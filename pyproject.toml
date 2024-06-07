@@ -1,0 +1,32 @@
+[project]
+name = "gmft"
+version = "0.0.1"
+description = "Lightweight, performant, configurable, deep table extraction"
+authors = [
+  {name = "conjunct"}
+]
+license = {text = "MIT License"}
+readme = "README.md"
+requires-python = ">=3.6"
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+]
+
+dependencies = [
+  "pypdfium2 >= 4",
+  "transformers >= 4.24.0",
+  "timm",
+  "pillow",
+  "pandas",
+  
+]
+
+[build-system]
+build-backend = "flit_core.buildapi"
+requires = ["flit_core >=3.4,<4"]
+
+[tool.flit.sdist]
+include = ["gmft/**/*.py", "README.md", "LICENSE"]
+exclude = ["gmft/pdf_bindings_mu.py"]

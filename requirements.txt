@@ -1,0 +1,5 @@
+pypdfium2
+transformers[torch]
+timm
+pillow
+pandas
