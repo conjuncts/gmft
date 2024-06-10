@@ -33,4 +33,4 @@ requires = ["flit_core >=3.4,<4"]
 
 [tool.flit.sdist]
 include = ["gmft/**/*.py", "README.md", "LICENSE"]
-exclude = ["gmft/pdf_bindings_mu.py", "dist/**/*", "notebooks/**/*", "samples/**/*", "reading_list.md", "*.zip"]
+exclude = ["gmft/pdf_bindings_mu.py", "dist/**/*", "notebooks/**/*", "samples/**/*", "plans/**/*", "reading_list.md", "*.zip"]
