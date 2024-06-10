@@ -1,0 +1,34 @@
+,,is_spanning_row
+Data collection,,False
+Wavelength range (A˚ ),3.05–4.00,False
+No. of images,20,False
+Setting spacing (),7,False
+Average exposure time (h),18,False
+Space group,P213,False
+a = b = c (A˚ ),97.98,False
+ =  =  ( ),90,False
+Resolution (A˚ ),40–1.80 (1.90–1.80),False
+Rp.i.m. (%),6.3 (12.7),False
+hI/(I)i,7.9 (3.7),False
+Completeness (%),85.5 (69.8),False
+Multiplicity,6.5 (2.9),False
+,,True
+,,False
+Refinement,,True
+No. of unique reflections,24728,False
+Rwork/Rfree (%),23.17/27.64,False
+No. of atoms,,True
+,,True
+Total,5659,False
+Protein,5109,False
+Cu,2,False
+D2O,182 D2O [546 atoms],False
+O,2,False
+B factors (A˚ 2 ),,True
+Protein,15.2,False
+Cu,8.6,False
+Water,20.2,False
+R.m.s. deviations,,True
+Bond lengths (A˚ ),0.004,False
+Bond angles (),0.884,False
+PDB code,6gtj,False

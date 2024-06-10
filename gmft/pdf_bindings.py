@@ -53,6 +53,10 @@ class BasePDFDocument(ABC):
 import pypdfium2 as pdfium
 
 class PyPDFium2Page(BasePage):
+    """
+    Note: This follows PIL's convention of (0, 0) being top left.
+    Therefore, beware: y0 and y1 are flipped from PyPDFium2's convention. 
+    """
     
     def __init__(self, page: pdfium.PdfPage, filename: str, page_no: int):
         self.page = page
@@ -171,3 +175,51 @@ class PyPDFium2Document(BasePDFDocument):
         self.doc.close()
         self.doc = None
 
+
+def load_page_from_dict(d: dict) -> BasePage:
+    """
+    Helper method to load a BasePage from a serialized CroppedTable or TATRFormattedTable.
+    This method reads a pdf from disk! You will need to close it manually!
+    
+    ie. `page.close_document()`
+    """
+    filename = d['filename']
+    page_number = d['page_no']
+    
+    doc = PyPDFium2Document(filename)
+    return doc.get_page(page_number)
+
+class ImageOnlyPage(BasePage):
+    """
+    This is a dummy page that only contains an image.
+    """
+    
+    def __init__(self, img: PILImage):
+        self.img = img
+        self.width, self.height = img.size
+        super().__init__(0)
+    
+    def get_positions_and_text(self) -> Generator[tuple[float, float, float, float, str], None, None]:
+        """
+        This ImageOnlyPage has no text to extract.
+        """
+        return
+    
+    def get_filename(self) -> str:
+        return None
+    
+    def get_image(self, dpi: int=None, rect: Rect=None) -> PILImage:
+        # clip to rect
+        if rect is not None:
+            img = self.img.crop(rect.bbox)
+        else:
+            img = self.img
+        return img
+    
+    def close(self):
+        self.img.close()
+        self.img = None
+    
+    def __del__(self):
+        if self.img is not None:
+            self.close()

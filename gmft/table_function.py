@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 import bisect
+from math import ceil
 
+from gmft.pdf_bindings import BasePage
 import numpy as np
 import torch
 
 from gmft.table_visualization import plot_results_orig
-from gmft.tables import CroppedTable, TableDetectorConfig
+from gmft.table_detection import CroppedTable, TableDetectorConfig
 
 import transformers
 from transformers import AutoImageProcessor, TableTransformerForObjectDetection
@@ -66,6 +68,28 @@ class FormattedTable(CroppedTable):
         Return the table as a pandas dataframe.
         """
         return self._df
+    
+    @abstractmethod
+    def visualize(self):
+        """
+        Visualize the table.
+        """
+        raise NotImplementedError
+    
+    @abstractmethod
+    def to_dict(self):
+        """
+        Serialize self into dict
+        """
+        raise NotImplementedError
+    
+    @staticmethod
+    @abstractmethod
+    def from_dict(d: dict, page: BasePage):
+        """
+        Deserialize from dict
+        """
+        raise NotImplementedError
 
 
 
@@ -107,17 +131,62 @@ def _find_leftmost_gt(sorted_list, value, key_func):
 
 
 class TATRFormatConfig:
+    
+    # ---- model settings ----
+    
+    warn_uninitialized_weights: bool = False
+    image_processor_path: str = "microsoft/table-transformer-detection"
+    formatter_path: str = "microsoft/table-transformer-structure-recognition"
+    
+    # base threshold for the confidence demanded of a table feature (row/column)
+    # note that a low threshold is actually better, because overzealous rows means that
+    # generally, numbers are still aligned and there are just many empty rows
+    # (having fewer rows than expected merges cells, which is bad)
+    formatter_base_threshold: float = 0.3
+    
+    # Confidences required (>=) for a row/column feature to be considered good. See TATRFormattedTable.id2label
+    # But see formatter_threshold on why having low confidences may be better than too high confidence
+    cell_required_confidence = {
+        0: 0.3, 
+        1: 0.3, 
+        2: 0.3, 
+        3: 0.3, 
+        4: 0.3, 
+        5: 0.3,
+        6: 99
+    }
+    
+    # ---- df() settings ----
+    
+    # with large tables, table transformer struggles with placing too many overlapping rows
+    # luckily, with more rows, we have more info on the usual size of text, which we can use to make
+    # a guess on the height such that no rows are merged or overlapping
+    
+    # large table assumption is only applied when (# of rows > 50) AND (total overlap > 20%)
+    # set 9999 to disable, set 0 to force large table assumption to run every time
+    large_table_threshold = 20
+    large_table_total_overlap_threshold = 0.15
+
+    # reject if total overlap is > 20% of table area
     total_overlap_reject_threshold = 0.2
+    # warn if total overlap is > 5% of table area
     total_overlap_warn_threshold = 0.05
+    # "corner clip" is when the text is clipped by a corner, and not an edge
     corner_clip_outlier_threshold = 0.1
-    iob_reject_threshold = 0.2
+    # reject if iob < 5%
+    iob_reject_threshold = 0.05
+    # warn if iob < 50%
     iob_warn_threshold = 0.5
-    remove_null_rows = True # remove rows with no data
+    # remove rows with no data
+    remove_null_rows = True 
     
     spanning_cell_minimum_width = 0.6 # having trouble with row headers falsely detected as spanning cells
     # so this prunes certain cells
     # set 0 to keep all spanning cells
     
+    # iob threshold for deduplication
+    # if 2 consecutive rows have iob > 0.95, then one of them gets deleted (!)
+    deduplication_iob_threshold = 0.95
     
     # TATR seems to have a high spanning cell false positive rate. 
     # (spanning cell or projected row header)
@@ -126,6 +195,9 @@ class TATRFormatConfig:
     # This retains column information, and lets the user combine spanning rows if so desired.
     aggregate_spanning_cells = False
     
+    
+
+
     
 
 class TATRFormattedTable(FormattedTable):
@@ -184,7 +256,7 @@ class TATRFormattedTable(FormattedTable):
         """
         Serialize self into dict
         """
-        parent = super(TATRFormattedTable, self).to_dict()
+        parent = CroppedTable.to_dict(self)
         return {**parent, **{
             'scale_factor': self.scale_factor,
             'padding': self.padding,
@@ -192,15 +264,27 @@ class TATRFormattedTable(FormattedTable):
             'outliers': self.outliers,
             'fctn_results': {k: v.tolist() for k, v in self.fctn_results.items()},
         }}
+    
+    @staticmethod
+    def from_dict(d: dict, page: BasePage):
+        """
+        Deserialize from dict
+        """
+        cropped_table = CroppedTable.from_dict(d, page)
+        config = TATRFormatConfig()
+        for k, v in d['config'].items():
+            if v is not None and config.__dict__.get(k) != v:
+                setattr(config, k, v)
+        return TATRFormattedTable(cropped_table, d['fctn_results'], d['scale_factor'], tuple(d['padding']), config=config)
 
 class TATRTableFormatter(TableFunctionalizer):
     
     
 
     
-    def __init__(self, config: TableDetectorConfig=None):
+    def __init__(self, config: TATRFormatConfig=None):
         if config is None:
-            config = TableDetectorConfig()
+            config = TATRFormatConfig()
         if not config.warn_uninitialized_weights:
             previous_verbosity = transformers.logging.get_verbosity()
             transformers.logging.set_verbosity(transformers.logging.ERROR)
@@ -209,12 +293,12 @@ class TATRTableFormatter(TableFunctionalizer):
             previous_verbosity = transformers.logging.get_verbosity()
             transformers.logging.set_verbosity(transformers.logging.ERROR)
         self.image_processor = AutoImageProcessor.from_pretrained(config.image_processor_path)
-        self.structor = TableTransformerForObjectDetection.from_pretrained(config.structor_path)
+        self.structor = TableTransformerForObjectDetection.from_pretrained(config.formatter_path)
         self.config = config
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
     
-    def extract(self, table: CroppedTable, dpi=144, padding='auto', TOL=1.2) -> FormattedTable:
+    def extract(self, table: CroppedTable, dpi=144, padding='auto') -> FormattedTable:
         """
         Extract the data from the table.
         """
@@ -232,7 +316,7 @@ class TATRTableFormatter(TableFunctionalizer):
         # but since we find the highest-intersecting row, same-row elements still tend to stay together
         # this is better than having a high threshold, because if we have fewer rows than expected, we merge cells
         # losing information
-        results = self.image_processor.post_process_object_detection(outputs, threshold=self.config.formatter_threshold, target_sizes=target_sizes)[0]
+        results = self.image_processor.post_process_object_detection(outputs, threshold=self.config.formatter_base_threshold, target_sizes=target_sizes)[0]
         
 
         # create a new FormattedTable instance with the cropped table and the dataframe
@@ -240,7 +324,7 @@ class TATRTableFormatter(TableFunctionalizer):
         
         # return formatted_table
         
-        formatted_table = TATRFormattedTable(table, results, scale_factor, padding)
+        formatted_table = TATRFormattedTable(table, results, scale_factor, padding, config=self.config)
         return formatted_table
             
             
@@ -259,7 +343,44 @@ def priority_row(lbl: dict):
         return 0
     return 1
     
-         
+
+def guess_row_bboxes_for_large_tables(table: TATRFormattedTable, sorted_rows, sorted_headers):
+    # get the distribution of word heights, rounded to the nearest tenth
+    print("Invoking large table row guess! set TATRFormatConfig.large_table_threshold to 999 to disable this.")
+    word_heights = []
+    for xmin, ymin, xmax, ymax, text in table.text_positions(remove_table_offset=True):
+        word_heights.append(round(ymax - ymin, 1))
+    # get the mode
+    from collections import Counter
+    word_heights = Counter(word_heights)
+    
+    # set the mode to be the row height
+    # making the row less than text's height will mean that no cells are merged
+    # but subscripts may be difficult
+    row_height = 0.95 * max(word_heights, key=word_heights.get)
+    
+    # construct bbox for each row
+    prev_row_xmin = min([x['bbox'][0] for x in sorted_rows])
+    prev_row_xmax = max([x['bbox'][2] for x in sorted_rows])
+    
+    table_ymax = sorted_rows[-1]['bbox'][3]
+    # we need to find the number of rows that can fit in the table
+    
+    # of the rows, retain column headers only
+    # col_headers = [x for x in sorted_rows if x['label'] == 'table column header']
+    # start at the end of the col header
+    y = sorted_headers[-1]['bbox'][3]
+    
+    new_rows = []
+    while y < table_ymax:
+        new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [prev_row_xmin, y, prev_row_xmax, y + row_height]})
+        y += row_height
+    # 2a. sort by ymax, just in case
+    new_rows.sort(key=lambda x: x['bbox'][3])
+    return new_rows
+    # return col_headers 
+    
+    
         
             
 def extract_to_df(table: TATRFormattedTable):
@@ -267,8 +388,7 @@ def extract_to_df(table: TATRFormattedTable):
     Return the table as a pandas dataframe.
     """
 
-    # the tatr authors use a more sophisticated method in inference.py
-    # here is a naive method
+    # the tatr authors use a similar method in inference.py
     
     outliers = {} # store table-wide information about outliers or pecularities
     
@@ -282,7 +402,8 @@ def extract_to_df(table: TATRFormattedTable):
         bbox = c.tolist()
         bbox = [bbox[0] - padding[0], bbox[1] - padding[1], bbox[2] - padding[0], bbox[3] - padding[1]]
         bbox = [bbox[0] / scale_factor, bbox[1] / scale_factor, bbox[2] / scale_factor, bbox[3] / scale_factor]
-        boxes.append({'confidence': a.item(), 'label': table.id2label[b.item()], 'bbox': bbox})
+        if a.item() >= table.config.cell_required_confidence[b.item()]:
+            boxes.append({'confidence': a.item(), 'label': table.id2label[b.item()], 'bbox': bbox})
     
     # for cl, lbl_id, (xmin, ymin, xmax, ymax) in boxes:
     
@@ -307,6 +428,8 @@ def extract_to_df(table: TATRFormattedTable):
     # print(len(sorted_rows), len(sorted_columns))
     if not sorted_horizontals or not sorted_columns:
         raise ValueError("No rows or columns detected")
+
+
     
     # 3. deduplicate, because tatr places a 2 bboxes for header (it counts as a header and a row)
     # only check consecutive rows/columns
@@ -314,7 +437,7 @@ def extract_to_df(table: TATRFormattedTable):
     prev = sorted_horizontals[0]
     while i < len(sorted_horizontals):
         cur = sorted_horizontals[i]
-        if symmetric_iob(prev['bbox'], cur['bbox']) > 0.95:
+        if symmetric_iob(prev['bbox'], cur['bbox']) > table.config.deduplication_iob_threshold:
             # pop the one that is a row
             # print("popping something")
             cur_priority = priority_row(cur['label'])
@@ -337,6 +460,7 @@ def extract_to_df(table: TATRFormattedTable):
         else:
             sorted_headers.append(x)
     
+    
 
     # 4. check for catastrophic overlap
     table_area = table.rect.width * table.rect.height # * scale_factor ** 2
@@ -352,10 +476,15 @@ def extract_to_df(table: TATRFormattedTable):
             total_area += (col['bbox'][2] - col['bbox'][0]) * (col['bbox'][3] - col['bbox'][1])
     # we must divide by 2, because a cell is counted twice by the row + column
     total_area /= 2
-    if total_area > (1 + table.config.total_overlap_reject_threshold) * table_area:
+    
+    if total_area > (1 + table.config.large_table_total_overlap_threshold) * table_area \
+            and len(sorted_rows) > table.config.large_table_threshold:
+        sorted_rows = guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers)
+    
+    elif total_area > (1 + table.config.total_overlap_reject_threshold) * table_area:
         raise ValueError(f"The identified boxes have significant overlap: {total_area / table_area - 1:.2%} of area is overlapping (Max is {table.config.total_overlap_reject_threshold:.2%})")
     
-    if total_area > (1 + table.config.total_overlap_warn_threshold) * table_area:
+    elif total_area > (1 + table.config.total_overlap_warn_threshold) * table_area:
         outliers['high overlap'] = (total_area / table_area - 1)
     
     num_rows = len(sorted_rows)
@@ -417,6 +546,7 @@ def extract_to_df(table: TATRFormattedTable):
         if possible_header and header_max_iob <= 0.5:
             # best cell is a partial overlap; ambiguous
             outliers['skipped col header'] = True
+            outliers['skipped text'] = outliers.get('skipped text', '') + ' ' + text
             continue
             
         if row_num is None and not possible_header:
@@ -456,6 +586,7 @@ def extract_to_df(table: TATRFormattedTable):
             # continue
         row = sorted_rows[row_num]
         if column_num is None:
+            outliers['skipped text'] = outliers.get('skipped text', '') + ' ' + text
             continue
         column = sorted_columns[column_num]
         
@@ -472,6 +603,7 @@ def extract_to_df(table: TATRFormattedTable):
         score = iob(textbox, cell)
         
         if score < table.config.iob_reject_threshold: # poor match, like if score < 0.2
+            outliers['skipped text'] = outliers.get('skipped text', '') + ' ' + text
             continue
         
         # the "non-corner assumption" is that if the textbox has been clipped, it was clipped by
@@ -489,7 +621,7 @@ def extract_to_df(table: TATRFormattedTable):
             outliers['corner clip'] = True
         
         if score < table.config.iob_warn_threshold: # If <0.5 is the best, warn but proceed.
-            outliers['low iob'] = True
+            outliers['lowest iob'] = min(outliers.get('lowest iob', 1), score)
         
         # update the table array, and join with ' ' if exists
         if table_array[row_num, column_num] is not None:

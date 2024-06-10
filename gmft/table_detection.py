@@ -6,7 +6,7 @@ import transformers
 from transformers import AutoImageProcessor, TableTransformerForObjectDetection
 
 from gmft.common import Rect
-from gmft.pdf_bindings import BasePage
+from gmft.pdf_bindings import BasePage, ImageOnlyPage
 from gmft.table_visualization import plot_results_unwr
 
 
@@ -104,6 +104,13 @@ class CroppedTable:
         """
         return position_words(self.text_positions())
     
+    def visualize(self, **kwargs):
+        """
+        Visualize the cropped table.
+        """
+        img = self.page.get_image()
+        plot_results_unwr(img, [self.confidence_score], [self.label], [self.bbox], None, **kwargs)
+    
     def to_dict(self):
         return {
             'filename': self.page.get_filename(),
@@ -113,23 +120,38 @@ class CroppedTable:
             "label": self.label
         }
     
-    def visualize(self, **kwargs):
+    @staticmethod
+    def from_dict(d: dict, page: BasePage):
         """
-        Visualize the cropped table.
+        Deserialize a CroppedTable object from dict.
+        
+        Because file locations have changed, require the user to provide the original page - 
+        but as a helper method see pdf_bindings.load_page_from_dict
         """
-        img = self.page.get_image()
-        plot_results_unwr(img, [self.confidence_score], [self.label], [self.bbox], None, **kwargs)
+        return CroppedTable(page, d['bbox'], d['confidence_score'], d['label'])
+    
+    @staticmethod
+    def from_image_only(img: PILImage):
+        """
+        Create a CroppedTable object from an image only.
+        
+        :param img: PIL image
+        """
+        page = ImageOnlyPage(img)
+        # bbox is the entire image
+        bbox = (0, 0, img.width, img.height)
+        table = CroppedTable(page, bbox, confidence_score=1.0, label=0)
+        table._img = img
+        table._img_dpi = 72
+        return table
+    
+
 
 class TableDetectorConfig:
     image_processor_path: str = "microsoft/table-transformer-detection"
     detector_path: str = "microsoft/table-transformer-detection"
-    structor_path: str = "microsoft/table-transformer-structure-recognition"
     warn_uninitialized_weights: bool = False
-    
-    # note that a low threshold is actually better, because overzealous rows means that
-    # generally, numbers are still aligned and there are just many empty rows
-    # (having fewer rows than expected merges cells, which is bad)
-    formatter_threshold: float = 0.3
+
     
     def __init__(self, image_processor_path: str = None, detector_path: str = None):
 
