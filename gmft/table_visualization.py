@@ -41,7 +41,7 @@ def plot_results_orig(pil_img, results, id2label, filter=None): # prob, boxes):
     """
     results = {
     "scores": tensor([0.993, 0.927]),
-    "labels": tensor([0, 0]), # this is always 0, for the table class
+    "labels": tensor([0, 0]),
     "boxes": tensor([[0.000, 0.000, 70.333, 20.333], # bounding boxes: xmin, ymin, xmax, ymax
                      [10.001, 0.001, 0.998, 0.998]]),
     }"""

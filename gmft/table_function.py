@@ -6,7 +6,6 @@ from gmft.pdf_bindings import BasePage
 import numpy as np
 import torch
 
-from gmft.table_visualization import plot_results_orig
 from gmft.table_detection import CroppedTable, TableDetectorConfig
 
 import transformers
@@ -14,6 +13,7 @@ from transformers import AutoImageProcessor, TableTransformerForObjectDetection
 import pandas as pd
 
 from gmft.common import Rect
+from gmft.table_visualization import plot_results_unwr
 
 def iob(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, float, float]):
     """
@@ -162,10 +162,10 @@ class TATRFormatConfig:
     # luckily, with more rows, we have more info on the usual size of text, which we can use to make
     # a guess on the height such that no rows are merged or overlapping
     
-    # large table assumption is only applied when (# of rows > 50) AND (total overlap > 20%)
+    # large table assumption is only applied when (# of rows > 20) AND (total overlap > 20%)
     # set 9999 to disable, set 0 to force large table assumption to run every time
     large_table_threshold = 20
-    large_table_total_overlap_threshold = 0.15
+    large_table_row_overlap_threshold = 0.2
 
     # reject if total overlap is > 20% of table area
     total_overlap_reject_threshold = 0.2
@@ -222,11 +222,18 @@ class TATRFormattedTable(FormattedTable):
     
     config: TATRFormatConfig
     outliers: dict[str, bool]
+    
+    effective_rows: list[tuple]
+    "Rows as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+    
+    effective_columns: list[tuple]
+    "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+    
     def __init__(self, cropped_table: CroppedTable, fctn_results: dict, scale_factor: float, padding: tuple[int, int], config: TATRFormatConfig=None):
         super(TATRFormattedTable, self).__init__(cropped_table)
-        self.fctn_results = fctn_results
-        self.scale_factor = scale_factor
-        self.padding = padding
+        self.fctn_results = {k: v.tolist() for k, v in fctn_results.items()}
+        self.fctn_scale_factor = scale_factor
+        self.fctn_padding = padding
         
         if config is None:
             config = TATRFormatConfig()
@@ -243,26 +250,56 @@ class TATRFormattedTable(FormattedTable):
         return self._df
     
     
-    def visualize(self, filter=None):
+    def visualize(self, filter=None, dpi=None, effective=False):
         """
         Visualize the table.
+        
+        :param filter: filter the labels to visualize. See TATRFormattedTable.id2label
+        :param dpi: Sets the dpi. If none, then the dpi of the cached image is used.
+        :param effective: if True, visualize the effective rows and columns, which may differ from the table transformer's output.
         """
-        if self._img is not None:
-            plot_results_orig(self._img, self.fctn_results, TATRFormattedTable.id2label, filter=filter)
+        if dpi is None: # dpi = needed_dpi
+            dpi = self._img_dpi
+        
+        scale_by = (dpi / 72)
+        
+        if effective:
+            boxes = [x['bbox'] for x in self.effective_rows + self.effective_columns]
+            boxes = [(x * scale_by for x in bbox) for bbox in boxes]
+            _to_visualize = {
+                "scores": [x['confidence'] for x in self.effective_rows + self.effective_columns],
+                "labels": [self.label2id[x['label']] for x in self.effective_rows + self.effective_columns],
+                "boxes": boxes
+            }
         else:
-            raise ValueError("No image available to visualize")
-    
+            # transform functionalized coordinates into image coordinates
+            sf = self.fctn_scale_factor
+            pdg = self.fctn_padding
+            boxes = [_normalize_bbox(bbox, used_scale_factor=sf / scale_by, used_padding=pdg) for bbox in self.fctn_results["boxes"]]
+            # boxes = [(x * scale_by for x in bbox) for bbox in boxes]
+
+            _to_visualize = {
+                "scores": self.fctn_results["scores"],
+                "labels": self.fctn_results["labels"],
+                "boxes": boxes
+            }
+            
+        # get needed scale factor and dpi
+        img = self.image(dpi=dpi)
+        # if self._img is not None:
+        plot_results_unwr(img, _to_visualize['scores'], _to_visualize['labels'], _to_visualize['boxes'], TATRFormattedTable.id2label, filter=filter)
+            
     def to_dict(self):
         """
         Serialize self into dict
         """
         parent = CroppedTable.to_dict(self)
         return {**parent, **{
-            'scale_factor': self.scale_factor,
-            'padding': self.padding,
+            'fctn_scale_factor': self.fctn_scale_factor,
+            'fctn_padding': self.fctn_padding,
             'config': self.config.__dict__,
             'outliers': self.outliers,
-            'fctn_results': {k: v.tolist() for k, v in self.fctn_results.items()},
+            'fctn_results': self.fctn_results,
         }}
     
     @staticmethod
@@ -275,7 +312,9 @@ class TATRFormattedTable(FormattedTable):
         for k, v in d['config'].items():
             if v is not None and config.__dict__.get(k) != v:
                 setattr(config, k, v)
-        return TATRFormattedTable(cropped_table, d['fctn_results'], d['scale_factor'], tuple(d['padding']), config=config)
+        padding = d.get('fctn_padding', d.get('padding', (0, 0)))
+        scale_factor = d.get('fctn_scale_factor', d.get('scale_factor', 1))
+        return TATRFormattedTable(cropped_table, d['fctn_results'], scale_factor, tuple(padding), config=config)
 
 class TATRTableFormatter(TableFunctionalizer):
     
@@ -382,7 +421,17 @@ def guess_row_bboxes_for_large_tables(table: TATRFormattedTable, sorted_rows, so
     
     
         
-            
+
+def _normalize_bbox(bbox: tuple[float, float, float, float], used_scale_factor: float, used_padding: tuple[float, float]):
+    """
+    Normalize bbox such that:
+    1. padding is removed (so (0, 0) is the top-left of the cropped table)
+    2. scale factor is normalized (dpi=72)
+    """
+    bbox = [bbox[0] - used_padding[0], bbox[1] - used_padding[1], bbox[2] - used_padding[0], bbox[3] - used_padding[1]]
+    bbox = [bbox[0] / used_scale_factor, bbox[1] / used_scale_factor, bbox[2] / used_scale_factor, bbox[3] / used_scale_factor]
+    return bbox
+    
 def extract_to_df(table: TATRFormattedTable):
     """
     Return the table as a pandas dataframe.
@@ -393,17 +442,16 @@ def extract_to_df(table: TATRFormattedTable):
     outliers = {} # store table-wide information about outliers or pecularities
     
     results = table.fctn_results
-    scale_factor = table.scale_factor
-    padding = table.padding
+    scale_factor = table.fctn_scale_factor
+    padding = table.fctn_padding
 
     # 1. collate identified boxes
     boxes = []
     for a, b, c in zip(results["scores"], results["labels"], results["boxes"]):
-        bbox = c.tolist()
-        bbox = [bbox[0] - padding[0], bbox[1] - padding[1], bbox[2] - padding[0], bbox[3] - padding[1]]
-        bbox = [bbox[0] / scale_factor, bbox[1] / scale_factor, bbox[2] / scale_factor, bbox[3] / scale_factor]
-        if a.item() >= table.config.cell_required_confidence[b.item()]:
-            boxes.append({'confidence': a.item(), 'label': table.id2label[b.item()], 'bbox': bbox})
+        bbox = c # .tolist()
+        bbox = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
+        if a >= table.config.cell_required_confidence[b]:
+            boxes.append({'confidence': a, 'label': table.id2label[b], 'bbox': bbox})
     
     # for cl, lbl_id, (xmin, ymin, xmax, ymax) in boxes:
     
@@ -460,28 +508,37 @@ def extract_to_df(table: TATRFormattedTable):
         else:
             sorted_headers.append(x)
     
-    
-
-    # 4. check for catastrophic overlap
+    # 4a. calculate total row overlap. If higher than a threshold, invoke the large table assumption
+    # also count headers
     table_area = table.rect.width * table.rect.height # * scale_factor ** 2
-    total_area = 0
+    total_row_area = 0
     for row in sorted_rows:
         if row['label'] == 'table row':
-            total_area += (row['bbox'][2] - row['bbox'][0]) * (row['bbox'][3] - row['bbox'][1])
+            total_row_area += (row['bbox'][2] - row['bbox'][0]) * (row['bbox'][3] - row['bbox'][1])
     for row in sorted_headers:
-        if row['label'] == 'table row':
-            total_area += (row['bbox'][2] - row['bbox'][0]) * (row['bbox'][3] - row['bbox'][1])
-    for col in sorted_columns:
-        if col['label'] == 'table column':
-            total_area += (col['bbox'][2] - col['bbox'][0]) * (col['bbox'][3] - col['bbox'][1])
-    # we must divide by 2, because a cell is counted twice by the row + column
-    total_area /= 2
+        if row['label'] == 'table projected row header':
+            total_row_area += (row['bbox'][2] - row['bbox'][0]) * (row['bbox'][3] - row['bbox'][1])
     
-    if total_area > (1 + table.config.large_table_total_overlap_threshold) * table_area \
+    if total_row_area > (1 + table.config.large_table_row_overlap_threshold) * table_area \
             and len(sorted_rows) > table.config.large_table_threshold:
         sorted_rows = guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers)
+        left_corner = sorted_rows[0]['bbox']
+        right_corner = sorted_rows[-1]['bbox']
+        # (ymax - ymin) * (xmax - xmin)
+        total_row_area = (right_corner[3] - left_corner[1]) * (right_corner[2] - left_corner[0])
     
-    elif total_area > (1 + table.config.total_overlap_reject_threshold) * table_area:
+    table.effective_rows = sorted_rows
+    table.effective_columns = sorted_columns
+    
+    # 4b. check for catastrophic overlap
+    total_column_area = 0
+    for col in sorted_columns:
+        if col['label'] == 'table column':
+            total_column_area += (col['bbox'][2] - col['bbox'][0]) * (col['bbox'][3] - col['bbox'][1])
+    # we must divide by 2, because a cell is counted twice by the row + column
+    total_area = (total_row_area + total_column_area) / 2
+    
+    if total_area > (1 + table.config.total_overlap_reject_threshold) * table_area:
         raise ValueError(f"The identified boxes have significant overlap: {total_area / table_area - 1:.2%} of area is overlapping (Max is {table.config.total_overlap_reject_threshold:.2%})")
     
     elif total_area > (1 + table.config.total_overlap_warn_threshold) * table_area:
@@ -499,10 +556,6 @@ def extract_to_df(table: TATRFormattedTable):
         
     
     for xmin, ymin, xmax, ymax, text in table.text_positions(remove_table_offset=True):
-        
-        # TODO see if there's a way to find max_header with binary search
-        # O(n (w + h)) ~ O(n sqrt(n)) is linear search
-        # O(n (logw + logh)) ~ O(n (2log(sqrtn)) = O(nlogn) is binary search, but we 
         
         textbox = (xmin, ymin, xmax, ymax)
 

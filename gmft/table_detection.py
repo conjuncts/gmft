@@ -12,6 +12,9 @@ from gmft.table_visualization import plot_results_unwr
 
 
 def position_words(words):
+    """
+    Helper function to convert a list of words with positions to a string.
+    """
     
     # assume reading order is left to right, then top to bottom
     
@@ -31,6 +34,10 @@ def position_words(words):
     return lines
 
 class CroppedTable:
+    """
+    A pdf selection, cropped to include just a table. 
+    Created by the TableDetector class.
+    """
     _img: PILImage
     _img_dpi: int
     def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float, label=0):
@@ -74,22 +81,29 @@ class CroppedTable:
         if effective_padding is not None:
             img = PIL.ImageOps.expand(img, effective_padding, fill="white")
         self._img = img
-        self._img_dpi = dpi
+        self._img_dpi = effective_dpi
         self._img_padding = effective_padding
         return self._img
     
-    def text_positions(self, remove_table_offset: bool = False):
+    def text_positions(self, remove_table_offset: bool = False, outside: bool = False):
         """
         Return the text positions of the cropped table.
         
         Any words that intersect the table are captured, even if they are not fully contained.
         
         :param remove_table_offset: if True, the positions are adjusted to be relative to the top-left corner of the table.
+        :param outside: if True, returns the **complement** of the table: all the text positions outside the table.
+        By default, it returns the text positions inside the table.
         :return: list of text positions, which is a tuple 
         (x0, y0, x1, y1, "string")
         """
         words = [w for w in self.page.get_positions_and_text()]
-        subset = [w for w in words if Rect(w[:4]).is_intersecting(self.rect)]
+        if outside:
+            # get the table's complement
+            subset = [w for w in words if not Rect(w[:4]).is_intersecting(self.rect)]
+        else:
+            # get the table
+            subset = [w for w in words if Rect(w[:4]).is_intersecting(self.rect)]
         if remove_table_offset:
             subset = [(w[0] - self.rect.xmin, w[1] - self.rect.ymin, w[2] - self.rect.xmin, w[3] - self.rect.ymin, w[4]) for w in subset]
         return subset
@@ -148,9 +162,15 @@ class CroppedTable:
 
 
 class TableDetectorConfig:
+    """
+    Configuration for the TableDetector class.
+    """
     image_processor_path: str = "microsoft/table-transformer-detection"
     detector_path: str = "microsoft/table-transformer-detection"
     warn_uninitialized_weights: bool = False
+    
+    # How confident the model should be to consider a table
+    detector_base_threshold: float = 0.9
 
     
     def __init__(self, image_processor_path: str = None, detector_path: str = None):
@@ -173,13 +193,13 @@ class TableDetector:
         
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
+        self.config = config
     
-    def extract(self, page: BasePage, threshold=0.9) -> list[CroppedTable]:
+    def extract(self, page: BasePage) -> list[CroppedTable]:
         """
         Detect tables in a page.
         
-        :param page: MuPDF page
-        :param threshold: how confident the model should be to consider a table
+        :param page: BasePage
         :return: list of CroppedTable objects
         """
         img = page.get_image(72) # use standard dpi = 72, which means we don't need any scaling
@@ -188,6 +208,7 @@ class TableDetector:
             outputs = self.detector(**encoding)
         # keep only predictions of queries with 0.9+ confidence (excluding no-object class)
         target_sizes = torch.tensor([img.size[::-1]])
+        threshold = self.config.detector_base_threshold
         results = self.image_processor.post_process_object_detection(outputs, threshold=threshold, target_sizes=target_sizes)[
             0
         ]
