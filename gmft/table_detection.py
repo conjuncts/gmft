@@ -1,3 +1,4 @@
+from typing import Generator
 import PIL.Image
 from PIL.Image import Image as PILImage
 
@@ -11,7 +12,7 @@ from gmft.table_visualization import plot_results_unwr
 
 
 
-def position_words(words):
+def position_words(words: Generator[tuple[int, int, int, int, str], None, None], y_gap=3):
     """
     Helper function to convert a list of words with positions to a string.
     """
@@ -20,9 +21,11 @@ def position_words(words):
     
     if not words:
         return ""
-    prev_left, prev_top, prev_right, prev_bottom, lines = words[0]
+    
+    
+    prev_left, prev_top, prev_right, prev_bottom, lines = next(words)
 
-    y_gap = 2 # consider the y jumping by y_gap to be a new line
+    # y_gap = 2 # consider the y jumping by y_gap to be a new line
     for word in words:
         x0, y0, x1, y1, text = word[:5]
         if abs(y1 - prev_bottom) >= y_gap:
@@ -40,6 +43,7 @@ class CroppedTable:
     """
     _img: PILImage
     _img_dpi: int
+    _img_padding: tuple[int, int, int, int]
     def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float, label=0):
         
         self.page = page
@@ -52,6 +56,7 @@ class CroppedTable:
         self.confidence_score = confidence_score
         self._img = None 
         self._img_dpi = None
+        self._img_padding = None
         self.label = label
     
     def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None) -> PILImage:
@@ -85,7 +90,7 @@ class CroppedTable:
         self._img_padding = effective_padding
         return self._img
     
-    def text_positions(self, remove_table_offset: bool = False, outside: bool = False):
+    def text_positions(self, remove_table_offset: bool = False, outside: bool = False) -> Generator[tuple[int, int, int, int, str], None, None]:
         """
         Return the text positions of the cropped table.
         
@@ -97,16 +102,22 @@ class CroppedTable:
         :return: list of text positions, which is a tuple 
         (x0, y0, x1, y1, "string")
         """
-        words = [w for w in self.page.get_positions_and_text()]
-        if outside:
-            # get the table's complement
-            subset = [w for w in words if not Rect(w[:4]).is_intersecting(self.rect)]
-        else:
-            # get the table
-            subset = [w for w in words if Rect(w[:4]).is_intersecting(self.rect)]
-        if remove_table_offset:
-            subset = [(w[0] - self.rect.xmin, w[1] - self.rect.ymin, w[2] - self.rect.xmin, w[3] - self.rect.ymin, w[4]) for w in subset]
-        return subset
+        for w in self.page.get_positions_and_text():
+            if Rect(w[:4]).is_intersecting(self.rect) != outside:
+                if remove_table_offset:
+                    yield (w[0] - self.rect.xmin, w[1] - self.rect.ymin, w[2] - self.rect.xmin, w[3] - self.rect.ymin, w[4])
+                else:
+                    yield w
+        # words = [w for w in self.page.get_positions_and_text()]
+        # if outside:
+        #     # get the table's complement
+        #     subset = [w for w in words if not Rect(w[:4]).is_intersecting(self.rect)]
+        # else:
+        #     # get the table
+        #     subset = [w for w in words if Rect(w[:4]).is_intersecting(self.rect)]
+        # if remove_table_offset:
+        #     subset = [(w[0] - self.rect.xmin, w[1] - self.rect.ymin, w[2] - self.rect.xmin, w[3] - self.rect.ymin, w[4]) for w in subset]
+        # return subset
     
     def text(self):
         """
@@ -127,8 +138,8 @@ class CroppedTable:
     
     def to_dict(self):
         return {
-            'filename': self.page.get_filename(),
-            'page_no': self.page.page_number,
+            "filename": self.page.get_filename(),
+            "page_no": self.page.page_number,
             "bbox": self.bbox,
             "confidence_score": self.confidence_score,
             "label": self.label

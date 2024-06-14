@@ -57,7 +57,7 @@ class FormattedTable(CroppedTable):
         self.confidence_score = cropped_table.confidence_score
         self.label = cropped_table.label
         
-        self._img = cropped_table._img.copy()
+        self._img = cropped_table._img.copy() if cropped_table._img is not None else None
         self._img_dpi = cropped_table._img_dpi
         self._img_padding = cropped_table._img_padding
     
@@ -229,11 +229,11 @@ class TATRFormattedTable(FormattedTable):
     effective_columns: list[tuple]
     "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
     
-    def __init__(self, cropped_table: CroppedTable, fctn_results: dict, scale_factor: float, padding: tuple[int, int], config: TATRFormatConfig=None):
+    def __init__(self, cropped_table: CroppedTable, fctn_results: dict, fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int], config: TATRFormatConfig=None):
         super(TATRFormattedTable, self).__init__(cropped_table)
-        self.fctn_results = {k: v.tolist() for k, v in fctn_results.items()}
-        self.fctn_scale_factor = scale_factor
-        self.fctn_padding = padding
+        self.fctn_results = fctn_results
+        self.fctn_scale_factor = fctn_scale_factor
+        self.fctn_padding = tuple(fctn_padding)
         
         if config is None:
             config = TATRFormatConfig()
@@ -296,7 +296,7 @@ class TATRFormattedTable(FormattedTable):
         parent = CroppedTable.to_dict(self)
         return {**parent, **{
             'fctn_scale_factor': self.fctn_scale_factor,
-            'fctn_padding': self.fctn_padding,
+            'fctn_padding': list(self.fctn_padding),
             'config': self.config.__dict__,
             'outliers': self.outliers,
             'fctn_results': self.fctn_results,
@@ -312,9 +312,11 @@ class TATRFormattedTable(FormattedTable):
         for k, v in d['config'].items():
             if v is not None and config.__dict__.get(k) != v:
                 setattr(config, k, v)
-        padding = d.get('fctn_padding', d.get('padding', (0, 0)))
         scale_factor = d.get('fctn_scale_factor', d.get('scale_factor', 1))
-        return TATRFormattedTable(cropped_table, d['fctn_results'], scale_factor, tuple(padding), config=config)
+        padding = d.get('fctn_padding', d.get('padding', (0, 0)))
+        table = TATRFormattedTable(cropped_table, d['fctn_results'], scale_factor, tuple(padding), config=config)
+        table.outliers = d.get('outliers', None)
+        return table
 
 class TATRTableFormatter(TableFunctionalizer):
     
@@ -362,6 +364,7 @@ class TATRTableFormatter(TableFunctionalizer):
         # formatted_table = FormattedTable(table, df)
         
         # return formatted_table
+        results = {k: v.tolist() for k, v in results.items()}
         
         formatted_table = TATRFormattedTable(table, results, scale_factor, padding, config=self.config)
         return formatted_table
