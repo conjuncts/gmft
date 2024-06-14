@@ -94,7 +94,7 @@ class FormattedTable(CroppedTable):
 
 
 
-class TableFunctionalizer(ABC):
+class TableFormatter(ABC):
     """
     Abstract class for converting a table of data, and extracting the data from it.
     
@@ -318,7 +318,7 @@ class TATRFormattedTable(FormattedTable):
         table.outliers = d.get('outliers', None)
         return table
 
-class TATRTableFormatter(TableFunctionalizer):
+class TATRTableFormatter(TableFormatter):
     
     
 

@@ -1,0 +1,56 @@
+Usage
+=====
+
+.. _installation:
+
+Installation
+------------
+
+gmft can be installed with pip: 
+
+.. code-block:: console
+
+   (.venv) $ pip install gmft
+
+However, it may be helpful to install `pytorch <https://pytorch.org/get-started/locally/>`_ and transformers first, especially if you want to use GPU. 
+
+Quickstart
+----------------
+
+The `quickstart <https://github.com/conjuncts/gmft/blob/main/notebooks/quickstart.ipynb>`_ notebook is a good place to start.
+
+To extract many tables, the `bulk extract <https://github.com/conjuncts/gmft/blob/main/notebooks/bulk_extract.ipynb>`_ notebook is a good place to start.
+
+For example, 
+
+.. code-block:: python
+
+    from gmft import CroppedTable, TableDetector, TATRTableFormatter
+    from gmft.pdf_bindings import PyPDFium2Document
+
+    detector = TableDetector()
+    formatter = TATRTableFormatter()
+
+    def ingest_pdf(pdf_path): # produces list[CroppedTable]
+        doc = PyPDFium2Document(pdf_path)
+        tables = []
+        for page in doc:
+            tables += detector.extract(page)
+        return tables, doc
+    
+    tables, doc = ingest_pdf("path/to/pdf.pdf")
+    doc.close() # once you're done with the document
+
+Overview
+--------
+
+Documents are represented by a :ref:`BasePDFDocument` object, which supports arbitrary pdf readers. The default implementation is :ref:`PyPDFium2Document`, which is a wrapper around the `PyPDFium2 <https://github.com/pypdfium2-team/pypdfium2>`_ library. BasePDFDocuments contain :ref:`BasePage` objects, implemented by default with :ref:`PyPDFium2Page`. 
+
+With PyPDFium2, be sure to close documents once done processing.
+
+The :ref:`TableDetector` is the default table detection tool, which uses Microsoft's `Table Transformer <https://github.com/microsoft/table-transformer>`_. All TableDetectors produce :ref:`CroppedTable` objects, from which `.image()` permits image export. 
+
+The :ref:`TATRTableFormatter` is the default table formatting tool, permitting `.df()` dataframe export. All TableFormatters produce :ref:`FormattedTable` objects, which contain the original CroppedTable and the formatted dataframe.
+
+
+
