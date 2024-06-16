@@ -195,12 +195,12 @@ def test_bulk_pdf8(docs):
 if __name__ == "__main__":
     # generate the files
     formatter = TATRTableFormatter()
-    for i in range(1, 9):
+    for i in range(9, 10):
         tables, doc = ingest_pdf(f"test/samples/{i}.pdf")
         try:
             fts = [formatter.extract(table) for table in tables]
         except Exception as e:
-            print(f"Error in pdf {i} and table {j}")
+            print(f"Error in pdf {i}")
             
         for j, ft in enumerate(fts):
             with open(f"test/outputs/bulk/pdf{i}_t{j}.info", "w") as f:
