@@ -238,11 +238,13 @@ class TATRFormattedTable(FormattedTable):
     effective_columns: list[tuple]
     "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
     
-    def __init__(self, cropped_table: CroppedTable, fctn_results: dict, fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int], config: TATRFormatConfig=None):
+    def __init__(self, cropped_table: CroppedTable, fctn_results: dict, 
+                #  fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int], 
+                 config: TATRFormatConfig=None):
         super(TATRFormattedTable, self).__init__(cropped_table)
         self.fctn_results = fctn_results
-        self.fctn_scale_factor = fctn_scale_factor
-        self.fctn_padding = tuple(fctn_padding)
+        # self.fctn_scale_factor = fctn_scale_factor
+        # self.fctn_padding = tuple(fctn_padding)
         
         if config is None:
             config = TATRFormatConfig()
@@ -282,10 +284,10 @@ class TATRFormattedTable(FormattedTable):
             }
         else:
             # transform functionalized coordinates into image coordinates
-            sf = self.fctn_scale_factor
-            pdg = self.fctn_padding
-            boxes = [_normalize_bbox(bbox, used_scale_factor=sf / scale_by, used_padding=pdg) for bbox in self.fctn_results["boxes"]]
-            # boxes = [(x * scale_by for x in bbox) for bbox in self.fctn_results["boxes"]]
+            # sf = self.fctn_scale_factor
+            # pdg = self.fctn_padding
+            # boxes = [_normalize_bbox(bbox, used_scale_factor=sf / scale_by, used_padding=pdg) for bbox in self.fctn_results["boxes"]]
+            boxes = [(x * scale_by for x in bbox) for bbox in self.fctn_results["boxes"]]
 
             _to_visualize = {
                 "scores": self.fctn_results["scores"],
@@ -304,8 +306,8 @@ class TATRFormattedTable(FormattedTable):
         """
         parent = CroppedTable.to_dict(self)
         return {**parent, **{
-            'fctn_scale_factor': self.fctn_scale_factor,
-            'fctn_padding': list(self.fctn_padding),
+            # 'fctn_scale_factor': self.fctn_scale_factor,
+            # 'fctn_padding': list(self.fctn_padding),
             'config': self.config.__dict__,
             'outliers': self.outliers,
             'fctn_results': self.fctn_results,
@@ -321,9 +323,21 @@ class TATRFormattedTable(FormattedTable):
         for k, v in d['config'].items():
             if v is not None and config.__dict__.get(k) != v:
                 setattr(config, k, v)
-        scale_factor = d.get('fctn_scale_factor', d.get('scale_factor', 1))
-        padding = d.get('fctn_padding', d.get('padding', (0, 0)))
-        table = TATRFormattedTable(cropped_table, d['fctn_results'], scale_factor, tuple(padding), config=config)
+        
+        results = d['fctn_results']
+        if 'fctn_scale_factor' in d or 'scale_factor' in d or 'fctn_padding' in d or 'padding' in d:
+            # deprecated: this is for backwards compatibility
+            scale_factor = d.get('fctn_scale_factor', d.get('scale_factor', 1))
+            padding = d.get('fctn_padding', d.get('padding', (0, 0)))
+            padding = tuple(padding)
+            
+            # normalize results here
+            for i, bbox in enumerate(results["boxes"]):
+                results["boxes"][i] = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
+            
+            
+        table = TATRFormattedTable(cropped_table, results, # scale_factor, tuple(padding), 
+                                   config=config)
         table.outliers = d.get('outliers', None)
         return table
 
@@ -377,11 +391,12 @@ class TATRTableFormatter(TableFormatter):
         results = {k: v.tolist() for k, v in results.items()}
         
         # normalize results w.r.t. padding and scale factor
-        # for i, bbox in enumerate(results["boxes"]):
-        #     results["boxes"][i] = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
+        for i, bbox in enumerate(results["boxes"]):
+            results["boxes"][i] = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
         
         
-        formatted_table = TATRFormattedTable(table, results, scale_factor, padding, config=self.config)
+        formatted_table = TATRFormattedTable(table, results, # scale_factor, padding, 
+                                             config=self.config)
         return formatted_table
             
             
@@ -411,6 +426,9 @@ def guess_row_bboxes_for_large_tables(table: TATRFormattedTable, sorted_rows, so
     from collections import Counter
     word_heights = Counter(word_heights)
     
+    if not sorted_rows:
+        return []
+    
     # set the mode to be the row height
     # making the row less than text's height will mean that no cells are merged
     # but subscripts may be difficult
@@ -426,7 +444,10 @@ def guess_row_bboxes_for_large_tables(table: TATRFormattedTable, sorted_rows, so
     # of the rows, retain column headers only
     # col_headers = [x for x in sorted_rows if x['label'] == 'table column header']
     # start at the end of the col header
-    y = sorted_headers[-1]['bbox'][3]
+    if sorted_headers:
+        y = sorted_headers[-1]['bbox'][3]
+    else:
+        y = sorted_rows[0]['bbox'][1]
     
     new_rows = []
     while y < table_ymax:
@@ -460,14 +481,14 @@ def extract_to_df(table: TATRFormattedTable):
     outliers = {} # store table-wide information about outliers or pecularities
     
     results = table.fctn_results
-    scale_factor = table.fctn_scale_factor
-    padding = table.fctn_padding
+    # scale_factor = table.fctn_scale_factor
+    # padding = table.fctn_padding
 
     # 1. collate identified boxes
     boxes = []
     for a, b, c in zip(results["scores"], results["labels"], results["boxes"]):
         bbox = c # .tolist()
-        bbox = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
+        # bbox = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
         if a >= table.config.cell_required_confidence[b]:
             boxes.append({'confidence': a, 'label': table.id2label[b], 'bbox': bbox})
     

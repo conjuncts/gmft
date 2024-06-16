@@ -44,13 +44,11 @@ For example,
 Overview
 --------
 
-Documents are represented by a :ref:`BasePDFDocument` object, which supports arbitrary pdf readers. The default implementation is :ref:`PyPDFium2Document`, which is a wrapper around the `PyPDFium2 <https://github.com/pypdfium2-team/pypdfium2>`_ library. BasePDFDocuments contain :ref:`BasePage` objects, implemented by default with :ref:`PyPDFium2Page`. 
+Documents are represented by a :ref:`BasePDFDocument` object.. The default implementation is :ref:`PyPDFium2Document`, which uses the `PyPDFium2 <https://github.com/pypdfium2-team/pypdfium2>`_ library. 
+Within a document, the :ref:`BasePage` is implemented by default with :ref:`PyPDFium2Page`. 
 
-With PyPDFium2, be sure to close documents once done processing.
+The :ref:`TableDetector` is the default table detection tool, which uses Microsoft's `Table Transformer <https://github.com/microsoft/table-transformer>`_. They produce :ref:`CroppedTable` objects, from which `.image()` permits image export. 
 
-The :ref:`TableDetector` is the default table detection tool, which uses Microsoft's `Table Transformer <https://github.com/microsoft/table-transformer>`_. All TableDetectors produce :ref:`CroppedTable` objects, from which `.image()` permits image export. 
-
-The :ref:`TATRTableFormatter` is the default table formatting tool, permitting `.df()` dataframe export. All TableFormatters produce :ref:`FormattedTable` objects, which contain the original CroppedTable and the formatted dataframe.
-
+The :ref:`TATRTableFormatter` is the default table formatting tool, from which `.df()` permits dataframe export. All TableFormatters produce :ref:`FormattedTable` objects, which contain the original CroppedTable and the formatted dataframe.
 
 

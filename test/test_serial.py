@@ -46,10 +46,26 @@ def test_CroppedTable_from_dict(doc_tiny):
 Lorem ipsum dolor sit amet, consectetur adipiscing
 Table 1. Selected Numbers"""
 
+def test_FormattedTable_from_dict_backcompat(doc_tiny):
+    # create a CroppedTable object
+    page = doc_tiny[0]
+    with open("test/outputs/tiny_df.old.info") as f:
+        table_dict = json.load(f)
+    formatted_table = TATRFormattedTable.from_dict(table_dict, page)
+    df = formatted_table.df()
+    # get csv as string
+    csv_str = df.to_csv(index=False)
+    
+    assert csv_str == """Name,Celsius,Fahrenheit\r
+Water Freezing Point,0,32\r
+Water Boiling Point,100,212\r
+Body Temperature,37,98.6\r
+"""
+
 def test_FormattedTable_from_dict(doc_tiny):
     # create a CroppedTable object
     page = doc_tiny[0]
-    with open("test/outputs/tiny_df.info") as f:
+    with open("test/outputs/tiny_df.old.info") as f:
         table_dict = json.load(f)
     formatted_table = TATRFormattedTable.from_dict(table_dict, page)
     df = formatted_table.df()
@@ -69,5 +85,20 @@ def test_FormattedTable_to_dict(doc_tiny):
         table_dict = json.load(f)
     formatted_table = TATRFormattedTable.from_dict(table_dict, page)
     formatted_table_dict = formatted_table.to_dict()
+    
+    with open("test/outputs/actual/tiny_df.info", "w") as f:
+        json.dump(formatted_table_dict, f, indent=4)
     assert formatted_table_dict == table_dict
 
+def test_FormattedTable_to_dict_backcompat(doc_tiny):
+    # assert that to_dict o from_dict is identity
+    page = doc_tiny[0]
+    with open("test/outputs/tiny_df.old.info") as f:
+        table_dict = json.load(f)
+    formatted_table = TATRFormattedTable.from_dict(table_dict, page)
+    formatted_table_dict = formatted_table.to_dict()
+    
+    with open("test/outputs/tiny_df.info", "r") as f:
+        want = json.load(f)
+    
+    assert formatted_table_dict == want

@@ -5,29 +5,30 @@ from gmft.table_detection import RotatedCroppedTable, TableDetector
 from gmft.table_function import TATRTableFormatter
 
 
+# @pytest.fixture
+# def doc_8():
+#     # note: this document is poor because the text bboxes are intrinsically misaligned
+#     # (tested with both PyPDFium2 and PyMuPDF)
+#     doc = PyPDFium2Document("test/samples/8.pdf")
+#     yield doc
+#     # cleanup
+#     doc.close()
+
 @pytest.fixture
-def doc_8():
-    doc = PyPDFium2Document("test/samples/8.pdf")
+def doc_9():
+    doc = PyPDFium2Document("test/samples/9.pdf")
     yield doc
     # cleanup
     doc.close()
 
-@pytest.fixture
-def detector():
-    return TableDetector()
 
-@pytest.fixture
-def formatter():
-    return TATRTableFormatter()
-
-
-def test_rotated_p8(doc_8, detector, formatter):
+def test_rotated_p8(doc_9, detector, formatter):
     """
     This tests everything: ie. table detection, structure recognition, and df formatting.
     """
 
     # table detection    
-    tables = detector.extract(doc_8[8-1])
+    tables = detector.extract(doc_9[8-1])
     assert len(tables) == 1
     
     table = tables[0]
@@ -36,9 +37,9 @@ def test_rotated_p8(doc_8, detector, formatter):
     assert table.angle == 90
     
     # structure recognition and df formatting
-    ft = formatter.extract(tables)
+    ft = formatter.extract(table)
     df = ft.df()
-    df.to_csv("test/outputs/actual/rotated_p8.csv", index=True)
+    df.to_csv("test/outputs/actual/pdf9_p7.csv", index=True)
 #     assert df.to_csv() == """\
 # ,Dataset,Input Modality,# Tables,Cell Topology,Cell Content,Cell Location,Row & Column Location,Canonical Structure\r
 # 0,TableBank [9],Image,145K,X,,,,\r

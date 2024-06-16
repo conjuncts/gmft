@@ -12,14 +12,6 @@ def doc_tatr():
     # cleanup
     doc.close()
 
-@pytest.fixture
-def detector():
-    return TableDetector()
-
-@pytest.fixture
-def formatter():
-    return TATRTableFormatter()
-
 
 def test_tatr_p4(doc_tatr, detector, formatter):
     """
