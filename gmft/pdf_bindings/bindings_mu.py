@@ -7,7 +7,7 @@ import pymupdf
 from PIL.Image import Image as PILImage
 
 from gmft.common import Rect
-from gmft.pdf_bindings import BasePage, BasePDFDocument
+from gmft.pdf_bindings.common import BasePage, BasePDFDocument
 
 
 def pixmap_to_PIL(pixmap: pymupdf.Pixmap) -> PILImage:

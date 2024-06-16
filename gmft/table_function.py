@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 import bisect
 from math import ceil
 
-from gmft.pdf_bindings import BasePage
+from gmft.pdf_bindings.common import BasePage
 import numpy as np
 import torch
 
-from gmft.table_detection import CroppedTable, TableDetectorConfig
+from gmft.table_detection import CroppedTable, RotatedCroppedTable, TableDetectorConfig
 
 import transformers
 from transformers import AutoImageProcessor, TableTransformerForObjectDetection
@@ -51,11 +51,20 @@ class FormattedTable(CroppedTable):
         self._df = df
         
         # create shallow copy
-        self.page = cropped_table.page
-        self.rect = cropped_table.rect
-        self.bbox = cropped_table.bbox
-        self.confidence_score = cropped_table.confidence_score
-        self.label = cropped_table.label
+        if 'angle' in cropped_table.__dict__:
+            angle = cropped_table.angle
+        else:
+            angle = 0
+        super().__init__(page=cropped_table.page, 
+                         bbox=cropped_table.rect.bbox, 
+                         confidence_score=cropped_table.confidence_score, 
+                        #  angle=angle,
+                         label=cropped_table.label)
+        # self.page = cropped_table.page
+        # self.rect = cropped_table.rect
+        # self.bbox = cropped_table.bbox
+        # self.confidence_score = cropped_table.confidence_score
+        # self.label = cropped_table.label
         
         self._img = cropped_table._img.copy() if cropped_table._img is not None else None
         self._img_dpi = cropped_table._img_dpi
@@ -276,7 +285,7 @@ class TATRFormattedTable(FormattedTable):
             sf = self.fctn_scale_factor
             pdg = self.fctn_padding
             boxes = [_normalize_bbox(bbox, used_scale_factor=sf / scale_by, used_padding=pdg) for bbox in self.fctn_results["boxes"]]
-            # boxes = [(x * scale_by for x in bbox) for bbox in boxes]
+            # boxes = [(x * scale_by for x in bbox) for bbox in self.fctn_results["boxes"]]
 
             _to_visualize = {
                 "scores": self.fctn_results["scores"],
@@ -359,12 +368,18 @@ class TATRTableFormatter(TableFormatter):
         # losing information
         results = self.image_processor.post_process_object_detection(outputs, threshold=self.config.formatter_base_threshold, target_sizes=target_sizes)[0]
         
+        
 
         # create a new FormattedTable instance with the cropped table and the dataframe
         # formatted_table = FormattedTable(table, df)
         
         # return formatted_table
         results = {k: v.tolist() for k, v in results.items()}
+        
+        # normalize results w.r.t. padding and scale factor
+        # for i, bbox in enumerate(results["boxes"]):
+        #     results["boxes"][i] = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
+        
         
         formatted_table = TATRFormattedTable(table, results, scale_factor, padding, config=self.config)
         return formatted_table

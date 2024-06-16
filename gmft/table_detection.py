@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Union
 import PIL.Image
 from PIL.Image import Image as PILImage
 
@@ -7,7 +7,7 @@ import transformers
 from transformers import AutoImageProcessor, TableTransformerForObjectDetection
 
 from gmft.common import Rect
-from gmft.pdf_bindings import BasePage, ImageOnlyPage
+from gmft.pdf_bindings.common import BasePage, ImageOnlyPage
 from gmft.table_visualization import plot_results_unwr
 
 
@@ -48,10 +48,8 @@ class CroppedTable:
         
         self.page = page
         if isinstance(bbox, Rect):
-            self.bbox = (int(bbox.x0), int(bbox.y0), int(bbox.x1), int(bbox.y1))
             self.rect = bbox
         else:
-            self.bbox = bbox
             self.rect = Rect(bbox)
         self.confidence_score = confidence_score
         self._img = None 
@@ -68,6 +66,7 @@ class CroppedTable:
         
         :param dpi: dots per inch. If not None, the scaling_factor parameter is ignored.
         :param padding: padding to add to the image. Tuple of (left, top, right, bottom)
+        Padding is added after the crop and rotation.
         Padding is important for subsequent row/column detection; see https://github.com/microsoft/table-transformer/issues/68 for discussion.
         If padding = 'auto', the padding is automatically set to 10% of the larger of {width, height}.
         :return: image of the cropped table
@@ -79,8 +78,8 @@ class CroppedTable:
             height = self.rect.height * effective_dpi / 72
             pad = int(max(width, height) * 0.1)
             effective_padding = (pad, pad, pad, pad)
-        if effective_dpi == self._img_dpi and effective_padding == self._img_padding: 
-            return self._img # cache results
+        # if effective_dpi == self._img_dpi and effective_padding == self._img_padding: 
+            # return self._img # cache results
         
         img = self.page.get_image(dpi=dpi, rect=self.rect)
         if effective_padding is not None:
@@ -129,18 +128,27 @@ class CroppedTable:
         """
         return position_words(self.text_positions())
     
-    def visualize(self, **kwargs):
+    def visualize(self, show_text=False, **kwargs):
         """
         Visualize the cropped table.
         """
         img = self.page.get_image()
-        plot_results_unwr(img, [self.confidence_score], [self.label], [self.bbox], None, **kwargs)
+        confidences = [self.confidence_score]
+        labels = [self.label]
+        bboxes = [self.rect.bbox]
+        if show_text:
+            # text_positions = [(x0, y0, x1, y1) for x0, y0, x1, y1, _ in self.text_positions()]
+            text_positions = [w[:4] for w in self.page.get_positions_and_text()]
+            confidences += [0.9] * len(text_positions)
+            labels += [-1] * len(text_positions)
+            bboxes += text_positions
+        plot_results_unwr(img, confidence=confidences, labels=labels, boxes=bboxes, id2label=None, **kwargs)
     
     def to_dict(self):
         return {
             "filename": self.page.get_filename(),
             "page_no": self.page.page_number,
-            "bbox": self.bbox,
+            "bbox": self.rect.bbox,
             "confidence_score": self.confidence_score,
             "label": self.label
         }
@@ -150,9 +158,11 @@ class CroppedTable:
         """
         Deserialize a CroppedTable object from dict.
         
-        Because file locations have changed, require the user to provide the original page - 
-        but as a helper method see pdf_bindings.load_page_from_dict
+        Because file locations may change, require the user to provide the original page - 
+        but as a helper method see PyPDFium2Utils.load_page_from_dict and PyPDFium2Utils.reload
         """
+        if 'angle' in d:
+            return RotatedCroppedTable.from_dict(d, page)
         return CroppedTable(page, d['bbox'], d['confidence_score'], d['label'])
     
     @staticmethod
@@ -170,6 +180,9 @@ class CroppedTable:
         table._img_dpi = 72
         return table
     
+    @property
+    def bbox(self):
+        return self.rect.bbox
 
 
 class TableDetectorConfig:
@@ -228,8 +241,98 @@ class TableDetector:
             bbox = results["boxes"][i].tolist()
             confidence_score = results["scores"][i].item()
             label = results["labels"][i].item()
-            tables.append(CroppedTable(page, bbox, confidence_score, label))
+            if label == 1:
+                tables.append(RotatedCroppedTable(page, bbox, confidence_score, 90, label))
+            else:
+                tables.append(CroppedTable(page, bbox, confidence_score, label))
         return tables
+
+
+class RotatedCroppedTable(CroppedTable):
+    """
+    Table that has been rotated. 
+    
+    Note: self.bbox and self.rect are in coordinates of the original pdf.
+    But text_positions() has rectified, unrotated positions in a different coordinate system relative to the table.
+    Currently, only 0, 90, 180, and 270 degree rotations are supported.
+    """
+    
+    def __init__(self, page: BasePage, bbox: tuple[int, int, int, int], confidence_score: float, angle: float, label=0):
+        """
+        
+        
+        :param angle: angle in degrees, counterclockwise. 
+        That is, 90 would mean that a 90 degree cc rotation has been applied to a level image. 
+        In practice, the majority of rotated tables are rotated by 90 degrees.
+        
+        Currently, only 0, 90, 180, and 270 degree rotations are supported.
+        
+        """
+        super().__init__(page, bbox, confidence_score, label)
+        
+        if angle not in [0, 90, 180, 270]:
+            raise ValueError("Only 0, 90, 180, 270 are supported.")
+        self.angle = angle
+        
+    def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None) -> PILImage:
+        """
+        Return the image of the cropped table.
+        """
+        img = super().image(dpi=dpi, padding=padding)
+        # if self.angle == 90:
+        if self.angle != 0:
+            # rotate by negative angle to get back to original orientation
+            img = img.rotate(-self.angle, expand=True)
+            
+        return img
+    
+    def text_positions(self, remove_table_offset: bool = False, outside: bool = False) -> Generator[tuple[int, int, int, int, str], None, None]:
+        """
+        Return the text positions of the cropped table.
+        
+        If remove_table_offset is False, positions are relative to the top-left corner of the pdf (no adjustment for rotation).
+        
+        If remove_table_offset is True, positions are relative to the top-left corner of the table.
+        Note that the text positions are rotated, and are no longer relative to the pdf.
+        """
+        if self.angle == 0 or remove_table_offset == False:
+            return super().text_positions(remove_table_offset=remove_table_offset, outside=outside)
+        elif self.angle == 90:
+            for w in super().text_positions(remove_table_offset=True, outside=outside):
+                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1 = self.rect.height - y1, x0, self.rect.height - y0, x1
+                yield (x0, y0, x1, y1, text)
+        elif self.angle == 180:
+            for w in super().text_positions(remove_table_offset=True, outside=outside):
+                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1 = self.rect.width - x1, self.rect.height - y1, self.rect.width - x0, self.rect.height - y0
+                yield (x0, y0, x1, y1, text)
+        elif self.angle == 270:
+            for w in super().text_positions(remove_table_offset=True, outside=outside):
+                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1 = y0, self.rect.width - x1, y1, self.rect.width - x0
+                yield (x0, y0, x1, y1, text)
+    
+    def to_dict(self):
+        d = super().to_dict()
+        d['angle'] = self.angle
+        return d
+    
+    @staticmethod
+    def from_dict(d: dict, page: BasePage) -> Union[CroppedTable, 'RotatedCroppedTable']:
+        """
+        Create a CroppedRotatedTable object from dict.
+        """
+        if 'angle' not in d:
+            return CroppedTable.from_dict(d, page)
+        return RotatedCroppedTable(page, d['bbox'], d['confidence_score'], d['angle'], d['label'])
+    
+    # def visualize(self, **kwargs):
+    #     """
+    #     Visualize the cropped table.
+    #     """
+    #     img = self.page.get_image()
+    #     plot_results_unwr(img, [self.confidence_score], [self.label], [self.bbox], self.angle, **kwargs)
     
     
 

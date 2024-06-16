@@ -8,6 +8,7 @@ from gmft.pdf_bindings.common import BasePDFDocument, BasePage
 
 from PIL.Image import Image as PILImage
 
+
 class PyPDFium2Page(BasePage):
     """
     Note: This follows PIL's convention of (0, 0) being top left.
@@ -131,16 +132,32 @@ class PyPDFium2Document(BasePDFDocument):
         self.doc.close()
         self.doc = None
 
-
-def load_page_from_dict(d: dict) -> BasePage:
+class PyPDFium2Utils:
     """
-    Helper method to load a BasePage from a serialized CroppedTable or TATRFormattedTable.
-    This method reads a pdf from disk! You will need to close it manually!
-    
-    ie. `page.close_document()`
+    Helper class for pypdfium2
     """
-    filename = d['filename']
-    page_number = d['page_no']
     
-    doc = PyPDFium2Document(filename)
-    return doc.get_page(page_number)
+    @staticmethod
+    def load_page_from_dict(d: dict) -> BasePage:
+        """
+        Helper method to load a BasePage from a serialized CroppedTable or TATRFormattedTable.
+        This method reads a pdf from disk! You will need to close it manually!
+        
+        ie. `page.close_document()`
+        """
+        filename = d['filename']
+        page_number = d['page_no']
+        
+        doc = PyPDFium2Document(filename)
+        return doc.get_page(page_number)
+    
+    @staticmethod
+    def reload(ct: 'CroppedTable') -> 'CroppedTable':
+        """
+        Reloads the CroppedTable from disk.
+        This is useful for a CroppedTable whose document has been closed.
+        """
+        page = PyPDFium2Utils.load_page_from_dict(ct.to_dict())
+        ct.page = page
+        return ct
+        

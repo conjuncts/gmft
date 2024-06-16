@@ -67,20 +67,7 @@ def test_CroppedTable_positions(doc_tiny):
     actual = list(table.text_positions(outside=True))
     are_bboxes_close(reference, actual, EPS)
     
-if __name__ == "__main__":
-    page = PyPDFium2Document("test/samples/tiny.pdf")[0]
-    table = CroppedTable.from_dict({
-        'filename': "test/samples/tiny.pdf",
-        'page_no': 0,
-        'bbox': (10, 10, 300, 150),
-        'confidence_score': 0.9,
-        'label': 0
-    }, page)
-    
-    # create the tsv
-    with open("test/outputs/tiny_cropped_positions.tsv", "w") as f:
-        for pos in table.text_positions():
-            f.write("\t".join(map(str, pos)) + "\n")
+
 
 def test_CroppedTable_text(doc_tiny):
         
@@ -98,3 +85,19 @@ Lorem ipsum dolor sit amet, consectetur adipiscing
 Table 1. Selected Numbers
 Name Celsius
 Water Freezing Point 0"""
+
+
+if __name__ == "__main__":
+    page = PyPDFium2Document("test/samples/tiny.pdf")[0]
+    table = CroppedTable.from_dict({
+        'filename': "test/samples/tiny.pdf",
+        'page_no': 0,
+        'bbox': (10, 10, 300, 150),
+        'confidence_score': 0.9,
+        'label': 0
+    }, page)
+    
+    # create the tsv
+    with open("test/outputs/tiny_cropped_positions.tsv", "w") as f:
+        for pos in table.text_positions():
+            f.write("\t".join(map(str, pos)) + "\n")

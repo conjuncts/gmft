@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 # colors for visualization
-colors = ["red", "blue", "green", "yellow", "orange", "violet"]
+colors = {-1: "red", 0: "red", 1: "blue", 2: "green", 3: "yellow", 4: "orange", 5: "violet"}
 
 
 
@@ -30,9 +30,10 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
             continue
         ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
                                    fill=False, color=colors[lbl], linewidth=3))
-        text = f'{id2label[lbl]}: {cl:0.2f}'
-        ax.text(xmin, ymin, text, fontsize=15,
-                bbox=dict(facecolor='yellow', alpha=0.5))
+        if lbl != -1:
+            text = f'{id2label[lbl]}: {cl:0.2f}'
+            ax.text(xmin, ymin, text, fontsize=15,
+                    bbox=dict(facecolor='yellow', alpha=0.5))
     plt.axis('off')
     plt.show()
 
