@@ -104,4 +104,8 @@ Gmft focuses highly on pdf tables. Another great option is [https://github.com/x
 
 For general document understanding, I recommend checking out [open-parse](https://github.com/Filimoa/open-parse), [unstructured](https://github.com/Unstructured-IO/unstructured), [surya](https://github.com/VikParuchuri/surya), [deepdoctection](https://github.com/deepdoctection/deepdoctection), and [DocTR](https://github.com/mindee/doctr). Open-parse and unstructured do quite well on the same example pdfs in terms of extraction quality. Open-parse offers UniTable, a larger model which may achieve higher quality but runs much slower on cpu (see [reliability section](#Reliable) for more discussion.) Importantly, open-parse allows extraction of auxiliary information like headers, paragraphs, etc., (not just tables) useful for RAG.
 
+## License
+
 gmft is released under MIT. 
+
+If you wish to use PyMuPDF, the file `gmft/pdf_bindings/bindings_mu.py` is available but is packaged [separately](https://gist.github.com/conjuncts/5a44784d6849c6966e57206da14d757d). `bindings_mu.py` alone is released under [AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html).
