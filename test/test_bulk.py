@@ -7,17 +7,7 @@ from gmft.table_detection import TableDetector
 from gmft.table_function import TATRFormattedTable, TATRTableFormatter
 
 
-@pytest.fixture
-def docs():
-    docs = []
-    for i in range(1, 9):
-        doc = PyPDFium2Document(f"test/samples/{i}.pdf")
-        docs.append(doc)
 
-    yield docs
-    # cleanup
-    for doc in docs:
-        doc.close()
 
 num_tables = {
     1: 10,
@@ -29,10 +19,10 @@ num_tables = {
     7: 3, 
     8: 2,
 }
-def test_bulk_pdf1(docs):
+def test_bulk_pdf1(docs_bulk):
     i = 0
-    doc = docs[i]
-    # for i, doc in enumerate(docs):
+    doc = docs_bulk[i]
+    # for i, doc in enumerate(docs_bulk_bulk):
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             
@@ -49,10 +39,10 @@ def test_bulk_pdf1(docs):
             except ValueError as e:
                 assert not os.path.exists(f"test/outputs/bulk/pdf{i+1}_t{j}.csv"), f"Failed to create df in pdf {i+1} and table {j}"
                 
-def test_bulk_pdf2(docs):
+def test_bulk_pdf2(docs_bulk):
     i = 1
-    doc = docs[i]
-    # for i, doc in enumerate(docs):
+    doc = docs_bulk[i]
+    # for i, doc in enumerate(docs_bulk):
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             
@@ -69,10 +59,10 @@ def test_bulk_pdf2(docs):
             except ValueError as e:
                 assert not os.path.exists(f"test/outputs/bulk/pdf{i+1}_t{j}.csv"), f"Failed to create df in pdf {i+1} and table {j}"
 
-def test_bulk_pdf3(docs):
+def test_bulk_pdf3(docs_bulk):
     i = 2
-    doc = docs[i]
-    # for i, doc in enumerate(docs):
+    doc = docs_bulk[i]
+    # for i, doc in enumerate(docs_bulk):
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             
@@ -89,10 +79,10 @@ def test_bulk_pdf3(docs):
             except ValueError as e:
                 assert not os.path.exists(f"test/outputs/bulk/pdf{i+1}_t{j}.csv"), f"Failed to create df in pdf {i+1} and table {j}"
 
-def test_bulk_pdf4(docs):
+def test_bulk_pdf4(docs_bulk):
     i = 3
-    doc = docs[i]
-    # for i, doc in enumerate(docs):
+    doc = docs_bulk[i]
+    # for i, doc in enumerate(docs_bulk):
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             
@@ -109,10 +99,10 @@ def test_bulk_pdf4(docs):
             except ValueError as e:
                 assert not os.path.exists(f"test/outputs/bulk/pdf{i+1}_t{j}.csv"), f"Failed to create df in pdf {i+1} and table {j}"
 
-def test_bulk_pdf5(docs):
+def test_bulk_pdf5(docs_bulk):
     i = 4
-    doc = docs[i]
-    # for i, doc in enumerate(docs):
+    doc = docs_bulk[i]
+    # for i, doc in enumerate(docs_bulk):
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             
@@ -129,10 +119,10 @@ def test_bulk_pdf5(docs):
             except ValueError as e:
                 assert not os.path.exists(f"test/outputs/bulk/pdf{i+1}_t{j}.csv"), f"Failed to create df in pdf {i+1} and table {j}"
 
-def test_bulk_pdf6(docs):
+def test_bulk_pdf6(docs_bulk):
     i = 5
-    doc = docs[i]
-    # for i, doc in enumerate(docs):
+    doc = docs_bulk[i]
+    # for i, doc in enumerate(docs_bulk):
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             
@@ -149,10 +139,10 @@ def test_bulk_pdf6(docs):
             except ValueError as e:
                 assert not os.path.exists(f"test/outputs/bulk/pdf{i+1}_t{j}.csv"), f"Failed to create df in pdf {i+1} and table {j}"
 
-def test_bulk_pdf7(docs):
+def test_bulk_pdf7(docs_bulk):
     i = 6
-    doc = docs[i]
-    # for i, doc in enumerate(docs):
+    doc = docs_bulk[i]
+    # for i, doc in enumerate(docs_bulk):
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             
@@ -169,10 +159,10 @@ def test_bulk_pdf7(docs):
             except ValueError as e:
                 assert not os.path.exists(f"test/outputs/bulk/pdf{i+1}_t{j}.csv"), f"Failed to create df in pdf {i+1} and table {j}"
 
-def test_bulk_pdf8(docs):
+def test_bulk_pdf8(docs_bulk):
     i = 7
-    doc = docs[i]
-    # for i, doc in enumerate(docs):
+    doc = docs_bulk[i]
+    # for i, doc in enumerate(docs_bulk):
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             

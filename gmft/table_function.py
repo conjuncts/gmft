@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import bisect
+import copy
 from math import ceil
 
 from gmft.pdf_bindings.common import BasePage
@@ -40,7 +41,7 @@ def symmetric_iob(bbox1, bbox2):
     
     return 0
 
-class FormattedTable(CroppedTable):
+class FormattedTable(RotatedCroppedTable):
     """
     This is a table that is *formatted*, which is to say it is "functionalized" with header and data information. 
     Therefore, it can be converted into df, csv, etc.
@@ -58,7 +59,7 @@ class FormattedTable(CroppedTable):
         super().__init__(page=cropped_table.page, 
                          bbox=cropped_table.rect.bbox, 
                          confidence_score=cropped_table.confidence_score, 
-                        #  angle=angle,
+                         angle=angle,
                          label=cropped_table.label)
         # self.page = cropped_table.page
         # self.rect = cropped_table.rect
@@ -250,14 +251,21 @@ class TATRFormattedTable(FormattedTable):
             config = TATRFormatConfig()
         self.config = config
         self.outliers = None
-    def df(self):
+    def df(self, config_overrides: TATRFormatConfig=None):
         """
-        Return the table as a pandas dataframe.
+        Return the table as a pandas dataframe. 
+        :param config_overrides: override the config settings for this call only
         """
         if self._df is not None: # cache
             return self._df
         
-        self._df = extract_to_df(self)
+        if config_overrides is not None:
+            config = copy.deepcopy(self.config)
+            config.__dict__.update(config_overrides.__dict__)
+        else:
+            config = self.config
+        
+        self._df = extract_to_df(self, config=config)
         return self._df
     
     
@@ -304,7 +312,10 @@ class TATRFormattedTable(FormattedTable):
         """
         Serialize self into dict
         """
-        parent = CroppedTable.to_dict(self)
+        if self.angle != 0:
+            parent = RotatedCroppedTable.to_dict(self)
+        else:
+            parent = CroppedTable.to_dict(self)
         return {**parent, **{
             # 'fctn_scale_factor': self.fctn_scale_factor,
             # 'fctn_padding': list(self.fctn_padding),
@@ -471,12 +482,14 @@ def _normalize_bbox(bbox: tuple[float, float, float, float], used_scale_factor: 
     bbox = [bbox[0] / used_scale_factor, bbox[1] / used_scale_factor, bbox[2] / used_scale_factor, bbox[3] / used_scale_factor]
     return bbox
     
-def extract_to_df(table: TATRFormattedTable):
+def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     """
     Return the table as a pandas dataframe.
     """
-
+    
     # the tatr authors use a similar method in inference.py
+    if config is None:
+        config = table.config
     
     outliers = {} # store table-wide information about outliers or pecularities
     

@@ -19,11 +19,12 @@ def position_words(words: Generator[tuple[int, int, int, int, str], None, None],
     
     # assume reading order is left to right, then top to bottom
     
-    if not words:
+    first = next(words, None)
+    
+    if first is None:
         return ""
     
-    
-    prev_left, prev_top, prev_right, prev_bottom, lines = next(words)
+    prev_left, prev_top, prev_right, prev_bottom, lines = first
 
     # y_gap = 2 # consider the y jumping by y_gap to be a new line
     for word in words:
@@ -296,7 +297,7 @@ class RotatedCroppedTable(CroppedTable):
         Note that the text positions are rotated, and are no longer relative to the pdf.
         """
         if self.angle == 0 or remove_table_offset == False:
-            return super().text_positions(remove_table_offset=remove_table_offset, outside=outside)
+            yield from super().text_positions(remove_table_offset=remove_table_offset, outside=outside)
         elif self.angle == 90:
             for w in super().text_positions(remove_table_offset=True, outside=outside):
                 x0, y0, x1, y1, text = w

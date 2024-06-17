@@ -8,11 +8,19 @@ import pytest
 from gmft.pdf_bindings import BasePage
 from gmft import CroppedTable
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
+from gmft.table_detection import RotatedCroppedTable
 from gmft.table_function import TATRFormattedTable
 
 @pytest.fixture
 def doc_tiny():
     doc = PyPDFium2Document("test/samples/tiny.pdf")
+    yield doc
+    # cleanup
+    doc.close()
+
+@pytest.fixture
+def doc_9():
+    doc = PyPDFium2Document("test/samples/9.pdf")
     yield doc
     # cleanup
     doc.close()
@@ -83,22 +91,54 @@ def test_FormattedTable_to_dict(doc_tiny):
     page = doc_tiny[0]
     with open("test/outputs/tiny_df.info") as f:
         table_dict = json.load(f)
-    formatted_table = TATRFormattedTable.from_dict(table_dict, page)
-    formatted_table_dict = formatted_table.to_dict()
+    dict2table = TATRFormattedTable.from_dict(table_dict, page)
+    dict2table2dict = dict2table.to_dict()
     
     with open("test/outputs/actual/tiny_df.info", "w") as f:
-        json.dump(formatted_table_dict, f, indent=4)
-    assert formatted_table_dict == table_dict
+        json.dump(dict2table2dict, f, indent=4)
+    assert dict2table2dict == table_dict
 
 def test_FormattedTable_to_dict_backcompat(doc_tiny):
     # assert that to_dict o from_dict is identity
     page = doc_tiny[0]
     with open("test/outputs/tiny_df.old.info") as f:
         table_dict = json.load(f)
-    formatted_table = TATRFormattedTable.from_dict(table_dict, page)
-    formatted_table_dict = formatted_table.to_dict()
+    dict2table = TATRFormattedTable.from_dict(table_dict, page)
+    dict2table2dict = dict2table.to_dict()
     
     with open("test/outputs/tiny_df.info", "r") as f:
         want = json.load(f)
     
-    assert formatted_table_dict == want
+    assert dict2table2dict == want
+
+
+def test_RotatedCroppedTable_from_to_dict(doc_9):
+    # create a CroppedTable object
+    page = doc_9[8]
+    with open("test/outputs/bulk/pdf9_t4.info") as f:
+        table_dict = json.load(f)
+    dict2table = TATRFormattedTable.from_dict(table_dict, page)
+    assert isinstance(dict2table, RotatedCroppedTable)
+    assert dict2table.angle == 90
+    
+    dict2table2dict = dict2table.to_dict()
+    assert dict2table2dict == table_dict
+    
+    # test a simpler subset
+    dict2simple = RotatedCroppedTable.from_dict(table_dict, page)
+    assert dict2simple.to_dict() == {
+        "filename": "test/samples/9.pdf",
+        "page_no": 8,
+        "bbox": [
+            71.3222885131836,
+            54.75971984863281,
+            529.1936645507812,
+            716.1232299804688
+        ],
+        "confidence_score": 0.9999405145645142,
+        "label": 1,
+        "angle": 90
+    }
+    
+    
+    
