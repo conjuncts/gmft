@@ -9,7 +9,8 @@ colors = {-1: "red", 0: "red", 1: "blue", 2: "green", 3: "yellow", 4: "orange", 
 
 
 
-def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None, figsize=(32,20)): # prob, boxes):
+def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None, figsize=(32,20),
+                      show_labels=True): # prob, boxes):
     """
     confidence = [0.993, 0.927]
     labels = [0, 0] # 0 is the table class
@@ -30,7 +31,7 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
             continue
         ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
                                    fill=False, color=colors[lbl], linewidth=3))
-        if lbl != -1:
+        if lbl != -1 and show_labels:
             text = f'{id2label[lbl]}: {cl:0.2f}'
             ax.text(xmin, ymin, text, fontsize=15,
                     bbox=dict(facecolor='yellow', alpha=0.5))
