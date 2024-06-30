@@ -207,7 +207,21 @@ class TableDetectorConfig:
     
 
 class TableDetector:
-    def __init__(self, config: TableDetectorConfig=None):
+    """
+    Detects tables in a pdf page. Default implementation uses TableTransformerForObjectDetection.
+    """
+    def __init__(self, config: TableDetectorConfig=None, default_implementation=True):
+        """
+        Initialize the TableDetector.
+        
+        :param config: TableDetectorConfig
+        :param default_implementation: Should be True, unless you are writing a custom subclass for TableDetector.
+        """
+        
+        # future-proofing: allow subclasses for TableDetector to have different architectures
+        if not default_implementation:
+            return
+        
         if config is None:
             config = TableDetectorConfig()
         if not config.warn_uninitialized_weights:
@@ -248,6 +262,22 @@ class TableDetector:
                 tables.append(CroppedTable(page, bbox, confidence_score, label))
         return tables
 
+class TATRTableDetector(TableDetector):
+    """
+    Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
+    
+    Using the extract() method, a FormattedTable is produced, which can be exported to csv, df, etc.
+    """
+    pass
+
+class AutoTableDetector(TATRTableDetector):
+    """
+    The recommended table detector. Currently points to TATRTableDetector.
+    Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
+    
+    Using the extract() method, a FormattedTable is produced, which can be exported to csv, df, etc.
+    """
+    pass
 
 class RotatedCroppedTable(CroppedTable):
     """
@@ -261,7 +291,7 @@ class RotatedCroppedTable(CroppedTable):
     def __init__(self, page: BasePage, bbox: tuple[int, int, int, int], confidence_score: float, angle: float, label=0):
         """
         
-        
+        :param page: BasePage
         :param angle: angle in degrees, counterclockwise. 
         That is, 90 would mean that a 90 degree cc rotation has been applied to a level image. 
         In practice, the majority of rotated tables are rotated by 90 degrees.
@@ -293,8 +323,12 @@ class RotatedCroppedTable(CroppedTable):
         
         If remove_table_offset is False, positions are relative to the top-left corner of the pdf (no adjustment for rotation).
         
-        If remove_table_offset is True, positions are relative to the top-left corner of the table.
-        Note that the text positions are rotated, and are no longer relative to the pdf.
+        If remove_table_offset is True, positions are relative to a hypothetical pdf where the text in the table is perfectly level, and 
+        pdf's top-left corner is also the table's top-left corner (both at 0, 0).
+        
+        :param remove_table_offset: if True, the positions are adjusted to be relative to the top-left corner of the table. 
+        :param outside: if True, returns the **complement** of the table: all the text positions outside the table.
+        :return: list of text positions, which are tuples of (xmin, ymin, xmax, ymax, "string")
         """
         if self.angle == 0 or remove_table_offset == False:
             yield from super().text_positions(remove_table_offset=remove_table_offset, outside=outside)

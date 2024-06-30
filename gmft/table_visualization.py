@@ -12,6 +12,18 @@ colors = {-1: "red", 0: "red", 1: "blue", 2: "green", 3: "yellow", 4: "orange", 
 def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None, figsize=(32,20),
                       show_labels=True): # prob, boxes):
     """
+    Helper method to visualize the results of the table detection/format model.
+    
+    :param pil_img: PIL image
+    :param confidence: list of floats, confidence scores
+    :param labels: list of integers, class labels
+    :param boxes: list of lists, bounding boxes in the format [xmin, ymin, xmax, ymax]
+    :param id2label: dictionary, mapping class labels (int) to class names
+    :param filter: list of integers, class labels to selectively display
+    :param figsize: tuple, figure size. None for a smaller size
+    :param show_labels: boolean, whether to display the class labels
+    
+    
     confidence = [0.993, 0.927]
     labels = [0, 0] # 0 is the table class
     boxes = [[0.000, 0.000, 70.333, 20.333], # bounding boxes: xmin, ymin, xmax, ymax

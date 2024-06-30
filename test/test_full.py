@@ -2,7 +2,7 @@ import json
 import pytest
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.table_detection import TableDetector
-from gmft.table_function import TATRTableFormatter
+from gmft.table_function import AutoTableFormatter
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def test_tiny_df(doc_tiny):
     
     assert len(tables) == 1
     table = tables[0]
-    formatter = TATRTableFormatter()
+    formatter = AutoTableFormatter()
     ft = formatter.extract(table)
     ft.df().to_csv("test/outputs/actual/tiny_df.csv", index=False)
     with open("test/outputs/actual/tiny_df.info", "w") as f:

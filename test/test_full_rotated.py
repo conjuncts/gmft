@@ -2,7 +2,7 @@ import json
 import pytest
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.table_detection import RotatedCroppedTable, TableDetector
-from gmft.table_function import TATRFormattedTable, TATRTableFormatter
+from gmft.table_function import TATRFormattedTable, AutoTableFormatter
 
 
 # @pytest.fixture

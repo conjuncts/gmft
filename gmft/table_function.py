@@ -44,7 +44,7 @@ def symmetric_iob(bbox1, bbox2):
 
 class FormattedTable(RotatedCroppedTable):
     """
-    This is a table that is *formatted*, which is to say it is "functionalized" with header and data information. 
+    This is a table that is *formatted*, which is to say it is "functionalized" with header and data information through structural analysis.
     Therefore, it can be converted into df, csv, etc.
     """
     
@@ -107,14 +107,15 @@ class FormattedTable(RotatedCroppedTable):
 
 class TableFormatter(ABC):
     """
-    Abstract class for converting a table of data, and extracting the data from it.
-    
+    Abstract class for converting a CroppedTable to a FormattedTable.
+    Allows export to csv, df, etc.
     """
     
     @abstractmethod
     def extract(self, table: CroppedTable) -> FormattedTable:
         """
         Extract the data from the table.
+        Produces a FormattedTable instance, from which data can be exported in csv, html, etc.
         """
         raise NotImplementedError
 
@@ -142,6 +143,9 @@ def _find_leftmost_gt(sorted_list, value, key_func):
 
 
 class TATRFormatConfig:
+    """
+    Configuration for TATRTableFormatter.
+    """
     
     # ---- model settings ----
     
@@ -149,14 +153,15 @@ class TATRFormatConfig:
     image_processor_path: str = "microsoft/table-transformer-detection"
     formatter_path: str = "microsoft/table-transformer-structure-recognition"
     
-    # base threshold for the confidence demanded of a table feature (row/column)
-    # note that a low threshold is actually better, because overzealous rows means that
-    # generally, numbers are still aligned and there are just many empty rows
-    # (having fewer rows than expected merges cells, which is bad)
+
     formatter_base_threshold: float = 0.3
+    """Base threshold for the confidence demanded of a table feature (row/column).
+    Note that a low threshold is actually better, because overzealous rows means that
+    generally, numbers are still aligned and there are just many empty rows
+    (having fewer rows than expected merges cells, which is bad).
+    """
     
-    # Confidences required (>=) for a row/column feature to be considered good. See TATRFormattedTable.id2label
-    # But see formatter_threshold on why having low confidences may be better than too high confidence
+
     cell_required_confidence = {
         0: 0.3, 
         1: 0.3, 
@@ -166,45 +171,58 @@ class TATRFormatConfig:
         5: 0.3,
         6: 99
     }
+    """Confidences required (>=) for a row/column feature to be considered good. See TATRFormattedTable.id2label
+    
+    But low confidences may be better than too high confidence (see formatter_base_threshold)
+    """
     
     # ---- df() settings ----
     
-    # with large tables, table transformer struggles with placing too many overlapping rows
-    # luckily, with more rows, we have more info on the usual size of text, which we can use to make
-    # a guess on the height such that no rows are merged or overlapping
-    
-    # large table assumption is only applied when (# of rows > 20) AND (total overlap > 20%)
-    # set 9999 to disable, set 0 to force large table assumption to run every time
     large_table_threshold = 20
+    """with large tables, table transformer struggles with placing too many overlapping rows
+    luckily, with more rows, we have more info on the usual size of text, which we can use to make
+    a guess on the height such that no rows are merged or overlapping
+    
+    large table assumption is only applied when (# of rows > 20) AND (total overlap > 20%)
+    set 9999 to disable, set 0 to force large table assumption to run every time"""
     large_table_row_overlap_threshold = 0.2
 
-    # reject if total overlap is > 20% of table area
+
     total_overlap_reject_threshold = 0.2
-    # warn if total overlap is > 5% of table area
+    """reject if total overlap is > 20% of table area"""
+    
     total_overlap_warn_threshold = 0.05
-    # "corner clip" is when the text is clipped by a corner, and not an edge
+    """warn if total overlap is > 5% of table area"""
+    
     corner_clip_outlier_threshold = 0.1
-    # reject if iob < 5%
+    """"corner clip" is when the text is clipped by a corner, and not an edge"""
+    
     iob_reject_threshold = 0.05
-    # warn if iob < 50%
+    """reject if iob between textbox and cell is < 5%"""
+
     iob_warn_threshold = 0.5
-    # remove rows with no data
+    """warn if iob between textbox and cell is < 50%"""
+
     remove_null_rows = True 
+    """remove rows with no text"""
     
-    spanning_cell_minimum_width = 0.6 # having trouble with row headers falsely detected as spanning cells
-    # so this prunes certain cells
-    # set 0 to keep all spanning cells
+    spanning_cell_minimum_width = 0.6
+    """Prunes spanning cells that are < 60% of the table width.
+    Set to 0 to keep all spanning cells."""
     
-    # iob threshold for deduplication
-    # if 2 consecutive rows have iob > 0.95, then one of them gets deleted (!)
+
     deduplication_iob_threshold = 0.95
+    """iob threshold for deduplication
+    if 2 consecutive rows have iob > 0.95, then one of them gets deleted (!)"""
     
-    # TATR seems to have a high spanning cell false positive rate. 
-    # (spanning cell or projected row header)
-    # That is, it identifies a regular row with information (ie. Retired|5|3|2) as a super-row.
-    # This flag prevents aggregating, and only marks a row as a suspected spanning cell.
-    # This retains column information, and lets the user combine spanning rows if so desired.
+    
     aggregate_spanning_cells = False
+    """TATR seems to have a high spanning cell false positive rate. 
+    (spanning cell or projected row header)
+    That is, it identifies a regular row with information (ie. Retired|5|3|2) as a super-row.
+    This flag prevents aggregating, and only marks a row as a suspected spanning cell.
+    This retains column information, and lets the user combine spanning rows if so desired.
+    """
     
     
 
@@ -213,10 +231,12 @@ class TATRFormatConfig:
 
 class TATRFormattedTable(FormattedTable):
     """
+    FormattedTable, as seen by a Table Transformer (TATR).
+    See TATRTableFormatter.
     """
     
     _POSSIBLE_ROWS = ['table row', 'table spanning cell', 'table projected row header'] # , 'table column header']
-    _POSSIBLE_SPANNING_ROWS = ['table projected row header', 'table spanning cell']
+    _POSSIBLE_PROJECTING_ROWS = ['table projected row header'] # , 'table spanning cell']
     _POSSIBLE_COLUMN_HEADERS = ['table column header']
     _POSSIBLE_COLUMNS = ['table column'] 
     id2label = {
@@ -357,6 +377,11 @@ class TATRFormattedTable(FormattedTable):
         return table
 
 class TATRTableFormatter(TableFormatter):
+    """
+    Uses a TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
+    
+    Using the extract() method, a FormattedTable is produced, which can be exported to csv, df, etc.
+    """
     
     
 
@@ -414,7 +439,23 @@ class TATRTableFormatter(TableFormatter):
                                              config=self.config)
         return formatted_table
             
-            
+
+class AutoTableFormatter(TATRTableFormatter):
+    """
+    The recommended TableFormatter. Currently points to TATRTableFormatter.
+    Uses a TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
+    
+    Using the extract() method, a FormattedTable is produced, which can be exported to csv, df, etc.
+    """
+    pass
+
+class AutoFormatConfig(TATRFormatConfig):
+    """
+    Configuration for the recommended TableFormatter. Currently points to TATRFormatConfig.
+    """
+    pass
+    
+
 def priority_row(lbl: dict):
     """
     To deal with overlap, we need to prioritize cells.
@@ -513,6 +554,10 @@ def fill_using_partitions(text_positions: Generator[tuple[float, float, float, f
                           row_headers: dict[int, list[str]], outliers: dict[str, bool], 
                         #   large_table_guess: bool, 
                           row_means: list[list[float]]):
+    """
+    Given estimated positions of rows, columns, headers and text positions,
+    fills the table array.
+    """
 
     num_rows = len(sorted_rows)
     num_columns = len(sorted_columns)
@@ -832,10 +877,10 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     # if row_headers exist, add it in to the special "row_headers" column, which we preferably insert to the left
     if not table.config.aggregate_spanning_cells:
         # just mark as spanning/non-spanning
-        is_spanning = [row['label'] in TATRFormattedTable._POSSIBLE_SPANNING_ROWS for row in sorted_rows]
+        is_spanning = [row['label'] in TATRFormattedTable._POSSIBLE_PROJECTING_ROWS for row in sorted_rows]
         if any(is_spanning):
             # insert at end
-            table._df.insert(num_columns, 'is_spanning_row', is_spanning)
+            table._df.insert(num_columns, 'is_projecting_row', is_spanning)
     elif row_headers:
         row_headers_list = [' '.join(row_headers.get(i, '')) for i in range(num_rows)]
         row_headers_list = [x if x else None for x in row_headers_list]

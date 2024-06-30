@@ -25,11 +25,11 @@ For example,
 
 .. code-block:: python
 
-    from gmft import CroppedTable, TableDetector, TATRTableFormatter
+    from gmft import CroppedTable, TableDetector, AutoTableFormatter
     from gmft.pdf_bindings import PyPDFium2Document
 
     detector = TableDetector()
-    formatter = TATRTableFormatter()
+    formatter = AutoTableFormatter()
 
     def ingest_pdf(pdf_path): # produces list[CroppedTable]
         doc = PyPDFium2Document(pdf_path)

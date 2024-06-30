@@ -1,4 +1,4 @@
-Variable,N (%),Mean,SD,Median,Min,Max,is_spanning_row
+Variable,N (%),Mean,SD,Median,Min,Max,is_projecting_row
 Age (years),34,41.3,10.4,39.5,25,65,False
 Weight (kg),34,83.5,20.2,84.6,49.3,115,False
 Height (cm),34,173,13.3,172,151,197,False

@@ -4,7 +4,7 @@ import pytest
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.presets import ingest_pdf
 from gmft.table_detection import TableDetector
-from gmft.table_function import TATRFormattedTable, TATRTableFormatter
+from gmft.table_function import TATRFormattedTable, AutoTableFormatter
 
 
 
@@ -39,7 +39,7 @@ def trial_pdf(docs_bulk, i):
                     actual = df.to_csv(index=False, lineterminator="\n")
                     if not expected == actual:
                         # write to file
-                        debug_img = ft.visualize(effective=True, show_labels=False)
+                        debug_img = ft.image() # visualize(effective=True, show_labels=False)
                         debug_img.save(f"test/outputs/bulk/pdf{i+1}_t{j}.png")
                         with open(f"test/outputs/actual/pdf{i+1}_t{j}.csv", "w", encoding='utf-8') as f:
                             f.write(actual)
@@ -76,7 +76,7 @@ def test_bulk_pdf8(docs_bulk):
 
 if __name__ == "__main__":
     # generate the files
-    formatter = TATRTableFormatter()
+    formatter = AutoTableFormatter()
     for i in range(9, 10):
         tables, doc = ingest_pdf(f"test/samples/{i}.pdf")
         try:

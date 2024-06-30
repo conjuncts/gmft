@@ -1,4 +1,4 @@
-Parameter,Final typical value estimate,%SEM,is_spanning_row
+Parameter,Final typical value estimate,%SEM,is_projecting_row
 ka (h−1),0.256,15.2,False
 CLM/F (L/h),631,14.8,False
 VM/F (L),506,29.4,False
