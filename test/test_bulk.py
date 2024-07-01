@@ -40,7 +40,7 @@ def trial_pdf(docs_bulk, i):
                     if not expected == actual:
                         # write to file
                         debug_img = ft.image() # visualize(effective=True, show_labels=False)
-                        debug_img.save(f"test/outputs/bulk/pdf{i+1}_t{j}.png")
+                        debug_img.save(f"test/outputs/actual/pdf{i+1}_t{j}.png")
                         with open(f"test/outputs/actual/pdf{i+1}_t{j}.csv", "w", encoding='utf-8') as f:
                             f.write(actual)
                     assert expected == actual, f"Mismatch in csv files for pdf {i+1} and table {j}"

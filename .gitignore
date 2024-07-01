@@ -6,6 +6,8 @@ dist
 .idea
 .venv
 test/outputs/actual
+test/samples
 plans
 gmft/pdf_bindings/bindings_mu.py
 docs/build
+notebooks

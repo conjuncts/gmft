@@ -154,8 +154,8 @@ class PyPDFium2Utils:
     @staticmethod
     def reload(ct: 'CroppedTable') -> 'CroppedTable':
         """
-        Reloads the CroppedTable from disk.
-        This is useful for a CroppedTable whose document has been closed.
+        Reloads the :class:`~gmft.CroppedTable` from disk.
+        This is useful for a :class:`~gmft.CroppedTable` whose document has been closed.
         """
         page = PyPDFium2Utils.load_page_from_dict(ct.to_dict())
         ct.page = page
