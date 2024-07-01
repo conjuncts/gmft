@@ -1,4 +1,7 @@
 class Rect:
+    """
+    A floating-point rectangle.
+    """
     def __init__(self, bbox: tuple[float, float, float, float]):
         # (xmin, ymin, xmax, ymax)
         self.bbox = bbox

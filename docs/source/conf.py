@@ -1,10 +1,14 @@
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
+
 
 project = 'gmft'
-copyright = '2024, conjuncts'
-author = 'conjuncts'
+copyright = '2024, conjunct'
+author = 'conjunct'
 
 release = '0.0'
 version = '0.0.1'
@@ -19,6 +23,8 @@ extensions = [
     'sphinx.ext.intersphinx',
 ]
 
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
@@ -26,6 +32,12 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
+
+# autodoc_default_options = {
+#     'imported-members': True,
+# }
+
+autodoc_mock_imports = ['transformers'] # , 'torch', 'numpy', 'pandas']
 
 # -- Options for HTML output
 

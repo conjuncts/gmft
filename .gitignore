@@ -4,6 +4,8 @@ dist
 .vscode
 .pytest_cache
 .idea
+.venv
 test/outputs/actual
 plans
 gmft/pdf_bindings/bindings_mu.py
+docs/build

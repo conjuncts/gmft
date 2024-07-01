@@ -44,11 +44,11 @@ For example,
 Overview
 --------
 
-Documents are represented by a :ref:`BasePDFDocument` object.. The default implementation is :ref:`PyPDFium2Document`, which uses the `PyPDFium2 <https://github.com/pypdfium2-team/pypdfium2>`_ library. 
-Within a document, the :ref:`BasePage` is implemented by default with :ref:`PyPDFium2Page`. 
+Documents are represented by a :class:`gmft.BasePDFDocument` object. The default implementation is :class:`gmft.pdf_bindings.PyPDFium2Document`, which uses the `PyPDFium2 <https://github.com/pypdfium2-team/pypdfium2>`_ library. 
+Within a document, the :class:`gmft.BasePage` is implemented by default with :class:`gmft.pdf_bindings.PyPDFium2Page`. 
 
-The :ref:`TableDetector` is the default table detection tool, which uses Microsoft's `Table Transformer <https://github.com/microsoft/table-transformer>`_. They produce :ref:`CroppedTable` objects, from which `.image()` permits image export. 
+The :class:`gmft.TableDetector` is the recommended table detection tool, which uses Microsoft's `Table Transformer <https://github.com/microsoft/table-transformer>`_. They produce :class:`gmft.CroppedTable` objects, from which :meth:`gmft.CroppedTable.image` permits image export. 
 
-The :ref:`TATRTableFormatter` is the default table formatting tool, from which `.df()` permits dataframe export. All TableFormatters produce :ref:`FormattedTable` objects, which contain the original CroppedTable and the formatted dataframe.
+The :class:`gmft.AutoTableFormatter` is the recommended table formatting tool, from which :meth:`gmft.FormattedTable.df` permits dataframe export. All TableFormatters produce :class:`gmft.FormattedTable` objects, which contain the original CroppedTable and the formatted dataframe.
 
 

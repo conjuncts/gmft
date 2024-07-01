@@ -1,3 +1,13 @@
+"""
+Module containing methods of detecting tables from whole pdf pages.
+
+Whenever possible, classes (like :class:`TableDetector`) should be imported from the top-level module, not from this module,
+as the exact paths may change in future versions.
+
+Example:
+    >>> from gmft import TableDetector
+"""
+
 from typing import Generator, Union
 import PIL.Image
 from PIL.Image import Image as PILImage
@@ -40,7 +50,7 @@ def position_words(words: Generator[tuple[int, int, int, int, str], None, None],
 class CroppedTable:
     """
     A pdf selection, cropped to include just a table. 
-    Created by the TableDetector class.
+    Created by :class:`~gmft.TableDetector`.
     """
     _img: PILImage
     _img_dpi: int
@@ -67,9 +77,9 @@ class CroppedTable:
         
         :param dpi: dots per inch. If not None, the scaling_factor parameter is ignored.
         :param padding: padding to add to the image. Tuple of (left, top, right, bottom)
-        Padding is added after the crop and rotation.
-        Padding is important for subsequent row/column detection; see https://github.com/microsoft/table-transformer/issues/68 for discussion.
-        If padding = 'auto', the padding is automatically set to 10% of the larger of {width, height}.
+            Padding is added after the crop and rotation.
+            Padding is important for subsequent row/column detection; see https://github.com/microsoft/table-transformer/issues/68 for discussion.
+            If padding = 'auto', the padding is automatically set to 10% of the larger of {width, height}.
         :return: image of the cropped table
         """
         effective_dpi = 72 if dpi is None else dpi
@@ -98,9 +108,9 @@ class CroppedTable:
         
         :param remove_table_offset: if True, the positions are adjusted to be relative to the top-left corner of the table.
         :param outside: if True, returns the **complement** of the table: all the text positions outside the table.
-        By default, it returns the text positions inside the table.
+            By default, it returns the text positions inside the table.
         :return: list of text positions, which is a tuple 
-        (x0, y0, x1, y1, "string")
+            ``(x0, y0, x1, y1, "string")``
         """
         for w in self.page.get_positions_and_text():
             if Rect(w[:4]).is_intersecting(self.rect) != outside:
@@ -161,17 +171,22 @@ class CroppedTable:
         
         Because file locations may change, require the user to provide the original page - 
         but as a helper method see PyPDFium2Utils.load_page_from_dict and PyPDFium2Utils.reload
+        
+        :param d: dict
+        :param page: BasePage
+        :return: CroppedTable object
         """
         if 'angle' in d:
             return RotatedCroppedTable.from_dict(d, page)
         return CroppedTable(page, d['bbox'], d['confidence_score'], d['label'])
     
     @staticmethod
-    def from_image_only(img: PILImage):
+    def from_image_only(img: PILImage) -> 'CroppedTable':
         """
-        Create a CroppedTable object from an image only.
+        Create a :class:`~gmft.CroppedTable` object from an image only.
         
         :param img: PIL image
+        :return: CroppedTable object
         """
         page = ImageOnlyPage(img)
         # bbox is the entire image
@@ -188,7 +203,7 @@ class CroppedTable:
 
 class TableDetectorConfig:
     """
-    Configuration for the TableDetector class.
+    Configuration for the :class:`~gmft.TableDetector` class.
     """
     image_processor_path: str = "microsoft/table-transformer-detection"
     detector_path: str = "microsoft/table-transformer-detection"
@@ -266,16 +281,16 @@ class TATRTableDetector(TableDetector):
     """
     Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
-    Using the extract() method, a FormattedTable is produced, which can be exported to csv, df, etc.
+    Using :meth:`extract` produces a :class:`~gmft.FormattedTable`, which can be exported to csv, df, etc.
     """
     pass
 
 class AutoTableDetector(TATRTableDetector):
     """
-    The recommended table detector. Currently points to TATRTableDetector.
+    The recommended :class:`~gmft.TableDetector`. Currently points to :class:`~gmft.TATRTableDetector`.
     Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
-    Using the extract() method, a FormattedTable is produced, which can be exported to csv, df, etc.
+    Using :meth:`extract` produces a :class:`~gmft.FormattedTable`, which can be exported to csv, df, etc.
     """
     pass
 
@@ -283,20 +298,23 @@ class RotatedCroppedTable(CroppedTable):
     """
     Table that has been rotated. 
     
-    Note: self.bbox and self.rect are in coordinates of the original pdf.
-    But text_positions() has rectified, unrotated positions in a different coordinate system relative to the table.
+    Note: ``self.bbox`` and ``self.rect`` are in coordinates of the original pdf.
+    But text_positions() can possibly give transformed coordinates.
+    
     Currently, only 0, 90, 180, and 270 degree rotations are supported.
+    An angle of 90 would mean that a 90 degree cc rotation has been applied to a level image. 
+    
+    In practice, the majority of rotated tables are rotated by 90 degrees.
     """
     
     def __init__(self, page: BasePage, bbox: tuple[int, int, int, int], confidence_score: float, angle: float, label=0):
         """
+        Currently, only 0, 90, 180, and 270 degree rotations are supported.
         
         :param page: BasePage
         :param angle: angle in degrees, counterclockwise. 
-        That is, 90 would mean that a 90 degree cc rotation has been applied to a level image. 
-        In practice, the majority of rotated tables are rotated by 90 degrees.
-        
-        Currently, only 0, 90, 180, and 270 degree rotations are supported.
+            That is, 90 would mean that a 90 degree cc rotation has been applied to a level image. 
+            In practice, the majority of rotated tables are rotated by 90 degrees.
         
         """
         super().__init__(page, bbox, confidence_score, label)
@@ -308,6 +326,7 @@ class RotatedCroppedTable(CroppedTable):
     def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None) -> PILImage:
         """
         Return the image of the cropped table.
+        
         """
         img = super().image(dpi=dpi, padding=padding)
         # if self.angle == 90:
@@ -356,7 +375,7 @@ class RotatedCroppedTable(CroppedTable):
     @staticmethod
     def from_dict(d: dict, page: BasePage) -> Union[CroppedTable, 'RotatedCroppedTable']:
         """
-        Create a CroppedRotatedTable object from dict.
+        Create a :class:`CroppedRotatedTable` object from dict.
         """
         if 'angle' not in d:
             return CroppedTable.from_dict(d, page)

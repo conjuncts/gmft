@@ -23,12 +23,15 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
     :param figsize: tuple, figure size. None for a smaller size
     :param show_labels: boolean, whether to display the class labels
     
-    
-    confidence = [0.993, 0.927]
-    labels = [0, 0] # 0 is the table class
-    boxes = [[0.000, 0.000, 70.333, 20.333], # bounding boxes: xmin, ymin, xmax, ymax
-                     [10.001, 0.001, 0.998, 0.998]]
-    }"""
+    **Example**::
+
+        confidence = [0.993, 0.927]
+        labels = [0, 0]  # 0 is the table class
+        boxes = [
+            [0.000, 0.000, 70.333, 20.333],  # bounding boxes: xmin, ymin, xmax, ymax
+            [10.001, 0.001, 0.998, 0.998]
+        ]
+    """
     # confidence = results["scores"].tolist()
     # labels = results["labels"].tolist()
     # boxes = results["boxes"].tolist()
@@ -52,11 +55,11 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
 
 
 def plot_results_orig(pil_img, results, id2label, filter=None): # prob, boxes):
-    """
-    results = {
-    "scores": tensor([0.993, 0.927]),
-    "labels": tensor([0, 0]),
-    "boxes": tensor([[0.000, 0.000, 70.333, 20.333], # bounding boxes: xmin, ymin, xmax, ymax
-                     [10.001, 0.001, 0.998, 0.998]]),
-    }"""
+    
+    # results = {
+    # "scores": tensor([0.993, 0.927]),
+    # "labels": tensor([0, 0]),
+    # "boxes": tensor([[0.000, 0.000, 70.333, 20.333], # bounding boxes: xmin, ymin, xmax, ymax
+    #                  [10.001, 0.001, 0.998, 0.998]]),
+    # }
     plot_results_unwr(pil_img, results["scores"].tolist(), results["labels"].tolist(), results["boxes"].tolist(), id2label, filter=filter)

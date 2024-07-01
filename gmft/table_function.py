@@ -1,3 +1,14 @@
+"""
+Module containing methods of formatting tables: structural analysis, data extraction, and converting them into pandas dataframes.
+
+Whenever possible, classes (like :class:`AutoTableFormatter`) should be imported from the top-level module, not from this module,
+as the exact paths may change in future versions.
+
+Example:
+    >>> from gmft import AutoTableFormatter
+"""
+
+
 from abc import ABC, abstractmethod
 import bisect
 import copy
@@ -17,7 +28,7 @@ import pandas as pd
 from gmft.common import Rect
 from gmft.table_visualization import plot_results_unwr
 
-def iob(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, float, float]):
+def _iob(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, float, float]):
     """
     Compute the intersection area over box area, for bbox1.
     """
@@ -29,7 +40,7 @@ def iob(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, flo
     
     return 0
 
-def symmetric_iob(bbox1, bbox2):
+def _symmetric_iob(bbox1, bbox2):
     """
     Compute the intersection area over box area, for min of bbox1 and bbox2
     """
@@ -44,7 +55,7 @@ def symmetric_iob(bbox1, bbox2):
 
 class FormattedTable(RotatedCroppedTable):
     """
-    This is a table that is *formatted*, which is to say it is "functionalized" with header and data information through structural analysis.
+    This is a table that is "formatted", which is to say it is functionalized with header and data information through structural analysis.
     Therefore, it can be converted into df, csv, etc.
     """
     
@@ -107,7 +118,7 @@ class FormattedTable(RotatedCroppedTable):
 
 class TableFormatter(ABC):
     """
-    Abstract class for converting a CroppedTable to a FormattedTable.
+    Abstract class for converting a :class:`~gmft.CroppedTable` to a :class:`~gmft.FormattedTable`.
     Allows export to csv, df, etc.
     """
     
@@ -115,7 +126,7 @@ class TableFormatter(ABC):
     def extract(self, table: CroppedTable) -> FormattedTable:
         """
         Extract the data from the table.
-        Produces a FormattedTable instance, from which data can be exported in csv, html, etc.
+        Produces a :class:`~gmft.FormattedTable` instance, from which data can be exported in csv, html, etc.
         """
         raise NotImplementedError
 
@@ -144,7 +155,7 @@ def _find_leftmost_gt(sorted_list, value, key_func):
 
 class TATRFormatConfig:
     """
-    Configuration for TATRTableFormatter.
+    Configuration for :class:`~gmft.TATRTableFormatter`.
     """
     
     # ---- model settings ----
@@ -232,7 +243,7 @@ class TATRFormatConfig:
 class TATRFormattedTable(FormattedTable):
     """
     FormattedTable, as seen by a Table Transformer (TATR).
-    See TATRTableFormatter.
+    See :class:`~gmft.TATRTableFormatter`.
     """
     
     _POSSIBLE_ROWS = ['table row', 'table spanning cell', 'table projected row header'] # , 'table column header']
@@ -380,11 +391,8 @@ class TATRTableFormatter(TableFormatter):
     """
     Uses a TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
-    Using the extract() method, a FormattedTable is produced, which can be exported to csv, df, etc.
+    Using :meth:`extract`, a :class:`~gmft.FormattedTable` is produced, which can be exported to csv, df, etc.
     """
-    
-    
-
     
     def __init__(self, config: TATRFormatConfig=None):
         if config is None:
@@ -442,21 +450,21 @@ class TATRTableFormatter(TableFormatter):
 
 class AutoTableFormatter(TATRTableFormatter):
     """
-    The recommended TableFormatter. Currently points to TATRTableFormatter.
+    The recommended :class:`TableFormatter`. Currently points to :class:`~gmft.TATRTableFormatter`.
     Uses a TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
-    Using the extract() method, a FormattedTable is produced, which can be exported to csv, df, etc.
+    Using :meth:`extract`, a :class:`~gmft.FormattedTable` is produced, which can be exported to csv, df, etc.
     """
     pass
 
 class AutoFormatConfig(TATRFormatConfig):
     """
-    Configuration for the recommended TableFormatter. Currently points to TATRFormatConfig.
+    Configuration for the recommended :class:`TableFormatter`. Currently points to :class:`~gmft.TATRFormatConfig`.
     """
     pass
     
 
-def priority_row(lbl: dict):
+def _priority_row(lbl: dict):
     """
     To deal with overlap, we need to prioritize cells.
     "table column header" is most valuable. 
@@ -472,7 +480,7 @@ def priority_row(lbl: dict):
     return 1
     
 
-def guess_row_bboxes_for_large_tables(table: TATRFormattedTable, sorted_rows, sorted_headers, known_means=None, known_height=None):
+def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, sorted_rows, sorted_headers, known_means=None, known_height=None):
     if known_height:
         row_height = known_height
     else:
@@ -547,7 +555,7 @@ def _normalize_bbox(bbox: tuple[float, float, float, float], used_scale_factor: 
     return bbox
 
 
-def fill_using_partitions(text_positions: Generator[tuple[float, float, float, float, str], None, None], 
+def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, float, str], None, None], 
                           config: TATRFormatConfig, 
                           sorted_rows: list[dict], sorted_columns: list[dict], 
                           sorted_headers: list[dict], column_headers: dict[int, list[str]], 
@@ -577,7 +585,7 @@ def fill_using_partitions(text_positions: Generator[tuple[float, float, float, f
         i = _find_leftmost_gt(sorted_rows, ymin, lambda row: row['bbox'][3])
         while i < len(sorted_rows):
             row = sorted_rows[i]
-            iob_score = iob(textbox, row['bbox'])
+            iob_score = _iob(textbox, row['bbox'])
             if iob_score > row_max_iob:
                 row_max_iob = iob_score
                 row_num = i
@@ -590,7 +598,7 @@ def fill_using_partitions(text_positions: Generator[tuple[float, float, float, f
         # 6. look for high iob headers too
         header_max_iob = 0
         for i, header in enumerate(sorted_headers):
-            iob_score = iob(textbox, header['bbox'])
+            iob_score = _iob(textbox, header['bbox'])
             if iob_score > header_max_iob:
                 header_max_iob = iob_score
         
@@ -615,7 +623,7 @@ def fill_using_partitions(text_positions: Generator[tuple[float, float, float, f
         i = _find_leftmost_gt(sorted_columns, xmin, lambda column: column['bbox'][2])
         while i < len(sorted_columns):
             column = sorted_columns[i]
-            iob_score = iob(textbox, column['bbox'])
+            iob_score = _iob(textbox, column['bbox'])
             if iob_score > column_max_iob:
                 column_max_iob = iob_score
                 column_num = i
@@ -647,7 +655,7 @@ def fill_using_partitions(text_positions: Generator[tuple[float, float, float, f
         cell = Rect(row['bbox']).intersect(column['bbox'])
         
         # get iob: how much of the text is in the cell
-        score = iob(textbox, cell)
+        score = _iob(textbox, cell)
         
         if score < config.iob_reject_threshold: # poor match, like if score < 0.2
             outliers['skipped text'] = outliers.get('skipped text', '') + ' ' + text
@@ -737,11 +745,11 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     prev = sorted_horizontals[0]
     while i < len(sorted_horizontals):
         cur = sorted_horizontals[i]
-        if symmetric_iob(prev['bbox'], cur['bbox']) > table.config.deduplication_iob_threshold:
+        if _symmetric_iob(prev['bbox'], cur['bbox']) > table.config.deduplication_iob_threshold:
             # pop the one that is a row
             # print("popping something")
-            cur_priority = priority_row(cur['label'])
-            prev_priority = priority_row(prev['label'])
+            cur_priority = _priority_row(cur['label'])
+            prev_priority = _priority_row(prev['label'])
             if cur_priority <= prev_priority:
                 # pop cur
                 sorted_horizontals.pop(i)
@@ -776,7 +784,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
             and len(sorted_rows) > table.config.large_table_threshold
     
     if large_table_guess:
-        sorted_rows, known_height = guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers)
+        sorted_rows, known_height = _guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers)
         left_corner = sorted_rows[0]['bbox']
         right_corner = sorted_rows[-1]['bbox']
         # (ymax - ymin) * (xmax - xmin)
@@ -817,7 +825,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
                 # don't allow double merging
             i += 1
         
-        sorted_rows, known_height = guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers, 
+        sorted_rows, known_height = _guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers, 
                                                                       known_means=known_means, known_height=known_height)
         
         # bit of deduplication
@@ -861,7 +869,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     if large_table_guess:
 
         pass
-    table_array = fill_using_partitions(table.text_positions(remove_table_offset=True), config=config, 
+    table_array = _fill_using_partitions(table.text_positions(remove_table_offset=True), config=config, 
                                         sorted_rows=sorted_rows, sorted_columns=sorted_columns, 
                                         sorted_headers=sorted_headers, column_headers=column_headers, 
                                         row_headers=row_headers, outliers=outliers, row_means=row_means)
