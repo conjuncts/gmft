@@ -4,7 +4,7 @@ import pytest
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.presets import ingest_pdf
 from gmft.table_detection import TableDetector
-from gmft.table_function import TATRFormattedTable, AutoTableFormatter
+from gmft.table_function import AutoFormatConfig, TATRFormattedTable, AutoTableFormatter
 
 
 
@@ -23,6 +23,11 @@ num_tables = {
 def trial_pdf(docs_bulk, i):
     doc = docs_bulk[i]
     # for i, doc in enumerate(docs_bulk):
+    
+    config = AutoFormatConfig()
+    # config.large_table_threshold = 0
+    # config.large_table_row_overlap_threshold = -1
+    # config.remove_null_rows = False
     for j in range(num_tables[i+1]):
         with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
             
@@ -31,7 +36,7 @@ def trial_pdf(docs_bulk, i):
             page = doc[page_no]
             ft = TATRFormattedTable.from_dict(as_dict, page)
             try:
-                df = ft.df()
+                df = ft.df(config_overrides=config)
                 expected = f"test/outputs/bulk/pdf{i+1}_t{j}.csv"
                 assert os.path.exists(expected), f"Extra df: pdf {i+1} and table {j} not found"
                 with open(expected, encoding='utf-8') as f:
@@ -71,7 +76,7 @@ def test_bulk_pdf7(docs_bulk):
 def test_bulk_pdf8(docs_bulk):
     trial_pdf(docs_bulk=docs_bulk, i=7)
 
-        
+
     
 
 if __name__ == "__main__":

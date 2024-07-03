@@ -7,6 +7,8 @@
 
 **tables**!
 
+[![Documentation Status](https://readthedocs.org/projects/gmft/badge/?version=latest)](https://gmft.readthedocs.io/en/latest/?badge=latest)
+
 There are many pdfs out there, and many of those pdfs have tables. But despite a plethora of table extraction options, there is still no definitive extraction method. 
 
 ## About
@@ -20,6 +22,8 @@ gmft relies on microsoft's [Table Transformers](https://github.com/microsoft/tab
 Install: `pip install gmft`
 
 Quickstart: [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/quickstart.ipynb), [bulk extract](https://github.com/conjuncts/gmft/blob/main/notebooks/bulk_extract.ipynb).
+
+Documentation: [readthedocs](https://gmft.readthedocs.io/en/latest/)
 
 # Why use gmft?
 

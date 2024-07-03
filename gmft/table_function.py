@@ -711,7 +711,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     for a, b, c in zip(results["scores"], results["labels"], results["boxes"]):
         bbox = c # .tolist()
         # bbox = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
-        if a >= table.config.cell_required_confidence[b]:
+        if a >= config.cell_required_confidence[b]:
             boxes.append({'confidence': a, 'label': table.id2label[b], 'bbox': bbox})
     
     # for cl, lbl_id, (xmin, ymin, xmax, ymax) in boxes:
@@ -722,7 +722,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         label = box['label']
         if label == 'table spanning cell':
             span_width = box['bbox'][2] - box['bbox'][0]
-            if span_width < table.config.spanning_cell_minimum_width * table.rect.width:
+            if span_width < config.spanning_cell_minimum_width * table.rect.width:
                 outliers['narrow spanning cell'] = outliers.get('narrow spanning cell', 0) + 1
                 continue
         elif label in TATRFormattedTable._POSSIBLE_COLUMN_HEADERS or label in TATRFormattedTable._POSSIBLE_ROWS:
@@ -745,7 +745,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     prev = sorted_horizontals[0]
     while i < len(sorted_horizontals):
         cur = sorted_horizontals[i]
-        if _symmetric_iob(prev['bbox'], cur['bbox']) > table.config.deduplication_iob_threshold:
+        if _symmetric_iob(prev['bbox'], cur['bbox']) > config.deduplication_iob_threshold:
             # pop the one that is a row
             # print("popping something")
             cur_priority = _priority_row(cur['label'])
@@ -780,8 +780,8 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
             total_row_area += (row['bbox'][2] - row['bbox'][0]) * (row['bbox'][3] - row['bbox'][1])
     
     # large table guess
-    large_table_guess = total_row_area > (1 + table.config.large_table_row_overlap_threshold) * table_area \
-            and len(sorted_rows) > table.config.large_table_threshold
+    large_table_guess = total_row_area > (1 + config.large_table_row_overlap_threshold) * table_area \
+            and len(sorted_rows) > config.large_table_threshold
     
     if large_table_guess:
         sorted_rows, known_height = _guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers)
@@ -833,7 +833,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         # prev = sorted_rows[0]
         # while i < len(sorted_rows):
         #     cur = sorted_rows[i]
-        #     if symmetric_iob(prev['bbox'], cur['bbox']) > table.config.deduplication_iob_threshold:
+        #     if symmetric_iob(prev['bbox'], cur['bbox']) > config.deduplication_iob_threshold:
         #         sorted_rows.pop(i)
         #     else:
         #         prev = cur
@@ -851,10 +851,10 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     # we must divide by 2, because a cell is counted twice by the row + column
     total_area = (total_row_area + total_column_area) / 2
     
-    if total_area > (1 + table.config.total_overlap_reject_threshold) * table_area:
-        raise ValueError(f"The identified boxes have significant overlap: {total_area / table_area - 1:.2%} of area is overlapping (Max is {table.config.total_overlap_reject_threshold:.2%})")
+    if total_area > (1 + config.total_overlap_reject_threshold) * table_area:
+        raise ValueError(f"The identified boxes have significant overlap: {total_area / table_area - 1:.2%} of area is overlapping (Max is {config.total_overlap_reject_threshold:.2%})")
     
-    elif total_area > (1 + table.config.total_overlap_warn_threshold) * table_area:
+    elif total_area > (1 + config.total_overlap_warn_threshold) * table_area:
         outliers['high overlap'] = (total_area / table_area - 1)
     
         
@@ -883,7 +883,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     table._df = pd.DataFrame(data=table_array, columns=[' '.join(column_headers.get(i, '')) for i in range(num_columns)])
     
     # if row_headers exist, add it in to the special "row_headers" column, which we preferably insert to the left
-    if not table.config.aggregate_spanning_cells:
+    if not config.aggregate_spanning_cells:
         # just mark as spanning/non-spanning
         is_spanning = [row['label'] in TATRFormattedTable._POSSIBLE_PROJECTING_ROWS for row in sorted_rows]
         if any(is_spanning):
@@ -894,7 +894,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         row_headers_list = [x if x else None for x in row_headers_list]
         table._df.insert(0, 'row_headers', row_headers_list)
     
-    if table.config.remove_null_rows:
+    if config.remove_null_rows:
         table._df = table._df.dropna(how='all')
     table.outliers = outliers
     return table._df
