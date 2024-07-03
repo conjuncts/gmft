@@ -239,6 +239,8 @@ class TableDetector:
         
         if config is None:
             config = TableDetectorConfig()
+        elif isinstance(config, dict):
+            config = TableDetectorConfig(**config)
         if not config.warn_uninitialized_weights:
             previous_verbosity = transformers.logging.get_verbosity()
             transformers.logging.set_verbosity(transformers.logging.ERROR)
