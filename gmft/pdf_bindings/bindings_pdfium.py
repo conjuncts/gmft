@@ -120,6 +120,9 @@ class PyPDFium2Document(BasePDFDocument):
         self.filename = filename
     
     def get_page(self, n: int) -> BasePage:
+        """
+        Get 0-indexed page
+        """
         return PyPDFium2Page(self.doc[n], self.filename, n)
     
     def __len__(self) -> int:

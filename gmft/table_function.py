@@ -271,11 +271,12 @@ class TATRFormattedTable(FormattedTable):
         scale_by = (dpi / 72)
         
         if effective:
-            boxes = [x['bbox'] for x in self.effective_rows + self.effective_columns]
+            vis = self.effective_rows + self.effective_columns + self.effective_headers
+            boxes = [x['bbox'] for x in vis]
             boxes = [(x * scale_by for x in bbox) for bbox in boxes]
             _to_visualize = {
-                "scores": [x['confidence'] for x in self.effective_rows + self.effective_columns],
-                "labels": [self.label2id[x['label']] for x in self.effective_rows + self.effective_columns],
+                "scores": [x['confidence'] for x in vis],
+                "labels": [self.label2id[x['label']] for x in vis],
                 "boxes": boxes
             }
         else:
@@ -294,7 +295,7 @@ class TATRFormattedTable(FormattedTable):
         # get needed scale factor and dpi
         img = self.image(dpi=dpi)
         # if self._img is not None:
-        plot_results_unwr(img, _to_visualize['scores'], _to_visualize['labels'], _to_visualize['boxes'], TATRFormattedTable.id2label, filter=filter, **kwargs)
+        return plot_results_unwr(img, _to_visualize['scores'], _to_visualize['labels'], _to_visualize['boxes'], TATRFormattedTable.id2label, filter=filter, **kwargs)
             
     def to_dict(self):
         """
@@ -315,9 +316,14 @@ class TATRFormattedTable(FormattedTable):
     @staticmethod
     def from_dict(d: dict, page: BasePage):
         """
-        Deserialize from dict
+        Deserialize from dict.
+        A page is required partly because of memory management, since having this open a page may cause memory issues.
         """
         cropped_table = CroppedTable.from_dict(d, page)
+        
+        if 'fctn_results' not in d:
+            raise ValueError("fctn_results not found in dict -- dict may be a CroppedTable but not a TATRFormattedTable.")
+        
         config = TATRFormatConfig()
         for k, v in d['config'].items():
             if v is not None and config.__dict__.get(k) != v:

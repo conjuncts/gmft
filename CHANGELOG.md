@@ -1,3 +1,8 @@
+## v0.2.0
+
+- Automatically drop rows whose only non-null values is the "is_projecting_row" column
+- Return visualized images as PIL image
+
 ## v0.1.1
 
 - Created AutoTableFormatter and AutoTableDetector for future flexibility

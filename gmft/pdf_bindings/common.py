@@ -35,6 +35,9 @@ class BasePage(ABC):
 class BasePDFDocument(ABC):
     @abstractmethod
     def get_page(self, n: int) -> BasePage:
+        """
+        Get 0-indexed page
+        """
         raise NotImplementedError
     
     @abstractmethod

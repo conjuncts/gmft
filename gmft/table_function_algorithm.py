@@ -71,29 +71,68 @@ def _priority_row(lbl: dict):
     elif lbl == 'table spanning cell':
         return 0
     return 1
+
+def _predict_word_height(table):
+    """
+    Get the predicted height of standard text in the table.
+    """
+    # get the distribution of word heights, rounded to the nearest tenth
+    word_heights = []
+    for xmin, ymin, xmax, ymax, text in table.text_positions(remove_table_offset=True):
+        word_heights.append(round(ymax - ymin, 1))
+    
+    # get the mode
+    # from collections import Counter
+    # word_heights = Counter(word_heights)
+    
+    # # set the mode to be the row height
+    # # making the row less than text's height will mean that no cells are merged
+    # # but subscripts may be difficult
+    # row_height = 0.95 * max(word_heights, key=word_heights.get)
+    
+    # actually no - use the median
+    row_height = 0.95 * np.median(word_heights)
+    return row_height
+
+def _widen_and_even_out_rows(sorted_rows, sorted_headers):
+    # widen the rows to the full width of the table
+    leftmost = min([x['bbox'][0] for x in sorted_rows])
+    rightmost = max([x['bbox'][2] for x in sorted_rows])
+    for row in sorted_rows:
+        row['bbox'][0] = leftmost
+        row['bbox'][2] = rightmost
+    for header in sorted_headers:
+        header['bbox'][0] = leftmost
+        header['bbox'][2] = rightmost
+
+
+def _fill_in_gaps(sorted_rows, gap_height, leave_gap=0.4):
+    # fill in gaps in the rows
+    margin = leave_gap * gap_height
+    
+    i = 1
+    while i < len(sorted_rows):
+        prev = sorted_rows[i-1]
+        cur = sorted_rows[i]
+        if cur['bbox'][1] - prev['bbox'][3] > gap_height:
+            # fill in the gap
+            sorted_rows.insert(i, {'confidence': 1, 'label': 'table row', 'bbox': 
+                                   [prev['bbox'][0], prev['bbox'][3] + margin, prev['bbox'][2], cur['bbox'][1] - margin]})
+        i += 1
+    
+    
     
 
 def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, sorted_rows, sorted_headers, known_means=None, known_height=None):
     if known_height:
-        row_height = known_height
+        word_height = known_height
     else:
         # get the distribution of word heights, rounded to the nearest tenth
-        print("Invoking large table row guess! set TATRFormatConfig.large_table_threshold to 999 to disable this.")
-        word_heights = []
-        for xmin, ymin, xmax, ymax, text in table.text_positions(remove_table_offset=True):
-            word_heights.append(round(ymax - ymin, 1))
-        # get the mode
-        from collections import Counter
-        word_heights = Counter(word_heights)
-        
-        if not sorted_rows:
-            return []
-        
-        # set the mode to be the row height
-        # making the row less than text's height will mean that no cells are merged
-        # but subscripts may be difficult
-        row_height = 0.95 * max(word_heights, key=word_heights.get)
+        print("Invoking large table row guess! set TATRFormatConfig.force_large_table_assumption to False to disable this.")        
+        word_height = _predict_word_height(table)
     
+    if not sorted_rows:
+        return []
     # construct bbox for each row
     leftmost = min([x['bbox'][0] for x in sorted_rows])
     rightmost = max([x['bbox'][2] for x in sorted_rows])
@@ -117,21 +156,21 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, sorted_rows, s
             if mean < starting_y:
                 # do not observe the header
                 continue
-            y = mean - row_height / 2
+            y = mean - word_height / 2
             # do NOT construct mini row if there is a gap
             # if prev_height is not None and y < prev_height:
                 # new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, prev_height, rightmost, y]})
-            new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, y, rightmost, y + row_height]})
-            prev_height = y + row_height
+            new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, y, rightmost, y + word_height]})
+            prev_height = y + word_height
             
     else:
         # this is reminiscent of the proof that the rationals are dense in the reals
         while y < table_ymax:
-            new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, y, rightmost, y + row_height]})
-            y += row_height
+            new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, y, rightmost, y + word_height]})
+            y += word_height
     # 2a. sort by ymax, just in case
     new_rows.sort(key=lambda x: x['bbox'][3])
-    return new_rows, row_height
+    return new_rows, word_height
     # return col_headers 
 
 
@@ -350,6 +389,11 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         else:
             sorted_headers.append(x)
     
+    # _widen_and_even_out_rows(sorted_rows, sorted_headers)
+    
+    word_height = _predict_word_height(table)
+    # _fill_in_gaps(sorted_rows, word_height)
+    
     # 4a. calculate total row overlap. If higher than a threshold, invoke the large table assumption
     # also count headers
     table_area = table.rect.width * table.rect.height # * scale_factor ** 2
@@ -369,7 +413,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         large_table_guess = config.force_large_table_assumption
     
     if large_table_guess:
-        sorted_rows, known_height = _guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers)
+        sorted_rows, known_height = _guess_row_bboxes_for_large_tables(table, sorted_rows, sorted_headers, known_height=word_height)
         left_corner = sorted_rows[0]['bbox']
         right_corner = sorted_rows[-1]['bbox']
         # (ymax - ymin) * (xmax - xmin)
@@ -427,6 +471,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     
     table.effective_rows = sorted_rows
     table.effective_columns = sorted_columns
+    table.effective_headers = sorted_headers
     
     # 4b. check for catastrophic overlap
     total_column_area = 0
@@ -477,6 +522,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         table._df.insert(0, 'row_headers', row_headers_list)
     
     if config.remove_null_rows:
-        table._df = table._df.dropna(how='all')
+        keep_columns = [n for n in table._df if n != 'is_projecting_row']
+        table._df.dropna(subset=keep_columns, how='all', inplace=True)
     table.outliers = outliers
     return table._df

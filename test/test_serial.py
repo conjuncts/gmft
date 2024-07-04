@@ -62,12 +62,12 @@ def test_FormattedTable_from_dict_backcompat(doc_tiny):
     formatted_table = TATRFormattedTable.from_dict(table_dict, page)
     df = formatted_table.df()
     # get csv as string
-    csv_str = df.to_csv(index=False)
+    csv_str = df.to_csv(index=False, lineterminator='\n')
     
-    assert csv_str == """Name,Celsius,Fahrenheit\r
-Water Freezing Point,0,32\r
-Water Boiling Point,100,212\r
-Body Temperature,37,98.6\r
+    assert csv_str == """Name,Celsius,Fahrenheit
+Water Freezing Point,0,32
+Water Boiling Point,100,212
+Body Temperature,37,98.6
 """
 
 def test_FormattedTable_from_dict(doc_tiny):
@@ -78,12 +78,12 @@ def test_FormattedTable_from_dict(doc_tiny):
     formatted_table = TATRFormattedTable.from_dict(table_dict, page)
     df = formatted_table.df()
     # get csv as string
-    csv_str = df.to_csv(index=False)
+    csv_str = df.to_csv(index=False, lineterminator='\n')
     
-    assert csv_str == """Name,Celsius,Fahrenheit\r
-Water Freezing Point,0,32\r
-Water Boiling Point,100,212\r
-Body Temperature,37,98.6\r
+    assert csv_str == """Name,Celsius,Fahrenheit
+Water Freezing Point,0,32
+Water Boiling Point,100,212
+Body Temperature,37,98.6
 """
 
 def test_FormattedTable_to_dict(doc_tiny):

@@ -44,7 +44,8 @@ def trial_pdf(docs_bulk, i):
                     actual = df.to_csv(index=False, lineterminator="\n")
                     if not expected == actual:
                         # write to file
-                        debug_img = ft.image() # visualize(effective=True, show_labels=False)
+                        # debug_img = ft.image() # visualize(effective=True, show_labels=False)
+                        debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
                         debug_img.save(f"test/outputs/actual/pdf{i+1}_t{j}.png")
                         with open(f"test/outputs/actual/pdf{i+1}_t{j}.csv", "w", encoding='utf-8') as f:
                             f.write(actual)

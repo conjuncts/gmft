@@ -10,7 +10,7 @@ colors = {-1: "red", 0: "red", 1: "blue", 2: "green", 3: "yellow", 4: "orange", 
 
 
 def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None, figsize=(32,20),
-                      show_labels=True): # prob, boxes):
+                      show_labels=True, return_img=False): # prob, boxes):
     """
     Helper method to visualize the results of the table detection/format model.
     
@@ -37,9 +37,11 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
     # boxes = results["boxes"].tolist()
     if id2label is None:
         id2label = {0: "table", 1: "table rotated"}
-    plt.figure(figsize=figsize)
-    plt.imshow(pil_img)
-    ax = plt.gca()
+
+    
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.imshow(pil_img)
+    
     for cl, lbl, (xmin, ymin, xmax, ymax) in zip(confidence, labels, boxes):
         # cl = p.argmax()
         if filter is not None and lbl not in filter:
@@ -51,6 +53,17 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
             ax.text(xmin, ymin, text, fontsize=15,
                     bbox=dict(facecolor='yellow', alpha=0.5))
     plt.axis('off')
+    
+    if return_img:
+        import io
+        from PIL import Image
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        img = Image.open(buf)
+        
+        plt.close(fig)
+        return img
     plt.show()
 
 
