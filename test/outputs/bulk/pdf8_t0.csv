@@ -1,4 +1,4 @@
-Experimental Sample,"conditions, Temperature (K)",calculated (s),gas Time,"fugacities, IWa f",measured H2 (bar),infrared f,H2O (bar),absorbance # of,points,intensity of the Fit 1 Absorbance,3550 cm−1 band Fit 2 Absorbance,and calculated Fit 3 Absorbance,H2O contents. Mean ε = 6.3 m2/mol,1σ,Mean ε = 5.1 m2/mol,1σ,Corrected Mean ε = 6.3 m2/mol,Corrected ε = 5.1 m2/mol
+Experimental Sample,"conditions, Temperature (K)",calculated (s),gas Time,"fugacities, IWa f",measured H2 (bar),infrared f,H2O (bar),absorbance # of,points,intensity of the Fit 1 Absorbance,3550 cm−1 band Fit 2 Absorbance,and calculated Fit 3 Absorbance,H2O contents. Mean ε = 6.3 m2/mol,1σ,Mean ε = 5.1 m2/mol,1σ,Corrected Mean ε = 6.3 m2/mol,Corrected Mean ε = 5.1 m2/mol
 ,,,,,,,,,,,,,(ppmw),,(ppmw),,(ppmw),(ppmw)
 Per-1,2173 ± 21,30,,5.97 0,,0,,3,,0.036,0.037,0.038,35.4,2.0,43.7,3.0,2.9,3.5
 Per-2,2166 ± 40,40,,3.46 0,,0,,7,,0.039,0.040,0.039,37.6,2.0,46.5,3.1,5.1,6.3

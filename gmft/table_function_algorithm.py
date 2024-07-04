@@ -23,6 +23,18 @@ def _iob(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, fl
     
     return 0
 
+def _iob_for_rows(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, float, float]):
+    """
+    Modification of iob but for rows: pretend that the bboxes are infinitely wide. For bbox1.
+    """
+    a0, a1 = bbox1[1], bbox1[3]
+    b0, b1 = bbox2[1], bbox2[3]
+    
+    intersect0, intersect1 = max(a0, b0), min(a1, b1)
+    intersect_area = max(0, intersect1 - intersect0)
+    
+    return intersect_area / (a1 - a0)
+
 def _symmetric_iob(bbox1, bbox2):
     """
     Compute the intersection area over box area, for min of bbox1 and bbox2
@@ -35,6 +47,18 @@ def _symmetric_iob(bbox1, bbox2):
         return intersection.area / min(bbox1_area, bbox2_area)
     
     return 0
+
+def _symmetric_iob_for_rows(bbox1, bbox2):
+    """
+    Modification of iob but for rows: pretend that the bboxes are infinitely wide. For min of bbox1 and bbox2.
+    """
+    a0, a1 = bbox1[1], bbox1[3]
+    b0, b1 = bbox2[1], bbox2[3]
+    
+    intersect0, intersect1 = max(a0, b0), min(a1, b1)
+    intersect_area = max(0, intersect1 - intersect0)
+    
+    return intersect_area / min(a1 - a0, b1 - b0)
 
 def _find_rightmost_le(sorted_list, value, key_func):
     """Find rightmost value less than or equal to value
@@ -218,13 +242,13 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
         # 6. look for high iob headers too
         header_max_iob = 0
         for i, header in enumerate(sorted_headers):
-            iob_score = _iob(textbox, header['bbox'])
+            iob_score = _iob_for_rows(textbox, header['bbox'])
             if iob_score > header_max_iob:
                 header_max_iob = iob_score
         
         # only consider 
         # if it could be both header or row, prefer header
-        possible_header = header_max_iob >= row_max_iob
+        possible_header = header_max_iob != 0 and (header_max_iob >= row_max_iob or header_max_iob >= 0.5)
         if possible_header and header_max_iob <= 0.5:
             # best cell is a partial overlap; ambiguous
             outliers['skipped col header'] = True
@@ -290,6 +314,8 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
         
         # If this is not true, then it is not true in general that the best cell (most overlap)
         # is given by the intersection of the best row and the best column.
+        
+        # TODO calculate this directly from the score bbox and text bbox
         
         score_norm_deviation = abs(row_max_iob * column_max_iob - score) / score
         if score_norm_deviation > config.corner_clip_outlier_threshold:
