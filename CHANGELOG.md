@@ -1,7 +1,9 @@
-## v0.2.0
+## v0.2.0-pre
 
 - Automatically drop rows whose only non-null values is the "is_projecting_row" column
 - Return visualized images as PIL image
+- Fill in gaps between table rows, so hopefully no text is skipped
+- ^ TODO: in that case, try the large table assumption
 
 ## v0.1.1
 

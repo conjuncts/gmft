@@ -418,7 +418,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     # _widen_and_even_out_rows(sorted_rows, sorted_headers)
     
     word_height = _predict_word_height(table)
-    # _fill_in_gaps(sorted_rows, word_height)
+    _fill_in_gaps(sorted_rows, word_height)
     
     # 4a. calculate total row overlap. If higher than a threshold, invoke the large table assumption
     # also count headers

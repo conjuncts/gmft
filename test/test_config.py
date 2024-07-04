@@ -25,6 +25,7 @@ def test_config(docs_bulk):
         df = ft.df(config_overrides=config)
     expected = """Genotype,Q,Amino R,acid 70 P,H,Amino C,acid M,91 L,Total
 ,,,,,,,,
+,,,,,,,,
 1a,2%,98%,-,-,100%,-,-,920
 1b,60%,35%,-,4%,1%,71%,28%,2022
 2,-,100%,-,-,39%,4%,58%,83
