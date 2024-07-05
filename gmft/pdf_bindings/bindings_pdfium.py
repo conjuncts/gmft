@@ -114,26 +114,35 @@ class PyPDFium2Page(BasePage):
         self.page = None
 
 class PyPDFium2Document(BasePDFDocument):
+    """
+    Wraps a pdfium.PdfDocument object. Note that the memory lifecycle is tightly coupled to the pdfium.PdfDocument object. When this object is destroyed, 
+    the underlying document is also destroyed.
+    """
     
     def __init__(self, filename: str):
-        self.doc = pdfium.PdfDocument(filename)
+        self._doc = pdfium.PdfDocument(filename)
         self.filename = filename
     
     def get_page(self, n: int) -> BasePage:
         """
         Get 0-indexed page
         """
-        return PyPDFium2Page(self.doc[n], self.filename, n)
+        return PyPDFium2Page(self._doc[n], self.filename, n)
     
     def __len__(self) -> int:
-        return len(self.doc)
+        return len(self._doc)
     
     def close(self):
         """
         Close the document
         """
-        self.doc.close()
-        self.doc = None
+        if self._doc is not None:
+            self._doc.close()
+        self._doc = None
+    
+    def __del__(self):
+        if self._doc is not None:
+            self.close()
 
 class PyPDFium2Utils:
     """

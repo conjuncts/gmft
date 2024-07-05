@@ -114,6 +114,14 @@ class TATRFormatConfig:
     image_processor_path: str = "microsoft/table-transformer-detection"
     formatter_path: str = "microsoft/table-transformer-structure-recognition"
     
+    verbosity: int = 1
+    """
+    0: errors only
+    1: print warnings
+    2: print warnings and info
+    3: print warnings, info, and debug
+    """
+    
 
     formatter_base_threshold: float = 0.3
     """Base threshold for the confidence demanded of a table feature (row/column).
@@ -139,7 +147,7 @@ class TATRFormatConfig:
     
     # ---- df() settings ----
     
-    large_table_threshold = 20
+    large_table_threshold = 10
     """with large tables, table transformer struggles with placing too many overlapping rows
     luckily, with more rows, we have more info on the usual size of text, which we can use to make
     a guess on the height such that no rows are merged or overlapping
@@ -147,6 +155,9 @@ class TATRFormatConfig:
     large table assumption is only applied when (# of rows > 20) AND (total overlap > 20%)
     set 9999 to disable, set 0 to force large table assumption to run every time"""
     large_table_row_overlap_threshold = 0.2
+    
+    large_table_maximum_rows = 1000
+    """If the table predicts a large number of rows, refuse to proceed. Therefore prevent memory issues for super small text."""
     
     force_large_table_assumption=None
     """True: force large table assumption to be applied to all tables
