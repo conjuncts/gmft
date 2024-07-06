@@ -2,7 +2,8 @@ import json
 import pytest
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.table_detection import CroppedTable, TableDetector
-from gmft.table_function import AutoTableFormatter, TATRFormattedTable
+from gmft.table_function import TATRFormattedTable
+from gmft import AutoTableFormatter
 
 
 @pytest.fixture
@@ -22,8 +23,6 @@ def test_pubt_p4(doc_pubt, detector, formatter):
     tables_p4 = detector.extract(doc_pubt[4-1])
     assert len(tables_p4) == 1
     
-
-    
     # with open("test/outputs/actual/pubt_p4.info", "w") as f:
     #     json.dump(tables_p4[0].to_dict(), f, indent=4)
     
@@ -36,8 +35,8 @@ def test_pubt_p4(doc_pubt, detector, formatter):
     # structure recognition and df formatting
     ft_4 = formatter.extract(tables_p4[0])
     df_4 = ft_4.df()
-    df_4.to_csv("test/outputs/actual/pubt_p4.csv", index=True)
-    assert df_4.to_csv(lineterminator='\n') == """\
+    actual = df_4.to_csv(lineterminator='\n')
+    expected = """\
 ,Dataset,Input Modality,# Tables,Cell Topology,Cell Content,Cell Location,Row & Column Location,Canonical Structure
 0,TableBank [9],Image,145K,X,,,,
 1,SciTSR [3],PDF∗,15K,X,X,,,
@@ -45,6 +44,10 @@ def test_pubt_p4(doc_pubt, detector, formatter):
 3,FinTabNet [22],PDF∗,113K,X,X,X†,,
 4,PubTables-1M (ours),PDF∗,948K,X,X,X,X,X
 """
+    if actual != expected:
+        ft_4.visualize(effective=True).save("test/outputs/actual/pubt_p4.png")
+        df_4.to_csv("test/outputs/actual/pubt_p4.csv", index=True)
+        assert actual == expected
 
 
 def test_pubt_p6(doc_pubt):
@@ -57,14 +60,18 @@ def test_pubt_p6(doc_pubt):
         ft = TATRFormattedTable.from_dict(json.load(f), doc_pubt[6-1])    
 
     df = ft.df()
-    df.to_csv("test/outputs/actual/pubt_p6.csv", index=True)
-    assert df.to_csv(lineterminator='\n') == """\
+    actual = df.to_csv(lineterminator='\n')
+    expected = """\
 ,Dataset,Total Tables Investigated†,Total Tables with a PRH∗,Total,Tables with an oversegmented % (of total with a PRH),PRH % (of total investigated)
 0,SciTSR,"10,431",342,54,15.79%,0.52%
 1,PubTabNet,"422,491","100,159","58,747",58.65%,13.90%
 2,FinTabNet,"70,028","25,637","25,348",98.87%,36.20%
 3,PubTables-1M (ours),"761,262","153,705",0,0%,0%
 """
+    if actual != expected:
+        ft.visualize(effective=True).save("test/outputs/actual/pubt_p6.png")
+        df.to_csv("test/outputs/actual/pubt_p6.csv", index=True)
+        assert actual == expected
 
 
     
@@ -74,22 +81,26 @@ def test_pubt_p7(doc_pubt, detector, formatter):
     
     ft_7 = formatter.extract(tables_p7[0])
     df_7 = ft_7.df()
-    df_7.to_csv("test/outputs/actual/pubt_p7.csv", index=True)
-    assert df_7.to_csv(lineterminator='\n') == """\
+    actual = df_7.to_csv(lineterminator='\n') 
+    expected = """\
 ,Task,Model,AP,AP50,AP75,AR
 0,TD,Faster R-CNN,0.825,0.985,0.927,0.866
 1,,DETR,0.966,0.995,0.988,0.981
 2,TSR + FA,Faster R-CNN,0.722,0.815,0.785,0.762
 3,,DETR,0.912,0.971,0.948,0.942
 """
+    if actual != expected:
+        ft_7.visualize(effective=True).save("test/outputs/actual/pubt_p7.png")
+        df_7.to_csv("test/outputs/actual/pubt_p7.csv", index=True)
+        assert actual == expected
 
 def test_pubt_p8(doc_pubt, detector, formatter):
     tables_p8 = detector.extract(doc_pubt[8-1])
     assert len(tables_p8) == 1
     ft_8 = formatter.extract(tables_p8[0])
     df_8 = ft_8.df()
-    df_8.to_csv("test/outputs/actual/pubt_p8.csv", index=False)
-    assert df_8.to_csv(index=False, lineterminator='\n') == """\
+    actual = df_8.to_csv(index=False, lineterminator='\n') 
+    expected = """\
 Test Data,Model,Table Category,AccCont,GriTSTop,GriTSCont,GriTSLoc,AdjCont
 Non-Canonical,DETR-NC,Simple,0.8678,0.9872,0.9859,0.9821,0.9801
 ,,Complex,0.5360,0.9600,0.9618,0.9444,0.9505
@@ -104,4 +115,8 @@ Canonical,DETR-NC,Simple,0.9349,0.9933,0.9920,0.9900,0.9865
 ,,Complex,0.6944,0.9752,0.9763,0.9654,0.9667
 ,,All,0.8138,0.9845,0.9846,0.9781,0.9774
 """
+    if actual != expected:
+        ft_8.visualize(effective=True).save("test/outputs/actual/pubt_p8.png")
+        df_8.to_csv("test/outputs/actual/pubt_p8.csv", index=False)
+        assert actual == expected
     

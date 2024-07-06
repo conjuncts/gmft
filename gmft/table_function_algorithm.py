@@ -363,14 +363,11 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     outliers = {} # store table-wide information about outliers or pecularities
     
     results = table.fctn_results
-    # scale_factor = table.fctn_scale_factor
-    # padding = table.fctn_padding
 
     # 1. collate identified boxes
     boxes = []
     for a, b, c in zip(results["scores"], results["labels"], results["boxes"]):
         bbox = c # .tolist()
-        # bbox = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
         if a >= config.cell_required_confidence[b]:
             boxes.append({'confidence': a, 'label': table.id2label[b], 'bbox': bbox})
     

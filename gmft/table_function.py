@@ -55,6 +55,7 @@ class FormattedTable(RotatedCroppedTable):
         self._img = cropped_table._img.copy() if cropped_table._img is not None else None
         self._img_dpi = cropped_table._img_dpi
         self._img_padding = cropped_table._img_padding
+        self._img_margin = cropped_table._img_margin
     
     
     
@@ -380,12 +381,13 @@ class TATRTableFormatter(TableFormatter):
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
     
-    def extract(self, table: CroppedTable, dpi=144, padding='auto') -> FormattedTable:
+    def extract(self, table: CroppedTable, dpi=144, padding='auto', margin=None) -> FormattedTable:
         """
         Extract the data from the table.
         """
-        image = table.image(dpi=dpi, padding=padding) # (20, 20, 20, 20)
+        image = table.image(dpi=dpi, padding=padding, margin=margin) # (20, 20, 20, 20)
         padding = table._img_padding
+        margin = table._img_margin
         
         scale_factor = dpi / 72
         encoding = self.image_processor(image, return_tensors="pt")
@@ -410,7 +412,7 @@ class TATRTableFormatter(TableFormatter):
         
         # normalize results w.r.t. padding and scale factor
         for i, bbox in enumerate(results["boxes"]):
-            results["boxes"][i] = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
+            results["boxes"][i] = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding, used_margin=margin)
         
         
         formatted_table = TATRFormattedTable(table, results, # scale_factor, padding, 
@@ -418,29 +420,22 @@ class TATRTableFormatter(TableFormatter):
         return formatted_table
             
 
-class AutoTableFormatter(TATRTableFormatter):
-    """
-    The recommended :class:`TableFormatter`. Currently points to :class:`~gmft.TATRTableFormatter`.
-    Uses a TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
-    
-    Using :meth:`extract`, a :class:`~gmft.FormattedTable` is produced, which can be exported to csv, df, etc.
-    """
-    pass
 
-class AutoFormatConfig(TATRFormatConfig):
-    """
-    Configuration for the recommended :class:`TableFormatter`. Currently points to :class:`~gmft.TATRFormatConfig`.
-    """
-    pass
     
 
-def _normalize_bbox(bbox: tuple[float, float, float, float], used_scale_factor: float, used_padding: tuple[float, float]):
+def _normalize_bbox(bbox: tuple[float, float, float, float], used_scale_factor: float, 
+                    used_padding: tuple[float, float], used_margin: tuple[float, float] =None):
     """
     Normalize bbox such that:
     1. padding is removed (so (0, 0) is the top-left of the cropped table)
     2. scale factor is normalized (dpi=72)
+    3. margin is removed (so (0, 0) is the start of the original detected bbox)
     """
+    # print("Margin: ", used_margin)
+    if used_margin is None:
+        used_margin = (0, 0)
     bbox = [bbox[0] - used_padding[0], bbox[1] - used_padding[1], bbox[2] - used_padding[0], bbox[3] - used_padding[1]]
     bbox = [bbox[0] / used_scale_factor, bbox[1] / used_scale_factor, bbox[2] / used_scale_factor, bbox[3] / used_scale_factor]
+    bbox = [bbox[0] - used_margin[0], bbox[1] - used_margin[1], bbox[2] - used_margin[0], bbox[3] - used_margin[1]]
     return bbox
         

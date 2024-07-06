@@ -2,7 +2,7 @@ import pytest
 
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.table_detection import TableDetector
-from gmft.table_function import AutoTableFormatter
+from gmft import AutoTableFormatter
 
 
 @pytest.fixture

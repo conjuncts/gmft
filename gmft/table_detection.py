@@ -55,6 +55,7 @@ class CroppedTable:
     _img: PILImage
     _img_dpi: int
     _img_padding: tuple[int, int, int, int]
+    _img_margin: tuple[int, int, int, int]
     def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float, label=0):
         
         self.page = page
@@ -66,9 +67,10 @@ class CroppedTable:
         self._img = None 
         self._img_dpi = None
         self._img_padding = None
+        self._img_margin = None
         self.label = label
     
-    def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None) -> PILImage:
+    def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None, margin: str | tuple[int, int, int, int]=None) -> PILImage:
         """
         Return the image of the cropped table.
         
@@ -76,28 +78,39 @@ class CroppedTable:
         Therefore, dpi=72 is the default, and dpi=144 is x2 zoom.
         
         :param dpi: dots per inch. If not None, the scaling_factor parameter is ignored.
-        :param padding: padding to add to the image. Tuple of (left, top, right, bottom)
-            Padding is added after the crop and rotation.
+        :param padding: padding (**blank pixels**) to add to the image. Tuple of (left, top, right, bottom)
+            Padding (blank pixels) is added after the crop and rotation.
             Padding is important for subsequent row/column detection; see https://github.com/microsoft/table-transformer/issues/68 for discussion.
             If padding = 'auto', the padding is automatically set to 10% of the larger of {width, height}.
+            Default is no padding.
+        :param margin: add content (in **pdf units**) from the original pdf beyond the detected table bbox boundary.
+
         :return: image of the cropped table
         """
-        effective_dpi = 72 if dpi is None else dpi
-        effective_padding = padding
+        dpi = 72 if dpi is None else dpi
         if padding == 'auto':
-            width= self.rect.width * effective_dpi / 72
-            height = self.rect.height * effective_dpi / 72
+            width= self.rect.width * dpi / 72
+            height = self.rect.height * dpi / 72
             pad = int(max(width, height) * 0.1)
-            effective_padding = (pad, pad, pad, pad)
+            padding = (pad, pad, pad, pad)
+        elif padding == None:
+            padding = (0, 0, 0, 0)
         # if effective_dpi == self._img_dpi and effective_padding == self._img_padding: 
             # return self._img # cache results
-        
-        img = self.page.get_image(dpi=dpi, rect=self.rect)
-        if effective_padding is not None:
-            img = PIL.ImageOps.expand(img, effective_padding, fill="white")
+        rect = self.rect
+        if margin == 'auto':
+            margin = (30, 30, 30, 30) # from the paper
+        if margin is not None:
+            
+            rect = Rect((rect.xmin - margin[0], rect.ymin - margin[1], 
+                         rect.xmax + margin[2], rect.ymax + margin[3]))
+        img = self.page.get_image(dpi=dpi, rect=rect)
+        if padding is not None:
+            img = PIL.ImageOps.expand(img, padding, fill="white")
         self._img = img
-        self._img_dpi = effective_dpi
-        self._img_padding = effective_padding
+        self._img_dpi = dpi
+        self._img_padding = padding
+        self._img_margin = margin
         return self._img
     
     def text_positions(self, remove_table_offset: bool = False, outside: bool = False) -> Generator[tuple[int, int, int, int, str], None, None]:
@@ -209,8 +222,8 @@ class TableDetectorConfig:
     detector_path: str = "microsoft/table-transformer-detection"
     warn_uninitialized_weights: bool = False
     
-    # How confident the model should be to consider a table
-    detector_base_threshold: float = 0.9
+    confidence_score_threshold: float = 0.9
+    """Minimum confidence score required for a table"""
 
     
     def __init__(self, image_processor_path: str = None, detector_path: str = None):
@@ -264,7 +277,7 @@ class TableDetector:
             outputs = self.detector(**encoding)
         # keep only predictions of queries with 0.9+ confidence (excluding no-object class)
         target_sizes = torch.tensor([img.size[::-1]])
-        threshold = self.config.detector_base_threshold
+        threshold = self.config.confidence_score_threshold
         results = self.image_processor.post_process_object_detection(outputs, threshold=threshold, target_sizes=target_sizes)[
             0
         ]
@@ -281,15 +294,6 @@ class TableDetector:
 
 class TATRTableDetector(TableDetector):
     """
-    Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
-    
-    Using :meth:`extract` produces a :class:`~gmft.FormattedTable`, which can be exported to csv, df, etc.
-    """
-    pass
-
-class AutoTableDetector(TATRTableDetector):
-    """
-    The recommended :class:`~gmft.TableDetector`. Currently points to :class:`~gmft.TATRTableDetector`.
     Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
     Using :meth:`extract` produces a :class:`~gmft.FormattedTable`, which can be exported to csv, df, etc.
