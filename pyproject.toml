@@ -1,6 +1,6 @@
 [project]
 name = "gmft"
-version = "0.1.1"
+version = "0.2.0rc0"
 description = "Lightweight, performant, configurable, deep table extraction"
 authors = [
   {name = "conjunct"}

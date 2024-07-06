@@ -1,10 +1,11 @@
 import json
 import os
 import pytest
+from gmft import AutoFormatConfig, AutoTableFormatter
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.presets import ingest_pdf
-from gmft.table_detection import TableDetector
-from gmft.table_function import AutoFormatConfig, TATRFormattedTable, AutoTableFormatter
+from gmft.table_function import TATRFormattedTable
+
 
 
 REDETECT_TABLES = True
@@ -20,7 +21,7 @@ num_tables = {
     8: 2,
 }
 
-def trial_pdf(docs_bulk, detector, formatter, i):
+def trial_pdf(docs_bulk, detector, formatter: AutoTableFormatter, i):
     doc = docs_bulk[i]
     # for i, doc in enumerate(docs_bulk):
     
@@ -39,8 +40,10 @@ def trial_pdf(docs_bulk, detector, formatter, i):
         for crop in cropped:
             try:
                 tables.append(formatter.extract(crop))
-            except Exception:
-                pass
+            except Exception as e:
+                # print(e)
+                raise e
+                # pass
                 # tables.append(None)
     else:
         for j in range(num_tables[i+1]):

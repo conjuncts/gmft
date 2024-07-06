@@ -6,10 +6,10 @@
 import json
 import pytest
 from gmft.pdf_bindings import BasePage
-from gmft import CroppedTable
+from gmft import AutoFormatConfig, CroppedTable
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.table_detection import RotatedCroppedTable
-from gmft.table_function import AutoFormatConfig, TATRFormattedTable
+from gmft.table_function import TATRFormattedTable
 
 def test_config(docs_bulk):
     # Test that configuration overrides work
