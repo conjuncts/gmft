@@ -13,7 +13,8 @@ hI/(I)i,6.3 (2.0),6.6 (2.3),5.4 (2.7),False
 CC1/2‡,0.980 (0.157),0.984 (0.288),0.957 (0.384),False
 Completeness (%),100.0 (100.0),100.0 (100.0),100.0 (100.0),False
 Multiplicity,220.9 (77.2),154.7 (50.8),66.1 (44.3),False
-Wilson B factor (A˚ 2 ),14.9,14.5,17.5,False
+2,,,,False
+Wilson B factor (A˚ ),14.9,14.5,17.5,False
 Refinement,,,,True
 No. of unique reflections,45883 (2276),45846 (2275),37489 (1858),False
 Rwork/Rfree (%),14.4/17.7,14.3/17.1,16.7/19.9,False
@@ -24,8 +25,7 @@ Water,425,418,279,False
 B factors (A˚ 2 ),,,,True
 Protein,18.9,18.7,21.9,False
 Cu,16.5,16.2,19.5,False
-2,,,,False
-SO4,33.2,41.5,,False
+SO4 2,33.2,41.5,,False
 NO2 18.5,,,,False
 Malonate,,37.2,30.1,False
 Water,30.0,30.0,32.7,False

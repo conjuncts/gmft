@@ -6,7 +6,7 @@ Copy number variations,19950,genes (186,pathways),91,False
 miRNA expressions,,1046,,91,False
 Protein expressions,,142,,62,False
 Mutated genes,,3734,,91,False
-Number of tumors with different,pathological,stages,,,True
+Number of tumors with different,pathological,stages,,,False
 Pathological Stage,T,M,N,Overall,False
 0,,91,46,,False
 I,38,,34,22,False

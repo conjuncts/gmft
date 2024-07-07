@@ -137,7 +137,7 @@ class TATRFormatConfig:
         1: 0.3, 
         2: 0.3, 
         3: 0.3, 
-        4: 0.3, 
+        4: 0.5, 
         5: 0.3,
         6: 99
     }
@@ -148,7 +148,7 @@ class TATRFormatConfig:
     
     # ---- df() settings ----
     
-    large_table_if_n_rows_removed = 3
+    large_table_if_n_rows_removed = 10
     """
     If >= n rows are removed due to non-maxima suppression (NMS), then this table is classified as a large table.
     """
@@ -206,7 +206,9 @@ class TATRFormatConfig:
     This flag prevents aggregating, and only marks a row as a suspected spanning cell.
     This retains column information, and lets the user combine spanning rows if so desired.
     """
-
+    
+    enable_multi_indices = False
+    """Enable multi-indices in the dataframe."""
 
     
 
@@ -397,10 +399,17 @@ class TATRTableFormatter(TableFormatter):
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
     
-    def extract(self, table: CroppedTable, dpi=144, padding='auto', margin=None) -> FormattedTable:
+    def extract(self, table: CroppedTable, dpi=144, padding='auto', margin=None, config_overrides=None) -> FormattedTable:
         """
         Extract the data from the table.
         """
+        
+        if config_overrides is not None:
+            config = copy.deepcopy(self.config)
+            config.__dict__.update(config_overrides.__dict__)
+        else:
+            config = self.config
+        
         image = table.image(dpi=dpi, padding=padding, margin=margin) # (20, 20, 20, 20)
         padding = table._img_padding
         margin = table._img_margin

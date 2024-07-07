@@ -35,6 +35,18 @@ def _iob_for_rows(bbox1: tuple[float, float, float, float], bbox2: tuple[float, 
     
     return intersect_area / (a1 - a0)
 
+def _iob_for_columns(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, float, float]):
+    """
+    Modification of iob but for columns: pretend that the bboxes are infinitely tall. For bbox1.
+    """
+    a0, a1 = bbox1[0], bbox1[2]
+    b0, b1 = bbox2[0], bbox2[2]
+    
+    intersect0, intersect1 = max(a0, b0), min(a1, b1)
+    intersect_area = max(0, intersect1 - intersect0)
+    
+    return intersect_area / (a1 - a0)
+
 def _symmetric_iob(bbox1, bbox2):
     """
     Compute the intersection area over box area, for min of bbox1 and bbox2
@@ -80,21 +92,6 @@ def _find_leftmost_gt(sorted_list, value, key_func):
     # if i < len(sorted_list):
     return i
     # return None
-
-def _priority_row(lbl: dict):
-    """
-    To deal with overlap, we need to prioritize cells.
-    "table column header" is most valuable. 
-    "table row" is next value.
-    "table spanning cell" is least valuable, and often it overlaps valid rows.
-    """
-    if lbl == 'table column header':
-        return 2
-    elif lbl == 'table row':
-        return 1
-    elif lbl == 'table spanning cell':
-        return 0
-    return 1
 
 def _predict_word_height(table):
     """
@@ -188,10 +185,21 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFo
     table_ymax = sorted_rows[-1]['bbox'][3]
     # we need to find the number of rows that can fit in the table
     
-    # start at first row
+    new_rows = []
+
+    # preserve existing rows inside the header, but otherwise start construction
+    if sorted_headers:
+        # is header-like
+        while sorted_rows:
+            row = sorted_rows[0]['bbox']
+            if any(_iob_for_rows(row, header['bbox']) > 0.5 for header in sorted_headers):
+                new_rows.append(sorted_rows.pop(0))
+            else:
+                break
+        if not sorted_rows:
+            # all rows are headers
+            return new_rows
     y = sorted_rows[0]['bbox'][1]
-    if sorted_headers and sorted_headers[0]['bbox'][1] < y:
-        y = sorted_headers[0]['bbox'][1]
         
 
     # fail-safe: if it predicts a very large table, raise
@@ -202,7 +210,6 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFo
         table.outliers['excessive rows'] = max(table.outliers.get('excessive rows', 0), est_num_rows)
         word_height = (table_ymax - y) / 100
     
-    new_rows = []
     if known_means:
         # print(known_means)
         # construct rows, trying to center the rows on the known means
@@ -226,7 +233,7 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFo
             y += word_height
     # 2a. sort by ymax, just in case
     new_rows.sort(key=lambda x: x['bbox'][3])
-    return new_rows, word_height
+    return new_rows
     # return col_headers 
 
 def _split_sorted_horizontals(sorted_horizontals):
@@ -246,6 +253,7 @@ def _split_sorted_horizontals(sorted_horizontals):
         else:
             raise AssertionError(f"Unknown label {label}")
     return sorted_rows, sorted_headers, sorted_projecting
+
     
 
 def _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting):
@@ -278,13 +286,140 @@ def _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projec
                 header_indices.append(i)
     return header_indices, projecting_indices
 
+def _find_all_rows_for_box(sorted_rows, bbox, threshold=0, _iob=_iob_for_rows):
+    """
+    Find all rows that intersect with the box.
+    :return list of indices of rows
+    """
+    rows = []
+    _, ymin, _, ymax = bbox
+    # linsearch
+    # for i, row in enumerate(sorted_rows):
+    i = _find_leftmost_gt(sorted_rows, ymin, lambda row: row['bbox'][3])
+    while i < len(sorted_rows):
+        row = sorted_rows[i]
+        iob_score = _iob(bbox, row['bbox'])
+        if iob_score > threshold:
+            rows.append(i)
+        # we may break early when the row is below the textbox
+        # this assumes that row_min and row_max are roughly 
+        if ymax < row['bbox'][1]: # ymax < row_min
+            break
+        i += 1
+    return rows
+
+def _find_all_columns_for_box(sorted_columns, bbox, threshold=0, _iob=_iob_for_columns):
+    """
+    Find all columns that intersect with the box.
+    """
+    columns = []
+    xmin, _, xmax, _ = bbox
+    # linsearch
+    # for i, row in enumerate(sorted_columns):
+    i = _find_leftmost_gt(sorted_columns, xmin, lambda column: column['bbox'][2])
+    while i < len(sorted_columns):
+        column = sorted_columns[i]
+        iob_score = _iob(bbox, column['bbox'])
+        if iob_score > threshold:
+            columns.append(i)
+        if xmax < column['bbox'][0]: # xmax < column_min
+            break
+        i += 1
+    return columns
+
+def _find_best_row_for_text(sorted_rows, textbox):
+    row_num = None
+    row_max_iob = 0
+    
+    _, ymin, _, ymax = textbox
+    
+    # with binary search, we can only look at filtered subsets
+    # get the first row that may intersect the textbox, even a little bit
+    # so the first such row_ymax > ymin
+    i = _find_leftmost_gt(sorted_rows, ymin, lambda row: row['bbox'][3])
+    while i < len(sorted_rows):
+        row = sorted_rows[i]
+        iob_score = _iob(textbox, row['bbox'])
+        if iob_score > row_max_iob:
+            row_max_iob = iob_score
+            row_num = i
+        # we may break early when the row is below the textbox
+        # this assumes that row_min and row_max are roughly 
+        if ymax < row['bbox'][1]: # ymax < row_min
+            break
+        i += 1
+    return row_num, row_max_iob
+
+def _find_best_column_for_text(sorted_columns, textbox):
+    column_num = None
+    column_max_iob = 0
+    xmin, _, xmax, _ = textbox
+    # linsearch
+    # for i, row in enumerate(sorted_columns):
+    i = _find_leftmost_gt(sorted_columns, xmin, lambda column: column['bbox'][2])
+    while i < len(sorted_columns):
+        column = sorted_columns[i]
+        iob_score = _iob(textbox, column['bbox'])
+        if iob_score > column_max_iob:
+            column_max_iob = iob_score
+            column_num = i
+        if xmax < column['bbox'][0]: # xmax < column_min
+            break
+        i += 1
+    return column_num, column_max_iob
+
+
+def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_columns,
+                          calculate_semantic_column_headers=False,
+                          calculate_semantic_row_headers=True):
+    """
+    Split spanning cells into 2 categories: 
+    a) those within column headers (and therefore likely represent info on hierarchical column headers). These reside on top
+    b) those outside (likely represent hierarchical row headers). These reside on the left
+    
+    More specifically, 
+    require hierarchical column headers to span only 1 row, and hierarchical row headers to span only 1 column.
+    """
+    sorted_spanning_top = []
+    sorted_spanning_left = []
+    for x in spanning_cells:
+        if any(_iob(x['bbox'], header['bbox']) > 0.5 for header in sorted_headers):
+            # good - it is located in the header
+            if calculate_semantic_column_headers:
+                all_valid_rows = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2)
+                
+                # further require that it spans only 1 row
+                if len(all_valid_rows) == 1:
+                    row_idx = all_valid_rows[0]
+                    col_indices = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2, _iob=_iob_for_columns)
+                    sorted_spanning_top.append((x, row_idx, col_indices))
+            else:
+                sorted_spanning_top.append((x, None, None))
+        else:
+            if calculate_semantic_row_headers:
+                all_valid_cols = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2)
+                
+                # further require that it spans only 1 column
+                if len(all_valid_cols) == 1:
+                    col_idx = all_valid_cols[0]
+                    row_indices = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2, _iob=_iob_for_rows)
+                    sorted_spanning_left.append((x, col_idx, row_indices))
+            else:
+                sorted_spanning_left.append((x, None, None))
+    
+    # get the columns in which the left spanning cells reside
+    left_spanning_indices = []
+    rightmost_span = max([x['bbox'][2] for x in sorted_spanning_left])
+    for i, col in enumerate(sorted_columns):
+        if any(_iob(col['bbox'], span['bbox']) > 0.5 for span in sorted_spanning_left):
+            left_spanning_indices.append(i)
+        if col['bbox'][0] > rightmost_span: # break early if we surpass the rightmost span
+            break
 
 def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, float, str], None, None], 
                           config: TATRFormatConfig, 
                           sorted_rows: list[dict], sorted_columns: list[dict], 
-                          sorted_headers: list[dict], column_headers: dict[int, list[str]], 
-                          header_indices: list[int], 
-                          row_headers: dict[int, list[str]], outliers: dict[str, bool], 
+                          outliers: dict[str, bool], 
                         #   large_table_guess: bool, 
                           row_means: list[list[float]]):
     """
@@ -301,27 +436,9 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
         textbox = (xmin, ymin, xmax, ymax)
 
         # 5. let row_num be row with max iob
-        row_num = None
-        row_max_iob = 0
-        
-        # with binary search, we can only look at filtered subsets
-        # get the first row that may intersect the textbox, even a little bit
-        # so the first such row_ymax > ymin
-        i = _find_leftmost_gt(sorted_rows, ymin, lambda row: row['bbox'][3])
-        while i < len(sorted_rows):
-            row = sorted_rows[i]
-            iob_score = _iob(textbox, row['bbox'])
-            if iob_score > row_max_iob:
-                row_max_iob = iob_score
-                row_num = i
-            # we may break early when the row is below the textbox
-            # this assumes that row_min and row_max are roughly 
-            if ymax < row['bbox'][1]: # ymax < row_min
-                break
-            i += 1
+        row_num, row_max_iob = _find_best_row_for_text(sorted_rows, textbox)
         
         # 6. determine if is header
-        possible_header = row_num in header_indices
             
         if row_num is None:
             # if we ever do not record a value, something awry happened
@@ -329,19 +446,7 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
             continue
         
         # 6. let column_num be column with max iob
-        column_num = None
-        column_max_iob = 0
-        # find the first column where column_max > xmin
-        i = _find_leftmost_gt(sorted_columns, xmin, lambda column: column['bbox'][2])
-        while i < len(sorted_columns):
-            column = sorted_columns[i]
-            iob_score = _iob(textbox, column['bbox'])
-            if iob_score > column_max_iob:
-                column_max_iob = iob_score
-                column_num = i
-            if xmax < column['bbox'][0]: # xmax < column_min
-                break
-            i += 1
+        column_num, column_max_iob = _find_best_column_for_text(sorted_columns, textbox)
         
         # 7. check if it's a header
         # if possible_header:
@@ -359,9 +464,6 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
         
         
         # 8. get the putative cell. check if it's a special cell
-        if config.aggregate_spanning_cells and row['label'] in ['table projected row header', 'table spanning cell']:
-            row_headers.setdefault(row_num, []).append(text)
-            continue
         
         # otherwise, we have a regular cell
         cell = Rect(row['bbox']).intersect(column['bbox'])
@@ -435,10 +537,6 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         label = box['label']
         if label == 'table spanning cell':
             spanning_cells.append(box)
-            span_width = box['bbox'][2] - box['bbox'][0]
-            if span_width < config.spanning_cell_minimum_width * table.rect.width:
-                outliers['narrow spanning cell'] = outliers.get('narrow spanning cell', 0) + 1
-                continue
         elif label in table._POSSIBLE_COLUMN_HEADERS or label in table._POSSIBLE_ROWS:
             sorted_horizontals.append(box)
         elif label in table._POSSIBLE_COLUMNS:
@@ -475,6 +573,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     #         i += 1
     sorted_rows, sorted_headers, sorted_projecting = _split_sorted_horizontals(sorted_horizontals)
     
+    _non_maxima_suppression(sorted_projecting)
     # non-maxima suppression
     num_removed = _non_maxima_suppression(sorted_rows)
     if num_removed > 0 and config.verbosity >= 2:
@@ -490,12 +589,8 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     table_area = table.rect.width * table.rect.height # * scale_factor ** 2
     total_row_area = 0
     for row in sorted_rows:
-        if row['label'] == 'table row':
-            total_row_area += (row['bbox'][2] - row['bbox'][0]) * (row['bbox'][3] - row['bbox'][1])
-    for row in sorted_headers:
-        if row['label'] == 'table projected row header':
-            total_row_area += (row['bbox'][2] - row['bbox'][0]) * (row['bbox'][3] - row['bbox'][1])
-    
+        total_row_area += (row['bbox'][2] - row['bbox'][0]) * (row['bbox'][3] - row['bbox'][1])
+
     # large table guess
     if config.force_large_table_assumption is None:
         large_table_guess = False
@@ -511,7 +606,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     if large_table_guess:
         
         
-        sorted_rows, known_height = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, known_height=word_height)
+        sorted_rows = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, known_height=word_height)
         left_corner = sorted_rows[0]['bbox']
         right_corner = sorted_rows[-1]['bbox']
         # (ymax - ymin) * (xmax - xmin)
@@ -552,20 +647,10 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
                 # don't allow double merging
             i += 1
         
-        sorted_rows, known_height = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, 
+        sorted_rows = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, 
                 known_means=known_means, known_height=known_height)
         
-        # bit of deduplication
-        # i = 1
-        # prev = sorted_rows[0]
-        # while i < len(sorted_rows):
-        #     cur = sorted_rows[i]
-        #     if symmetric_iob(prev['bbox'], cur['bbox']) > config.deduplication_iob_threshold:
-        #         sorted_rows.pop(i)
-        #     else:
-        #         prev = cur
-        #         i += 1
-    header_indices, projecting_indices = _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting)
+    # nms takes care of deduplication
     
     table.effective_rows = sorted_rows
     table.effective_columns = sorted_columns
@@ -589,7 +674,6 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     
         
     column_headers = {}
-    row_headers = {}
         
     # in case of large_table_guess, keep track of the means of rows
     row_means = None
@@ -597,11 +681,10 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         row_means = [[] for _ in range(len(sorted_rows))]
     
 
+
     table_array = _fill_using_partitions(table.text_positions(remove_table_offset=True), config=config, 
                                         sorted_rows=sorted_rows, sorted_columns=sorted_columns, 
-                                        sorted_headers=sorted_headers, column_headers=column_headers, 
-                                        header_indices=header_indices,
-                                        row_headers=row_headers, outliers=outliers, row_means=row_means)
+                                        outliers=outliers, row_means=row_means)
     
     
     num_rows = len(sorted_rows)
@@ -609,29 +692,33 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     
     # create a pandas dataframe from the table array
     
+    header_indices, projecting_indices = _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting)
+
     # extract out the headers
     header_rows = table_array[header_indices]
-    # join by '\n' if there are multiple lines
-    column_headers = ['\\n'.join([row[i] for row in header_rows if row[i]]) for i in range(num_columns)]
-    # zero out header rows
-    for i in header_indices:
-        table_array[i, :] = None
+    if config.enable_multi_indices and len(header_rows) > 1:
+        # Convert header rows to a list of tuples, where each tuple represents a column
+        columns_tuples = list(zip(*header_rows))
+
+        # Create a MultiIndex with these tuples
+        column_headers = pd.MultiIndex.from_tuples(columns_tuples, names=[f"Header {len(header_rows)-i}" for i in range(len(header_rows))])
+        # Level is descending from len(header_rows) to 1
+
+    else:
+        # join by '\n' if there are multiple lines
+        column_headers = [' \\n'.join([row[i] for row in header_rows if row[i]]) for i in range(num_columns)]
+    # note: header rows will be taken out
     table._df = pd.DataFrame(data=table_array, columns=column_headers)
     
+    # a. mark as projecting/non-projecting
+    is_projecting = [x in projecting_indices for x in range(num_rows)]
+    if any(is_projecting):
+        # insert at end
+        table._df.insert(num_columns, 'is_projecting_row', is_projecting)
     
-    
-    # if row_headers exist, add it in to the special "row_headers" column, which we preferably insert to the left
-    if not config.aggregate_spanning_cells:
-        # just mark as spanning/non-spanning
-        is_spanning = [x in projecting_indices for x in range(num_rows)]
-        # [row['label'] in table._POSSIBLE_PROJECTING_ROWS for row in sorted_rows]
-        if any(is_spanning):
-            # insert at end
-            table._df.insert(num_columns, 'is_projecting_row', is_spanning)
-    elif row_headers:
-        row_headers_list = [' '.join(row_headers.get(i, '')) for i in range(num_rows)]
-        row_headers_list = [x if x else None for x in row_headers_list]
-        table._df.insert(0, 'row_headers', row_headers_list)
+    # b. drop the former header rows always
+    table._df.drop(index=header_indices, inplace=True)
+    table._df.reset_index(drop=True, inplace=True)
     
     if config.remove_null_rows:
         keep_columns = [n for n in table._df if n != 'is_projecting_row']

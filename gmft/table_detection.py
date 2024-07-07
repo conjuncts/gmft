@@ -8,6 +8,7 @@ Example:
     >>> from gmft import TableDetector
 """
 
+import copy
 from typing import Generator, Union
 import PIL.Image
 from PIL.Image import Image as PILImage
@@ -222,7 +223,7 @@ class TableDetectorConfig:
     detector_path: str = "microsoft/table-transformer-detection"
     warn_uninitialized_weights: bool = False
     
-    confidence_score_threshold: float = 0.9
+    detector_base_threshold: float = 0.9
     """Minimum confidence score required for a table"""
 
     
@@ -258,26 +259,33 @@ class TableDetector:
             previous_verbosity = transformers.logging.get_verbosity()
             transformers.logging.set_verbosity(transformers.logging.ERROR)
         self.image_processor = AutoImageProcessor.from_pretrained(config.image_processor_path)
-        self.detector = TableTransformerForObjectDetection.from_pretrained(config.detector_path)
+        self.detector = TableTransformerForObjectDetection.from_pretrained(config.detector_path, revision="no_timm")
         
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
         self.config = config
     
-    def extract(self, page: BasePage) -> list[CroppedTable]:
+    def extract(self, page: BasePage, config_overrides: TableDetectorConfig=None) -> list[CroppedTable]:
         """
         Detect tables in a page.
         
         :param page: BasePage
+        :param config_overrides: override the config for this call only
         :return: list of CroppedTable objects
         """
+        if config_overrides is not None:
+            config = copy.deepcopy(self.config)
+            config.__dict__.update(config_overrides.__dict__)
+        else:
+            config = self.config
+        
         img = page.get_image(72) # use standard dpi = 72, which means we don't need any scaling
         encoding = self.image_processor(img, return_tensors="pt")
         with torch.no_grad():
             outputs = self.detector(**encoding)
         # keep only predictions of queries with 0.9+ confidence (excluding no-object class)
         target_sizes = torch.tensor([img.size[::-1]])
-        threshold = self.config.confidence_score_threshold
+        threshold = config.detector_base_threshold
         results = self.image_processor.post_process_object_detection(outputs, threshold=threshold, target_sizes=target_sizes)[
             0
         ]

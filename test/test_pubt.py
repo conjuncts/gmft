@@ -45,7 +45,7 @@ def test_pubt_p4(doc_pubt, detector, formatter):
 4,PubTables-1M (ours),PDF∗,948K,X,X,X,X,X
 """
     if actual != expected:
-        ft_4.visualize(effective=True).save("test/outputs/actual/pubt_p4.png")
+        ft_4.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pubt_p4.png")
         df_4.to_csv("test/outputs/actual/pubt_p4.csv", index=True)
         assert actual == expected
 
@@ -62,14 +62,14 @@ def test_pubt_p6(doc_pubt):
     df = ft.df()
     actual = df.to_csv(lineterminator='\n')
     expected = """\
-,Dataset,Total Tables Investigated†,Total Tables with a PRH∗,Total,Tables with an oversegmented % (of total with a PRH),PRH % (of total investigated)
+,Dataset,Total Tables \\nInvestigated†,Total Tables \\nwith a PRH∗,Total,Tables with an oversegmented \\n% (of total with a PRH),PRH \\n% (of total investigated)
 0,SciTSR,"10,431",342,54,15.79%,0.52%
 1,PubTabNet,"422,491","100,159","58,747",58.65%,13.90%
 2,FinTabNet,"70,028","25,637","25,348",98.87%,36.20%
 3,PubTables-1M (ours),"761,262","153,705",0,0%,0%
 """
     if actual != expected:
-        ft.visualize(effective=True).save("test/outputs/actual/pubt_p6.png")
+        ft.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pubt_p6.png")
         df.to_csv("test/outputs/actual/pubt_p6.csv", index=True)
         assert actual == expected
 
@@ -90,7 +90,7 @@ def test_pubt_p7(doc_pubt, detector, formatter):
 3,,DETR,0.912,0.971,0.948,0.942
 """
     if actual != expected:
-        ft_7.visualize(effective=True).save("test/outputs/actual/pubt_p7.png")
+        ft_7.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pubt_p7.png")
         df_7.to_csv("test/outputs/actual/pubt_p7.csv", index=True)
         assert actual == expected
 
@@ -116,7 +116,7 @@ Canonical,DETR-NC,Simple,0.9349,0.9933,0.9920,0.9900,0.9865
 ,,All,0.8138,0.9845,0.9846,0.9781,0.9774
 """
     if actual != expected:
-        ft_8.visualize(effective=True).save("test/outputs/actual/pubt_p8.png")
+        ft_8.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pubt_p8.png")
         df_8.to_csv("test/outputs/actual/pubt_p8.csv", index=False)
         assert actual == expected
     

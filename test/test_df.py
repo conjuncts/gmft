@@ -1,9 +1,10 @@
 import json
 import os
 import pytest
-from gmft import AutoFormatConfig, AutoTableFormatter
+from gmft import AutoFormatConfig, AutoTableDetector, AutoTableFormatter
 from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.presets import ingest_pdf
+from gmft.table_detection import TableDetectorConfig
 from gmft.table_function import TATRFormattedTable
 
 
@@ -23,11 +24,13 @@ num_tables = {
     8: 2,
 }
 
-def get_tables_for_pdf(docs_bulk, detector, formatter: AutoTableFormatter, n):
+def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTableFormatter, n):
     print("Making tables for pdf", n)
     doc = docs_bulk[n-1]
     # for i, doc in enumerate(docs_bulk):
     
+    config = TableDetectorConfig()
+    config.detector_base_threshold = 0.9
     tables = []
     if REDETECT_TABLES:
         cropped = []
@@ -53,15 +56,14 @@ def get_tables_for_pdf(docs_bulk, detector, formatter: AutoTableFormatter, n):
 
 
 
-def try_jth_table(tables, pdf_no, j):
+def try_jth_table(tables, pdf_no, j, config=None):
     
-    config = AutoFormatConfig()
-    config.formatter_base_threshold = 0.9
-    config.large_table_threshold = 20
-    config.verbosity = 3
-    # config.large_table_threshold = 0
-    # config.large_table_row_overlap_threshold = -1
-    # config.remove_null_rows = False
+    if config is None:
+        config = AutoFormatConfig()
+        config.large_table_threshold = 20
+        config.verbosity = 3
+    # note that config_overrides and config are both not a dict
+
     ft = tables[j]
     # try:
     df = ft.df(config_overrides=config)
@@ -112,7 +114,7 @@ class TestPdf1:
     def test_bulk_pdf1_t9(self, pdf1_tables):
         with pytest.raises(ValueError, match="The identified boxes have significant overlap"):
             try_jth_table(pdf1_tables, 1, 9)
-3, 
+
 
 class TestPdf2:
     
