@@ -8,14 +8,14 @@ eGFR (mL/min)a,34,123,22.2,120,85.0,170,False
 Albumin (g/dL),34,3.83,0.403,3.80,3.2,4.8,False
 Serum creatinine (mg/dL),34,0.499,0.223,0.49,0.12,0.95,False
 Creatine kinase (U/L),34,236,124,220,44.0,556,False
-Sex,,,,,,,False
+Sex,,,,,,,True
 Male,16 (47.1),,,,,,False
 Female,18 (52.9),,,,,,False
-Race,,,,,,,False
+Race,,,,,,,True
 Caucasian,24 (70.6),,,,,,False
 Asian,8 (26.5),,,,,,False
 Other,2 (2.94),,,,,,False
-GNE domain mutations,,,,,,,False
+GNE domain mutations,,,,,,,True
 Epimerase/kinase,23 (67.6),,,,,,False
 Kinase/kinase,8 (23.5),,,,,,False
 Deletion/kinase,2 (5.88),,,,,,False

@@ -241,6 +241,12 @@ class TATRFormattedTable(FormattedTable):
     effective_columns: list[tuple]
     "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
     
+    effective_headers: list[tuple]
+    "Headers as seen by the image --> df algorithm."
+    
+    effective_projecting: list[tuple]
+    "Projected rows as seen by the image --> df algorithm."
+    
     def __init__(self, cropped_table: CroppedTable, fctn_results: dict, 
                 #  fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int], 
                  config: TATRFormatConfig=None):
@@ -288,7 +294,7 @@ class TATRFormattedTable(FormattedTable):
         scale_by = (dpi / 72)
         
         if effective:
-            vis = self.effective_rows + self.effective_columns + self.effective_headers
+            vis = self.effective_rows + self.effective_columns + self.effective_headers + self.effective_projecting
             boxes = [x['bbox'] for x in vis]
             boxes = [(x * scale_by for x in bbox) for bbox in boxes]
             _to_visualize = {

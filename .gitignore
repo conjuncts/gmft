@@ -6,6 +6,7 @@ dist
 .idea
 .venv
 test/outputs/actual
+test/test_nmr.py
 test/outputs/nmr
 test/samples
 plans

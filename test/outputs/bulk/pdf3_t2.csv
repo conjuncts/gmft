@@ -7,7 +7,7 @@ IWV,12 × 12,56,21,52,47,60,86,False
 MOR,12 × 8,95,33,78,50,84,87,False
 UTL(int),14 × 12,59,29,49,49,82,97,False
 UTL(cha),14 × 12,64,28,57,45,68,80,False
-disproportionation,,,,,,,,False
+disproportionation,,,,,,,,True
 BEC,12 × 12 × 12,113,30,56,55,78,118,False
 IWV,12 × 12,72,30,75,59,67,104,False
 UTL(int),14 × 12,90,29,69,58,71,98,False

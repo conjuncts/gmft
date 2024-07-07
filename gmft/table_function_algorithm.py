@@ -188,11 +188,10 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFo
     table_ymax = sorted_rows[-1]['bbox'][3]
     # we need to find the number of rows that can fit in the table
     
-    # start at the end of the col header
-    if sorted_headers:
-        y = sorted_headers[-1]['bbox'][3]
-    else:
-        y = sorted_rows[0]['bbox'][1]
+    # start at first row
+    y = sorted_rows[0]['bbox'][1]
+    if sorted_headers and sorted_headers[0]['bbox'][1] < y:
+        y = sorted_headers[0]['bbox'][1]
         
 
     # fail-safe: if it predicts a very large table, raise
@@ -230,12 +229,61 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFo
     return new_rows, word_height
     # return col_headers 
 
+def _split_sorted_horizontals(sorted_horizontals):
+    sorted_rows = []
+    sorted_headers = []
+    sorted_projecting = []
+    for x in sorted_horizontals:
+        label = x['label']
+        if label in ['table row']:
+            sorted_rows.append(x)
+        elif label in ['table column header', 'table row header']:
+            sorted_headers.append(x)
+        elif label in ['table projected row header']:
+            sorted_projecting.append(x)
+        elif label in ['table']:
+            pass
+        else:
+            raise AssertionError(f"Unknown label {label}")
+    return sorted_rows, sorted_headers, sorted_projecting
+    
+
+def _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting):
+    """
+    Splits the sorted_horizontals into rows, headers, and projecting rows. 
+    Then, identifies a list of indices of headers and projecting rows.
+    """
+    
+    # determine which rows overlap (> 0.9) with headers
+    header_indices = []
+    projecting_indices = []
+    
+    if sorted_rows and sorted_headers:
+        first_row = sorted_rows[0]
+        first_header = sorted_headers[0]
+        if first_row['bbox'][1] - 1 > first_header['bbox'][3]:
+            # if the first row is below the first header, add the header as a row
+            print("The header is not included as a row. Consider adding it back as a row.")
+    
+    for i, row in enumerate(sorted_rows):
+        # TODO binary-ify
+        if any(_iob(row['bbox'], header['bbox']) > 0.7 for header in sorted_headers):
+            header_indices.append(i)
+        if any(_iob(row['bbox'], proj['bbox']) > 0.7 for proj in sorted_projecting):
+            projecting_indices.append(i)
+    if not header_indices:
+        # loosen the threshold
+        for i, row in enumerate(sorted_rows):
+            if any(_iob(row['bbox'], header['bbox']) > 0.5 for header in sorted_headers):
+                header_indices.append(i)
+    return header_indices, projecting_indices
 
 
 def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, float, str], None, None], 
                           config: TATRFormatConfig, 
                           sorted_rows: list[dict], sorted_columns: list[dict], 
                           sorted_headers: list[dict], column_headers: dict[int, list[str]], 
+                          header_indices: list[int], 
                           row_headers: dict[int, list[str]], outliers: dict[str, bool], 
                         #   large_table_guess: bool, 
                           row_means: list[list[float]]):
@@ -272,23 +320,10 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
                 break
             i += 1
         
-        # 6. look for high iob headers too
-        header_max_iob = 0
-        for i, header in enumerate(sorted_headers):
-            iob_score = _iob_for_rows(textbox, header['bbox'])
-            if iob_score > header_max_iob:
-                header_max_iob = iob_score
-        
-        # only consider 
-        # if it could be both header or row, prefer header
-        possible_header = header_max_iob != 0 and (header_max_iob >= row_max_iob or header_max_iob >= 0.5)
-        if possible_header and header_max_iob <= 0.5:
-            # best cell is a partial overlap; ambiguous
-            outliers['skipped col header'] = True
-            outliers['skipped text'] = outliers.get('skipped text', '') + ' ' + text
-            continue
+        # 6. determine if is header
+        possible_header = row_num in header_indices
             
-        if row_num is None and not possible_header:
+        if row_num is None:
             # if we ever do not record a value, something awry happened
             outliers['skipped text'] = outliers.get('skipped text', '') + ' ' + text
             continue
@@ -334,7 +369,7 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
         # get iob: how much of the text is in the cell
         score = _iob(textbox, cell)
         
-        if score < config.iob_reject_threshold: # poor match, like if score < 0.2
+        if score < config.iob_reject_threshold: # poor match, like if score < 0.05
             outliers['skipped text'] = outliers.get('skipped text', '') + ' ' + text
             continue
         
@@ -418,36 +453,29 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     
     # 3. deduplicate, because tatr places a 2 bboxes for header (it counts as a header and a row)
     # only check consecutive rows/columns
-    i = 1
-    prev = sorted_horizontals[0]
-    while i < len(sorted_horizontals):
-        cur = sorted_horizontals[i]
-        if _symmetric_iob(prev['bbox'], cur['bbox']) > config.deduplication_iob_threshold:
-            # pop the one that is a row
-            # print("popping something")
-            cur_priority = _priority_row(cur['label'])
-            prev_priority = _priority_row(prev['label'])
-            if cur_priority <= prev_priority:
-                # pop cur
-                sorted_horizontals.pop(i)
-            elif cur_priority > prev_priority:
-                sorted_horizontals.pop(i-1)
-                prev = cur
-        else:
-            prev = cur
-            i += 1
-    
-    sorted_rows = []
-    sorted_headers = []
-    for x in sorted_horizontals:
-        if x['label'] in table._POSSIBLE_ROWS:
-            sorted_rows.append(x)
-        else:
-            sorted_headers.append(x)
+    # i = 1
+    # prev = sorted_horizontals[0]
+    # while i < len(sorted_horizontals):
+    #     cur = sorted_horizontals[i]
+    #     if _symmetric_iob(prev['bbox'], cur['bbox']) > config.deduplication_iob_threshold:
+    #         # pop the one that is a row
+    #         # print("popping something")
+    #         cur_priority = _priority_row(cur['label'])
+    #         prev_priority = _priority_row(prev['label'])
+    #         if cur_priority <= prev_priority:
+    #             # pop cur
+    #             sorted_horizontals.pop(i)
+    #         elif cur_priority > prev_priority:
+    #             sorted_horizontals.pop(i-1)
+    #             prev = cur
+    #     else:
+    #         prev = cur
+    #         i += 1
+    sorted_rows, sorted_headers, sorted_projecting = _split_sorted_horizontals(sorted_horizontals)
     
     # non-maxima suppression
     num_removed = _non_maxima_suppression(sorted_rows)
-    if num_removed > 0:
+    if num_removed > 0 and config.verbosity >= 2:
         print(f"Removed {num_removed} overlapping rows")
     
     _widen_and_even_out_rows(sorted_rows, sorted_headers)
@@ -468,8 +496,13 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     
     # large table guess
     if config.force_large_table_assumption is None:
-        large_table_guess = total_row_area > (1 + config.large_table_row_overlap_threshold) * table_area \
-                and len(sorted_rows) > config.large_table_threshold
+        large_table_guess = False
+        if num_removed >= config.large_table_if_n_rows_removed:
+            large_table_guess = True
+        elif total_row_area > (1 + config.large_table_row_overlap_threshold) * table_area \
+                and len(sorted_rows) > config.large_table_threshold:
+            large_table_guess = True
+            
     else:
         large_table_guess = config.force_large_table_assumption
     
@@ -518,7 +551,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
             i += 1
         
         sorted_rows, known_height = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, 
-                                                                      known_means=known_means, known_height=known_height)
+                known_means=known_means, known_height=known_height)
         
         # bit of deduplication
         # i = 1
@@ -530,11 +563,12 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         #     else:
         #         prev = cur
         #         i += 1
-        
+    header_indices, projecting_indices = _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting)
     
     table.effective_rows = sorted_rows
     table.effective_columns = sorted_columns
     table.effective_headers = sorted_headers
+    table.effective_projecting = sorted_projecting
     
     # 4b. check for catastrophic overlap
     total_column_area = 0
@@ -563,6 +597,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     table_array = _fill_using_partitions(table.text_positions(remove_table_offset=True), config=config, 
                                         sorted_rows=sorted_rows, sorted_columns=sorted_columns, 
                                         sorted_headers=sorted_headers, column_headers=column_headers, 
+                                        header_indices=header_indices,
                                         row_headers=row_headers, outliers=outliers, row_means=row_means)
     
     
@@ -575,7 +610,8 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     # if row_headers exist, add it in to the special "row_headers" column, which we preferably insert to the left
     if not config.aggregate_spanning_cells:
         # just mark as spanning/non-spanning
-        is_spanning = [row['label'] in table._POSSIBLE_PROJECTING_ROWS for row in sorted_rows]
+        is_spanning = [x in projecting_indices for x in range(num_rows)]
+        # [row['label'] in table._POSSIBLE_PROJECTING_ROWS for row in sorted_rows]
         if any(is_spanning):
             # insert at end
             table._df.insert(num_columns, 'is_projecting_row', is_spanning)

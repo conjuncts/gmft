@@ -1,5 +1,5 @@
 Data Platform,,Number of Features,,Number of tumors,is_projecting_row
-Number of features and tumors,in different data,platforms,,,False
+Number of features and tumors,in different data,platforms,,,True
 Radiomics,,38,,91,False
 Gene expressions,20531,genes (186,pathways),91,False
 Copy number variations,19950,genes (186,pathways),91,False

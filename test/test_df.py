@@ -8,7 +8,7 @@ from gmft.table_function import TATRFormattedTable
 
 
 
-REDETECT_TABLES = True 
+REDETECT_TABLES = False 
 # non-determinism of transformers means this might not always pass
 # (ie. dependence on environment - colab/local) 
 
@@ -58,6 +58,7 @@ def try_jth_table(tables, pdf_no, j):
     config = AutoFormatConfig()
     config.formatter_base_threshold = 0.9
     config.large_table_threshold = 20
+    config.verbosity = 3
     # config.large_table_threshold = 0
     # config.large_table_row_overlap_threshold = -1
     # config.remove_null_rows = False
@@ -76,6 +77,9 @@ def try_jth_table(tables, pdf_no, j):
             debug_img.save(f"test/outputs/actual/pdf{pdf_no}_t{j}.png")
             with open(f"test/outputs/actual/pdf{pdf_no}_t{j}.csv", "w", encoding='utf-8') as f:
                 f.write(actual)
+            # copy over the old csv as well
+            with open(f"test/outputs/actual/pdf{pdf_no}_t{j}.old.csv", "w", encoding='utf-8') as f:
+                f.write(expected)
             if REDETECT_TABLES:
                 with open(f"test/outputs/actual/pdf{pdf_no}_t{j}.info", "w") as f:
                     json.dump(ft.to_dict(), f, indent=2)

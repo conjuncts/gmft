@@ -11,7 +11,7 @@ kinc (h−1),0.0287,45.3,False
 tlag (h),0.254,26.4,False
 ksyn (μg/h)a,"38,554",N/A,False
 kpro (ng/mL·h)a,40.9,N/A,False
-Relative ManNAc bio￾availability (F),,,False
+Relative ManNAc bio￾availability (F),,,True
 F for 6 g dose,1,Fixed,False
 F-Dose slope,−0.405,39.0,False
 ω2 for ka,0.0697 (26.4% CV),91.4,False
