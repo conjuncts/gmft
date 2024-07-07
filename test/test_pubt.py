@@ -6,7 +6,7 @@ from gmft.table_function import TATRFormattedTable
 from gmft import AutoTableFormatter
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def doc_pubt():
     doc = PyPDFium2Document("test/samples/tatr.pdf")
     yield doc

@@ -147,7 +147,27 @@ def _fill_in_gaps(sorted_rows, gap_height, leave_gap=0.4):
                                    [prev['bbox'][0], prev['bbox'][3] + margin, prev['bbox'][2], cur['bbox'][1] - margin]})
         i += 1
     
-    
+
+def _non_maxima_suppression(sorted_rows, overlap_threshold=0.1):
+    """
+    From the TATR authors' inference.py:
+    If a lower-confidence object overlaps more than 5% of its area
+    with a higher-confidence object, remove the lower-confidence object.
+    """
+    num_removed = 0
+    i = 1
+    while i < len(sorted_rows):
+        prev = sorted_rows[i-1]
+        cur = sorted_rows[i]
+        if _iob(prev['bbox'], cur['bbox']) > overlap_threshold:
+            if prev['confidence'] > cur['confidence']:
+                sorted_rows.pop(i)
+            else:
+                sorted_rows.pop(i-1)
+            num_removed += 1
+        else:
+            i += 1
+    return num_removed
     
 
 def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFormatConfig, sorted_rows, sorted_headers, known_means=None, known_height=None):
@@ -424,6 +444,11 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
             sorted_rows.append(x)
         else:
             sorted_headers.append(x)
+    
+    # non-maxima suppression
+    num_removed = _non_maxima_suppression(sorted_rows)
+    if num_removed > 0:
+        print(f"Removed {num_removed} overlapping rows")
     
     _widen_and_even_out_rows(sorted_rows, sorted_headers)
     

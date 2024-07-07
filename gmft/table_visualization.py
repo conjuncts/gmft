@@ -10,6 +10,7 @@ colors = {-1: "red", 0: "red", 1: "blue", 2: "green", 3: "yellow", 4: "orange", 
 
 
 def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None, figsize=(32,20),
+                      padding=None, margin=None,
                       show_labels=True, return_img=False): # prob, boxes):
     """
     Helper method to visualize the results of the table detection/format model.
@@ -44,6 +45,17 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
     
     for cl, lbl, (xmin, ymin, xmax, ymax) in zip(confidence, labels, boxes):
         # cl = p.argmax()
+        if padding is not None:
+            xmin += padding[0]
+            ymin += padding[1]
+            xmax += padding[0]
+            ymax += padding[1]
+        if margin is not None:
+            xmin += margin[0]
+            ymin += margin[1]
+            xmax += margin[0]
+            ymax += margin[1]
+            
         if filter is not None and lbl not in filter:
             continue
         ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,

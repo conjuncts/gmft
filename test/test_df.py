@@ -8,7 +8,9 @@ from gmft.table_function import TATRFormattedTable
 
 
 
-REDETECT_TABLES = True
+REDETECT_TABLES = True 
+# non-determinism of transformers means this might not always pass
+# (ie. dependence on environment - colab/local) 
 
 num_tables = {
     1: 10,
@@ -21,16 +23,10 @@ num_tables = {
     8: 2,
 }
 
-def trial_pdf(docs_bulk, detector, formatter: AutoTableFormatter, i):
-    doc = docs_bulk[i]
+def get_tables_for_pdf(docs_bulk, detector, formatter: AutoTableFormatter, n):
+    print("Making tables for pdf", n)
+    doc = docs_bulk[n-1]
     # for i, doc in enumerate(docs_bulk):
-    
-    config = AutoFormatConfig()
-    config.formatter_base_threshold = 0.9
-    config.large_table_threshold = 20
-    # config.large_table_threshold = 0
-    # config.large_table_row_overlap_threshold = -1
-    # config.remove_null_rows = False
     
     tables = []
     if REDETECT_TABLES:
@@ -39,66 +35,165 @@ def trial_pdf(docs_bulk, detector, formatter: AutoTableFormatter, i):
             cropped += detector.extract(page)
         for crop in cropped:
             try:
-                tables.append(formatter.extract(crop))
+                tables.append(formatter.extract(crop, margin='auto', padding=None))
             except Exception as e:
                 # print(e)
                 raise e
                 # pass
                 # tables.append(None)
     else:
-        for j in range(num_tables[i+1]):
-            with open(f"test/outputs/bulk/pdf{i+1}_t{j}.info", "r") as f:
+        for j in range(num_tables[n]):
+            with open(f"test/outputs/bulk/pdf{n}_t{j}.info", "r") as f:
                 as_dict = json.load(f)
                 page_no = as_dict["page_no"]
                 page = doc[page_no]
                 tables.append(TATRFormattedTable.from_dict(as_dict, page))
-        
-    for j, ft in enumerate(tables):
-        try:
-            df = ft.df(config_overrides=config)
-            expected = f"test/outputs/bulk/pdf{i+1}_t{j}.csv"
-            assert os.path.exists(expected), f"Extra df: pdf {i+1} and table {j} not found"
-            with open(expected, encoding='utf-8') as f:
-                expected = f.read()
-                actual = df.to_csv(index=False, lineterminator="\n")
-                if not expected == actual:
-                    # write to file
-                    # debug_img = ft.image() # visualize(effective=True, show_labels=False)
-                    debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
-                    debug_img.save(f"test/outputs/actual/pdf{i+1}_t{j}.png")
-                    with open(f"test/outputs/actual/pdf{i+1}_t{j}.csv", "w", encoding='utf-8') as f:
-                        f.write(actual)
-                    if REDETECT_TABLES:
-                        with open(f"test/outputs/actual/pdf{i+1}_t{j}.info", "w") as f:
-                            json.dump(ft.to_dict(), f, indent=2)
-                assert expected == actual, f"Mismatch in csv files for pdf {i+1} and table {j}"
-        except ValueError as e:
-            assert not os.path.exists(f"test/outputs/bulk/pdf{i+1}_t{j}.csv"), f"Failed to create df in pdf {i+1} and table {j}"
+    return tables
 
-def test_bulk_pdf1(docs_bulk, detector, formatter):
-    trial_pdf(docs_bulk=docs_bulk, detector=detector, formatter=formatter, i=0)
-            
-def test_bulk_pdf2(docs_bulk, detector, formatter):
-    trial_pdf(docs_bulk=docs_bulk, detector=detector, formatter=formatter, i=1)
 
-def test_bulk_pdf3(docs_bulk, detector, formatter):
-    trial_pdf(docs_bulk=docs_bulk, detector=detector, formatter=formatter, i=2)
 
-def test_bulk_pdf4(docs_bulk, detector, formatter):
-    trial_pdf(docs_bulk=docs_bulk, detector=detector, formatter=formatter, i=3)
 
-def test_bulk_pdf5(docs_bulk, detector, formatter):
-    trial_pdf(docs_bulk=docs_bulk, detector=detector, formatter=formatter, i=4)
-
-def test_bulk_pdf6(docs_bulk, detector, formatter):
-    trial_pdf(docs_bulk=docs_bulk, detector=detector, formatter=formatter, i=5)
-
-def test_bulk_pdf7(docs_bulk, detector, formatter):
-    trial_pdf(docs_bulk=docs_bulk, detector=detector, formatter=formatter, i=6)
+def try_jth_table(tables, pdf_no, j):
     
-def test_bulk_pdf8(docs_bulk, detector, formatter):
-    trial_pdf(docs_bulk=docs_bulk, detector=detector, formatter=formatter, i=7)
+    config = AutoFormatConfig()
+    config.formatter_base_threshold = 0.9
+    config.large_table_threshold = 20
+    # config.large_table_threshold = 0
+    # config.large_table_row_overlap_threshold = -1
+    # config.remove_null_rows = False
+    ft = tables[j]
+    # try:
+    df = ft.df(config_overrides=config)
+    expected = f"test/outputs/bulk/pdf{pdf_no}_t{j}.csv"
+    assert os.path.exists(expected), f"Extra df: pdf {pdf_no} and table {j} not found"
+    with open(expected, encoding='utf-8') as f:
+        expected = f.read()
+        actual = df.to_csv(index=False, lineterminator="\n")
+        if not expected == actual:
+            # write to file
+            # debug_img = ft.image() # visualize(effective=True, show_labels=False)
+            debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
+            debug_img.save(f"test/outputs/actual/pdf{pdf_no}_t{j}.png")
+            with open(f"test/outputs/actual/pdf{pdf_no}_t{j}.csv", "w", encoding='utf-8') as f:
+                f.write(actual)
+            if REDETECT_TABLES:
+                with open(f"test/outputs/actual/pdf{pdf_no}_t{j}.info", "w") as f:
+                    json.dump(ft.to_dict(), f, indent=2)
+        assert expected == actual, f"Mismatch in csv files for pdf {pdf_no} and table {j}"
+    # except ValueError as e:
+        # assert not os.path.exists(f"test/outputs/bulk/pdf{pdf_no}_t{j}.csv"), f"Failed to create df in pdf {pdf_no} and table {j}"
 
+class TestPdf1:
+    @pytest.fixture(scope="module")
+    def pdf1_tables(self, docs_bulk, detector, formatter):
+        yield get_tables_for_pdf(docs_bulk, detector, formatter, 1)
+
+    def test_bulk_pdf1_t0(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 0)
+    def test_bulk_pdf1_t1(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 1)
+    def test_bulk_pdf1_t2(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 2)
+    def test_bulk_pdf1_t3(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 3)
+    def test_bulk_pdf1_t4(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 4)
+    def test_bulk_pdf1_t5(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 5)
+    def test_bulk_pdf1_t6(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 6)
+    def test_bulk_pdf1_t7(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 7)
+    def test_bulk_pdf1_t8(self, pdf1_tables):
+        try_jth_table(pdf1_tables, 1, 8)
+    def test_bulk_pdf1_t9(self, pdf1_tables):
+        with pytest.raises(ValueError, match="The identified boxes have significant overlap"):
+            try_jth_table(pdf1_tables, 1, 9)
+3, 
+
+class TestPdf2:
+    
+    
+    @pytest.fixture(scope="module")
+    def pdf2_tables(self, docs_bulk, detector, formatter):
+        yield get_tables_for_pdf(docs_bulk, detector, formatter, 2)
+
+    def test_bulk_pdf2_t0(self, pdf2_tables):
+        try_jth_table(pdf2_tables, 2, 0)
+    def test_bulk_pdf2_t1(self, pdf2_tables):
+        try_jth_table(pdf2_tables, 2, 1)
+    def test_bulk_pdf2_t2(self, pdf2_tables):
+        try_jth_table(pdf2_tables, 2, 2)
+    def test_bulk_pdf2_t3(self, pdf2_tables):
+        try_jth_table(pdf2_tables, 2, 3)
+
+class TestPdf3:
+    @pytest.fixture(scope="module")
+    def pdf3_tables(self, docs_bulk, detector, formatter):
+        yield get_tables_for_pdf(docs_bulk, detector, formatter, 3)
+
+    def test_bulk_pdf3_t0(self, pdf3_tables):
+        try_jth_table(pdf3_tables, 3, 0)
+    def test_bulk_pdf3_t1(self, pdf3_tables):
+        try_jth_table(pdf3_tables, 3, 1)
+    def test_bulk_pdf3_t2(self, pdf3_tables):
+        try_jth_table(pdf3_tables, 3, 2)
+    def test_bulk_pdf3_t3(self, pdf3_tables):
+        try_jth_table(pdf3_tables, 3, 3)
+
+class TestPdf4:
+    @pytest.fixture(scope="module")
+    def pdf4_tables(self, docs_bulk, detector, formatter):
+        yield get_tables_for_pdf(docs_bulk, detector, formatter, 4)
+
+    def test_bulk_pdf4_t0(self, pdf4_tables):
+        try_jth_table(pdf4_tables, 4, 0)
+    def test_bulk_pdf4_t1(self, pdf4_tables):
+        try_jth_table(pdf4_tables, 4, 1)
+
+class TestPdf5:
+    @pytest.fixture(scope="module")
+    def pdf5_tables(self, docs_bulk, detector, formatter):
+        yield get_tables_for_pdf(docs_bulk, detector, formatter, 5)
+
+    def test_bulk_pdf5_t0(self, pdf5_tables):
+        try_jth_table(pdf5_tables, 5, 0)
+    def test_bulk_pdf5_t1(self, pdf5_tables):
+        try_jth_table(pdf5_tables, 5, 1)
+    
+class TestPdf6:
+    @pytest.fixture(scope="module")
+    def pdf6_tables(self, docs_bulk, detector, formatter):
+        yield get_tables_for_pdf(docs_bulk, detector, formatter, 6)
+
+    def test_bulk_pdf6_t0(self, pdf6_tables):
+        try_jth_table(pdf6_tables, 6, 0)
+    def test_bulk_pdf6_t1(self, pdf6_tables):
+        try_jth_table(pdf6_tables, 6, 1)
+    def test_bulk_pdf6_t2(self, pdf6_tables):
+        try_jth_table(pdf6_tables, 6, 2)
+
+class TestPdf7:
+    @pytest.fixture(scope="module")
+    def pdf7_tables(self, docs_bulk, detector, formatter):
+        yield get_tables_for_pdf(docs_bulk, detector, formatter, 7)
+
+    def test_bulk_pdf7_t0(self, pdf7_tables):
+        try_jth_table(pdf7_tables, 7, 0)
+    def test_bulk_pdf7_t1(self, pdf7_tables):
+        try_jth_table(pdf7_tables, 7, 1)
+    def test_bulk_pdf7_t2(self, pdf7_tables):
+        try_jth_table(pdf7_tables, 7, 2)
+
+class TestPdf8:
+    @pytest.fixture(scope="module")
+    def pdf8_tables(self, docs_bulk, detector, formatter):
+        yield get_tables_for_pdf(docs_bulk, detector, formatter, 8)
+    def test_bulk_pdf8_t0(self, pdf8_tables):
+        try_jth_table(pdf8_tables, 8, 0)
+    def test_bulk_pdf8_t1(self, pdf8_tables):
+        try_jth_table(pdf8_tables, 8, 1)
+    
 
     
 

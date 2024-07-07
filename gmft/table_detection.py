@@ -329,12 +329,13 @@ class RotatedCroppedTable(CroppedTable):
             raise ValueError("Only 0, 90, 180, 270 are supported.")
         self.angle = angle
         
-    def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None) -> PILImage:
+    def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None, 
+              margin: str | tuple[int, int, int, int]=None, **kwargs) -> PILImage:
         """
         Return the image of the cropped table.
         
         """
-        img = super().image(dpi=dpi, padding=padding)
+        img = super().image(dpi=dpi, padding=padding, margin=margin, **kwargs)
         # if self.angle == 90:
         if self.angle != 0:
             # rotate by negative angle to get back to original orientation

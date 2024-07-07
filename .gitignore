@@ -6,6 +6,7 @@ dist
 .idea
 .venv
 test/outputs/actual
+test/outputs/nmr
 test/samples
 plans
 gmft/pdf_bindings/bindings_mu.py

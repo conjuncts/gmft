@@ -5,15 +5,15 @@ from gmft.table_detection import TableDetector
 from gmft import AutoTableFormatter
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def detector():
-    return TableDetector()
+    yield TableDetector()
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def formatter():
-    return AutoTableFormatter()
+    yield AutoTableFormatter()
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def docs_bulk():
     docs = []
     for i in range(1, 9):

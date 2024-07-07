@@ -14,7 +14,7 @@ from gmft.table_function import TATRFormattedTable
 #     # cleanup
 #     doc.close()
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def doc_9():
     doc = PyPDFium2Document("test/samples/9.pdf")
     yield doc

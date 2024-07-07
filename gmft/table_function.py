@@ -148,12 +148,17 @@ class TATRFormatConfig:
     
     # ---- df() settings ----
     
+    large_table_if_n_rows_removed = 3
+    """
+    If >= n rows are removed due to non-maxima suppression (NMS), then this table is classified as a large table.
+    """
+    
     large_table_threshold = 10
     """with large tables, table transformer struggles with placing too many overlapping rows
     luckily, with more rows, we have more info on the usual size of text, which we can use to make
     a guess on the height such that no rows are merged or overlapping
     
-    large table assumption is only applied when (# of rows > 20) AND (total overlap > 20%)
+    large table assumption is only applied when (# of rows > large_table_threshold) AND (total overlap > large_table_row_overlap_threshold)
     set 9999 to disable, set 0 to force large table assumption to run every time"""
     large_table_row_overlap_threshold = 0.2
     
@@ -266,7 +271,7 @@ class TATRFormattedTable(FormattedTable):
         return self._df
     
     
-    def visualize(self, filter=None, dpi=None, effective=False, **kwargs):
+    def visualize(self, filter=None, dpi=None, padding=None, margin='auto', effective=False, **kwargs):
         """
         Visualize the table.
         
@@ -305,9 +310,11 @@ class TATRFormattedTable(FormattedTable):
             }
             
         # get needed scale factor and dpi
-        img = self.image(dpi=dpi)
+        img = self.image(dpi=dpi, padding=padding, margin=margin)
         # if self._img is not None:
-        return plot_results_unwr(img, _to_visualize['scores'], _to_visualize['labels'], _to_visualize['boxes'], TATRFormattedTable.id2label, filter=filter, **kwargs)
+        true_margin = [x * (dpi / 72) for x in self._img_margin]
+        return plot_results_unwr(img, _to_visualize['scores'], _to_visualize['labels'], _to_visualize['boxes'], TATRFormattedTable.id2label, 
+                                 filter=filter, padding=padding, margin=true_margin, **kwargs)
             
     def to_dict(self):
         """
