@@ -344,9 +344,9 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
             i += 1
         
         # 7. check if it's a header
-        if possible_header:
-            column_headers.setdefault(column_num, []).append(text)
-            continue
+        # if possible_header:
+        #     column_headers.setdefault(column_num, []).append(text)
+        #     continue
         
         # we may now obtain row and column
         # if row_num is None:
@@ -430,9 +430,11 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     
     sorted_horizontals = []
     sorted_columns = []
+    spanning_cells = []
     for box in boxes:
         label = box['label']
         if label == 'table spanning cell':
+            spanning_cells.append(box)
             span_width = box['bbox'][2] - box['bbox'][0]
             if span_width < config.spanning_cell_minimum_width * table.rect.width:
                 outliers['narrow spanning cell'] = outliers.get('narrow spanning cell', 0) + 1
@@ -569,6 +571,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     table.effective_columns = sorted_columns
     table.effective_headers = sorted_headers
     table.effective_projecting = sorted_projecting
+    table.effective_spanning = spanning_cells
     
     # 4b. check for catastrophic overlap
     total_column_area = 0
@@ -605,7 +608,17 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     num_columns = len(sorted_columns)
     
     # create a pandas dataframe from the table array
-    table._df = pd.DataFrame(data=table_array, columns=[' '.join(column_headers.get(i, '')) for i in range(num_columns)])
+    
+    # extract out the headers
+    header_rows = table_array[header_indices]
+    # join by '\n' if there are multiple lines
+    column_headers = ['\\n'.join([row[i] for row in header_rows if row[i]]) for i in range(num_columns)]
+    # zero out header rows
+    for i in header_indices:
+        table_array[i, :] = None
+    table._df = pd.DataFrame(data=table_array, columns=column_headers)
+    
+    
     
     # if row_headers exist, add it in to the special "row_headers" column, which we preferably insert to the left
     if not config.aggregate_spanning_cells:

@@ -1,4 +1,4 @@
-Patient no,Genotype,Viral load (106 IU/ml),Sex,Age (years),Core 70,amino acid 91,rs12979860,End of treatment response a
+Patient\nno,Genotype,Viral load\n(106 IU/ml),Sex,Age\n(years),Core\n70,amino acid\n91,rs12979860,End of treatment\nresponse a
 R1,1a,4.36,M,52.6,R,C,CC,SVR
 R2,1a,6.37,M,34.9,R,C,CC,SVR
 R3,1a,7.84,M,45.8,R,C,CC,SVR

@@ -75,8 +75,7 @@ def try_jth_table(tables, pdf_no, j):
             # debug_img = ft.image() # visualize(effective=True, show_labels=False)
             debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
             debug_img.save(f"test/outputs/actual/pdf{pdf_no}_t{j}.png")
-            with open(f"test/outputs/actual/pdf{pdf_no}_t{j}.csv", "w", encoding='utf-8') as f:
-                f.write(actual)
+            df.to_csv(f"test/outputs/actual/pdf{pdf_no}_t{j}.csv", index=False)
             # copy over the old csv as well
             with open(f"test/outputs/actual/pdf{pdf_no}_t{j}.old.csv", "w", encoding='utf-8') as f:
                 f.write(expected)
