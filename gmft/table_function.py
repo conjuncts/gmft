@@ -114,6 +114,9 @@ class TATRFormatConfig:
     warn_uninitialized_weights: bool = False
     image_processor_path: str = "microsoft/table-transformer-detection"
     formatter_path: str = "microsoft/table-transformer-structure-recognition"
+    no_timm: bool = True # use a model which uses AutoBackbone. 
+    # https://huggingface.co/microsoft/table-transformer-structure-recognition/discussions/5
+    # "microsoft/table-transformer-structure-recognition-v1.1-all"
     
     verbosity: int = 1
     """
@@ -131,15 +134,14 @@ class TATRFormatConfig:
     (having fewer rows than expected merges cells, which is bad).
     """
     
-
     cell_required_confidence = {
-        0: 0.3, 
-        1: 0.3, 
-        2: 0.3, 
-        3: 0.3, 
-        4: 0.5, 
-        5: 0.3,
-        6: 99
+        0: 0.3, # table
+        1: 0.3, # column
+        2: 0.3, # row
+        3: 0.3, # column header
+        4: 0.5, # projected row header
+        5: 0.5, # spanning cell
+        6: 99   # no object
     }
     """Confidences required (>=) for a row/column feature to be considered good. See TATRFormattedTable.id2label
     
@@ -148,7 +150,23 @@ class TATRFormatConfig:
     
     # ---- df() settings ----
     
-    large_table_if_n_rows_removed = 10
+    # ---- options ----
+    
+    remove_null_rows = True 
+    """remove rows with no text"""
+    
+    enable_multi_indices = False
+    """Enable multi-indices in the dataframe.
+    If false, then multiple headers will be merged column-wise."""
+    
+    semantic_spanning_cells = False
+    """
+    [Experimental] Enable semantic spanning cells, which often encode hierarchical multi-level indices.
+    """
+    
+    # ---- large table ----
+    
+    large_table_if_n_rows_removed = 8
     """
     If >= n rows are removed due to non-maxima suppression (NMS), then this table is classified as a large table.
     """
@@ -170,6 +188,7 @@ class TATRFormatConfig:
     False: force large table assumption to not be applied to any tables
     None: heuristically apply large table assumption according to threshold and overlap"""
 
+    # ---- rejection and warnings ----
 
     total_overlap_reject_threshold = 0.2
     """reject if total overlap is > 20% of table area"""
@@ -177,39 +196,62 @@ class TATRFormatConfig:
     total_overlap_warn_threshold = 0.05
     """warn if total overlap is > 5% of table area"""
     
-    corner_clip_outlier_threshold = 0.1
-    """"corner clip" is when the text is clipped by a corner, and not an edge"""
+    nms_warn_threshold = 5
+    """warn if non maxima suppression removes > 5 rows"""
     
     iob_reject_threshold = 0.05
     """reject if iob between textbox and cell is < 5%"""
 
     iob_warn_threshold = 0.5
     """warn if iob between textbox and cell is < 50%"""
-
-    remove_null_rows = True 
-    """remove rows with no text"""
     
-    spanning_cell_minimum_width = 0.6
-    """Prunes spanning cells that are < 60% of the table width.
-    Set to 0 to keep all spanning cells."""
+    # ---- technical ----
     
-
-    deduplication_iob_threshold = 0.95
-    """iob threshold for deduplication
-    if 2 consecutive rows have iob > 0.95, then one of them gets deleted (!)"""
+    _nms_overlap_threshold = 0.1
+    """Non-maxima suppression: if two rows overlap by > threshold (default: 10%), then the one with the lower confidence is removed.
+    A subsequent technique is able to fill in gaps created by NMS."""
+    
+    _large_table_merge_distance = 0.2
+    """In the large_table method, if two means are within (20% * text_height) of each other, then they are merged.
+    This may be useful to adjust if text is being split due to subscripts/superscripts."""
+    
+    _smallest_supported_text_height = 0.1
+    """The smallest supported text height. Text smaller than this height will be ignored. 
+    Helps prevent very small text from triggering creation of gigantic arrays under large table assumption."""
+    
+    # ---- deprecated ----
+    # aggregate_spanning_cells = False
+    @property
+    def aggregate_spanning_cells(self):
+        raise DeprecationWarning("aggregate_spanning_cells has been removed.")
+    @aggregate_spanning_cells.setter
+    def aggregate_spanning_cells(self, value):
+        raise DeprecationWarning("aggregate_spanning_cells has been removed.")
+    # corner_clip_outlier_threshold = 0.1
+    # """"corner clip" is when the text is clipped by a corner, and not an edge"""
+    @property
+    def corner_clip_outlier_threshold(self):
+        raise DeprecationWarning("corner_clip_outlier_threshold has been removed.")
+    @corner_clip_outlier_threshold.setter
+    def corner_clip_outlier_threshold(self, value):
+        raise DeprecationWarning("corner_clip_outlier_threshold has been removed.")
+    
+    # spanning_cell_minimum_width = 0.6
+    @property
+    def spanning_cell_minimum_width(self):
+        raise DeprecationWarning("spanning_cell_minimum_width has been removed.")
+    @spanning_cell_minimum_width.setter
+    def spanning_cell_minimum_width(self, value):
+        raise DeprecationWarning("spanning_cell_minimum_width has been removed.")
     
     
-    aggregate_spanning_cells = False
-    """TATR seems to have a high spanning cell false positive rate. 
-    (spanning cell or projected row header)
-    That is, it identifies a regular row with information (ie. Retired|5|3|2) as a super-row.
-    This flag prevents aggregating, and only marks a row as a suspected spanning cell.
-    This retains column information, and lets the user combine spanning rows if so desired.
-    """
+    @property
+    def deduplication_iob_threshold(self):
+        raise DeprecationWarning("deduplication_iob_threshold is deprecated. See nms_overlap_threshold instead.")
+    @deduplication_iob_threshold.setter
+    def deduplication_iob_threshold(self, value):
+        raise DeprecationWarning("deduplication_iob_threshold is deprecated. See nms_overlap_threshold instead.")
     
-    enable_multi_indices = False
-    """Enable multi-indices in the dataframe."""
-
     
 
 class TATRFormattedTable(FormattedTable):
@@ -282,7 +324,7 @@ class TATRFormattedTable(FormattedTable):
         return self._df
     
     
-    def visualize(self, filter=None, dpi=None, padding=None, margin='auto', effective=False, **kwargs):
+    def visualize(self, filter=None, dpi=None, padding=None, margin=(10,10,10,10), effective=False, **kwargs):
         """
         Visualize the table.
         
@@ -394,7 +436,8 @@ class TATRTableFormatter(TableFormatter):
             previous_verbosity = transformers.logging.get_verbosity()
             transformers.logging.set_verbosity(transformers.logging.ERROR)
         self.image_processor = AutoImageProcessor.from_pretrained(config.image_processor_path)
-        self.structor = TableTransformerForObjectDetection.from_pretrained(config.formatter_path)
+        revision = "no_timm" if config.no_timm else None
+        self.structor = TableTransformerForObjectDetection.from_pretrained(config.formatter_path, revision=revision)
         self.config = config
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
@@ -425,7 +468,7 @@ class TATRTableFormatter(TableFormatter):
         # but since we find the highest-intersecting row, same-row elements still tend to stay together
         # this is better than having a high threshold, because if we have fewer rows than expected, we merge cells
         # losing information
-        results = self.image_processor.post_process_object_detection(outputs, threshold=self.config.formatter_base_threshold, target_sizes=target_sizes)[0]
+        results = self.image_processor.post_process_object_detection(outputs, threshold=config.formatter_base_threshold, target_sizes=target_sizes)[0]
         
         
 
@@ -441,7 +484,7 @@ class TATRTableFormatter(TableFormatter):
         
         
         formatted_table = TATRFormattedTable(table, results, # scale_factor, padding, 
-                                             config=self.config)
+                                             config=config)
         return formatted_table
             
 

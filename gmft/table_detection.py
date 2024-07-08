@@ -221,11 +221,18 @@ class TableDetectorConfig:
     """
     image_processor_path: str = "microsoft/table-transformer-detection"
     detector_path: str = "microsoft/table-transformer-detection"
+    no_timm: bool = True # huggingface revision
     warn_uninitialized_weights: bool = False
     
     detector_base_threshold: float = 0.9
     """Minimum confidence score required for a table"""
 
+    @property
+    def confidence_score_threshold(self):
+        raise DeprecationWarning("Use detector_base_threshold instead.")
+    @confidence_score_threshold.setter
+    def confidence_score_threshold(self, value):
+        raise DeprecationWarning("Use detector_base_threshold instead.")
     
     def __init__(self, image_processor_path: str = None, detector_path: str = None):
 
@@ -259,7 +266,9 @@ class TableDetector:
             previous_verbosity = transformers.logging.get_verbosity()
             transformers.logging.set_verbosity(transformers.logging.ERROR)
         self.image_processor = AutoImageProcessor.from_pretrained(config.image_processor_path)
-        self.detector = TableTransformerForObjectDetection.from_pretrained(config.detector_path, revision="no_timm")
+        
+        revision = "no_timm" if config.no_timm else None
+        self.detector = TableTransformerForObjectDetection.from_pretrained(config.detector_path, revision=revision)
         
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)

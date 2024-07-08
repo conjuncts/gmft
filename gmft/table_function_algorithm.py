@@ -27,6 +27,10 @@ def _iob_for_rows(bbox1: tuple[float, float, float, float], bbox2: tuple[float, 
     """
     Modification of iob but for rows: pretend that the bboxes are infinitely wide. For bbox1.
     """
+    if not isinstance(bbox1, (tuple, list)): # intended to be a Rect
+        bbox1 = bbox1.bbox
+    if not isinstance(bbox2, (tuple, list)): # intended to be a Rect
+        bbox2 = bbox2.bbox
     a0, a1 = bbox1[1], bbox1[3]
     b0, b1 = bbox2[1], bbox2[3]
     
@@ -89,20 +93,17 @@ def _find_leftmost_gt(sorted_list, value, key_func):
     In other words, the first row where the row might intersect y_min, even a little bit
     """
     i = bisect.bisect_left(sorted_list, value, key=key_func)
-    # if i < len(sorted_list):
     return i
-    # return None
 
-def _predict_word_height(table):
+def _predict_word_height(table, smallest_supported_text_height=0.1):
     """
     Get the predicted height of standard text in the table.
     """
     # get the distribution of word heights, rounded to the nearest tenth
     word_heights = []
     for xmin, ymin, xmax, ymax, text in table.text_positions(remove_table_offset=True):
-        # word_heights.append(round(ymax - ymin, 1))
         height = ymax - ymin
-        if height > 0.1:
+        if height > smallest_supported_text_height: # .1
             word_heights.append(ymax - ymin)
     
     # get the mode
@@ -166,15 +167,16 @@ def _non_maxima_suppression(sorted_rows, overlap_threshold=0.1):
             i += 1
     return num_removed
     
+def _is_within_header(bbox, sorted_headers, _iob=_iob_for_rows, header_threshold=0.5): # assume len(sorted_headers) <= 2
+    return any(_iob(bbox, header['bbox']) > header_threshold for header in sorted_headers)
+    
 
 def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFormatConfig, sorted_rows, sorted_headers, known_means=None, known_height=None):
     if known_height:
         word_height = known_height
     else:
-        # get the distribution of word heights, rounded to the nearest tenth
-        if config.verbosity >= 1:
-            print("Invoking large table row guess! set TATRFormatConfig.force_large_table_assumption to False to disable this.")        
-        word_height = _predict_word_height(table)
+        # get the distribution of word heights, rounded to the nearest tenth        
+        word_height = _predict_word_height(table, smallest_supported_text_height=config._smallest_supported_text_height)
     
     if not sorted_rows:
         return []
@@ -192,7 +194,7 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFo
         # is header-like
         while sorted_rows:
             row = sorted_rows[0]['bbox']
-            if any(_iob_for_rows(row, header['bbox']) > 0.5 for header in sorted_headers):
+            if _is_within_header(row, sorted_headers):
                 new_rows.append(sorted_rows.pop(0))
             else:
                 break
@@ -275,15 +277,10 @@ def _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projec
     
     for i, row in enumerate(sorted_rows):
         # TODO binary-ify
-        if any(_iob(row['bbox'], header['bbox']) > 0.7 for header in sorted_headers):
+        if _is_within_header(row['bbox'], sorted_headers):
             header_indices.append(i)
         if any(_iob(row['bbox'], proj['bbox']) > 0.7 for proj in sorted_projecting):
             projecting_indices.append(i)
-    if not header_indices:
-        # loosen the threshold
-        for i, row in enumerate(sorted_rows):
-            if any(_iob(row['bbox'], header['bbox']) > 0.5 for header in sorted_headers):
-                header_indices.append(i)
     return header_indices, projecting_indices
 
 def _find_all_rows_for_box(sorted_rows, bbox, threshold=0, _iob=_iob_for_rows):
@@ -380,41 +377,56 @@ def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_co
     More specifically, 
     require hierarchical column headers to span only 1 row, and hierarchical row headers to span only 1 column.
     """
-    sorted_spanning_top = []
-    sorted_spanning_left = []
+    sorted_hier_top_headers = []
+    sorted_monosemantic_top_headers = []
+    sorted_hier_left_headers = []
     for x in spanning_cells:
-        if any(_iob(x['bbox'], header['bbox']) > 0.5 for header in sorted_headers):
+        if _is_within_header(x['bbox'], sorted_headers): # , _iob=_iob):
             # good - it is located in the header
-            if calculate_semantic_column_headers:
-                all_valid_rows = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2)
+            # if calculate_semantic_column_headers:
+            all_valid_rows = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2)
+            all_valid_cols = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2, _iob=_iob_for_columns)
+
+            # if it only spans only 1 row, then it is a hierarchical column header
+            if len(all_valid_rows) == 1 and len(all_valid_cols) > 1:
+                row_idx = all_valid_rows[0]
                 
-                # further require that it spans only 1 row
-                if len(all_valid_rows) == 1:
-                    row_idx = all_valid_rows[0]
-                    col_indices = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2, _iob=_iob_for_columns)
-                    sorted_spanning_top.append((x, row_idx, col_indices))
-            else:
-                sorted_spanning_top.append((x, None, None))
+                copy_x = {
+                    'row_idx': row_idx,
+                    'col_indices': all_valid_cols,
+                    **x
+                }
+                sorted_hier_top_headers.append(copy_x)
+            elif len(all_valid_cols) == 1 and len(all_valid_rows) > 1:
+                # this suggests that it is a non-hierarchical column header where the one title
+                # has a newline in it
+                copy_x = {
+                    'col_idx': col_idx,
+                    'row_indices': all_valid_rows,
+                    **x
+                }
+                sorted_monosemantic_top_headers.append(copy_x)
+            # else:
+                # sorted_hier_top_headers.append(x)
         else:
-            if calculate_semantic_row_headers:
-                all_valid_cols = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2)
-                
-                # further require that it spans only 1 column
-                if len(all_valid_cols) == 1:
-                    col_idx = all_valid_cols[0]
-                    row_indices = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2, _iob=_iob_for_rows)
-                    sorted_spanning_left.append((x, col_idx, row_indices))
-            else:
-                sorted_spanning_left.append((x, None, None))
+            # if calculate_semantic_row_headers:
+            all_valid_cols = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2)
+            
+            
+            # further require that it spans only 1 column
+            if len(all_valid_cols) == 1:
+                col_idx = all_valid_cols[0]
+                all_valid_rows = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2, _iob=_iob_for_rows)
+                copy_x = {
+                    'col_idx': col_idx,
+                    'row_indices': all_valid_rows,
+                    **x
+                }
+                sorted_hier_left_headers.append(copy_x)
+            # else:
+            #     sorted_hier_left_headers.append(x)
     
-    # get the columns in which the left spanning cells reside
-    left_spanning_indices = []
-    rightmost_span = max([x['bbox'][2] for x in sorted_spanning_left])
-    for i, col in enumerate(sorted_columns):
-        if any(_iob(col['bbox'], span['bbox']) > 0.5 for span in sorted_spanning_left):
-            left_spanning_indices.append(i)
-        if col['bbox'][0] > rightmost_span: # break early if we surpass the rightmost span
-            break
+    return sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers
 
 def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, float, str], None, None], 
                           config: TATRFormatConfig, 
@@ -487,9 +499,9 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
         
         # TODO calculate this directly from the score bbox and text bbox
         
-        score_norm_deviation = abs(row_max_iob * column_max_iob - score) / score
-        if score_norm_deviation > config.corner_clip_outlier_threshold:
-            outliers['corner clip'] = True
+        # score_norm_deviation = abs(row_max_iob * column_max_iob - score) / score
+        # if score_norm_deviation > config.corner_clip_outlier_threshold:
+            # outliers['corner clip'] = True
         
         if score < config.iob_warn_threshold: # If <0.5 is the best, warn but proceed.
             outliers['lowest iob'] = min(outliers.get('lowest iob', 1), score)
@@ -552,32 +564,16 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
 
     
     # 3. deduplicate, because tatr places a 2 bboxes for header (it counts as a header and a row)
-    # only check consecutive rows/columns
-    # i = 1
-    # prev = sorted_horizontals[0]
-    # while i < len(sorted_horizontals):
-    #     cur = sorted_horizontals[i]
     #     if _symmetric_iob(prev['bbox'], cur['bbox']) > config.deduplication_iob_threshold:
-    #         # pop the one that is a row
-    #         # print("popping something")
-    #         cur_priority = _priority_row(cur['label'])
-    #         prev_priority = _priority_row(prev['label'])
-    #         if cur_priority <= prev_priority:
-    #             # pop cur
-    #             sorted_horizontals.pop(i)
-    #         elif cur_priority > prev_priority:
-    #             sorted_horizontals.pop(i-1)
-    #             prev = cur
-    #     else:
-    #         prev = cur
-    #         i += 1
     sorted_rows, sorted_headers, sorted_projecting = _split_sorted_horizontals(sorted_horizontals)
     
-    _non_maxima_suppression(sorted_projecting)
+    _non_maxima_suppression(sorted_projecting, overlap_threshold=config._nms_overlap_threshold)
     # non-maxima suppression
-    num_removed = _non_maxima_suppression(sorted_rows)
+    num_removed = _non_maxima_suppression(sorted_rows, overlap_threshold=config._nms_overlap_threshold)
     if num_removed > 0 and config.verbosity >= 2:
         print(f"Removed {num_removed} overlapping rows")
+    if num_removed > config.nms_warn_threshold:
+        outliers['nms removed rows'] = max(outliers.get('nms removed rows', 0), num_removed)
     
     _widen_and_even_out_rows(sorted_rows, sorted_headers)
     
@@ -604,7 +600,8 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         large_table_guess = config.force_large_table_assumption
     
     if large_table_guess:
-        
+        if config.verbosity >= 1:
+            print("Invoking large table row guess! set TATRFormatConfig.force_large_table_assumption to False to disable this.")
         
         sorted_rows = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, known_height=word_height)
         left_corner = sorted_rows[0]['bbox']
@@ -639,7 +636,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         while i < len(known_means):
             prev = known_means[i-1]
             cur = known_means[i]
-            if abs(cur - prev) < 0.2 * known_height:
+            if abs(cur - prev) < config._large_table_merge_distance * known_height: # default: 0.2
                 # merge by averaging
                 known_means[i-1] = (prev + cur) / 2
                 known_means.pop(i)
@@ -667,6 +664,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     total_area = (total_row_area + total_column_area) / 2
     
     if total_area > (1 + config.total_overlap_reject_threshold) * table_area:
+        # this shouldn't really happen anymore with NMS
         raise ValueError(f"The identified boxes have significant overlap: {total_area / table_area - 1:.2%} of area is overlapping (Max is {config.total_overlap_reject_threshold:.2%})")
     
     elif total_area > (1 + config.total_overlap_warn_threshold) * table_area:

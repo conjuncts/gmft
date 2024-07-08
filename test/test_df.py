@@ -24,6 +24,15 @@ num_tables = {
     8: 2,
 }
 
+# @pytest.fixture(scope="module")
+# def formatter():
+#     # try out microsoft/table-transformer-structure-recognition-v1.1-all
+#     config = AutoFormatConfig()
+#     config.detector_path = "microsoft/table-transformer-structure-recognition-v1.1-all"
+#     config.no_timm = False
+#     yield AutoTableFormatter(config)
+
+
 def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTableFormatter, n):
     print("Making tables for pdf", n)
     doc = docs_bulk[n-1]
@@ -38,7 +47,7 @@ def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTa
             cropped += detector.extract(page)
         for crop in cropped:
             try:
-                tables.append(formatter.extract(crop, margin='auto', padding=None))
+                tables.append(formatter.extract(crop)) # , margin='auto', padding=None))
             except Exception as e:
                 # print(e)
                 raise e
@@ -62,6 +71,7 @@ def try_jth_table(tables, pdf_no, j, config=None):
         config = AutoFormatConfig()
         config.large_table_threshold = 20
         config.verbosity = 3
+        
     # note that config_overrides and config are both not a dict
 
     ft = tables[j]
