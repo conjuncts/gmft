@@ -1,6 +1,6 @@
 [project]
 name = "gmft"
-version = "0.2.0rc0"
+version = "0.2.0rc1"
 description = "Lightweight, performant, configurable, deep table extraction"
 authors = [
   {name = "conjunct"}
@@ -35,4 +35,5 @@ requires = ["flit_core >=3.4,<4"]
 [tool.flit.sdist]
 include = ["gmft/**/*.py", "README.md", "LICENSE"]
 exclude = ["gmft/pdf_bindings/bindings_mu.py", "test/**/*", "docs/**/*", "notebooks/**/*", "samples/**/*", "reading_list.md", "*.zip",
-  "*.tsv", "comparison.md", "gmft/formatters/*.py"]
+  "*.tsv", "gmft/formatters/*.py", "*.yaml", 
+  "TODO.md", "CHANGELOG.md", "dev.md", "comparisonn.md"]

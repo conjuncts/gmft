@@ -10,8 +10,8 @@ project = 'gmft'
 copyright = '2024, conjunct'
 author = 'conjunct'
 
-release = '0.1'
-version = '0.1.1'
+release = '0.2'
+version = '0.2.0rc1'
 
 # -- General configuration
 
