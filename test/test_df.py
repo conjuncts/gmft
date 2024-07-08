@@ -6,23 +6,13 @@ from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.presets import ingest_pdf
 from gmft.table_detection import TableDetectorConfig
 from gmft.table_function import TATRFormattedTable
+from .conftest import REDETECT_TABLES
 
 
-
-REDETECT_TABLES = False 
 # non-determinism of transformers means this might not always pass
 # (ie. dependence on environment - colab/local) 
 
-num_tables = {
-    1: 10,
-    2: 4,
-    3: 4,
-    4: 2, 
-    5: 2, 
-    6: 3, 
-    7: 3, 
-    8: 2,
-}
+
 
 # @pytest.fixture(scope="module")
 # def formatter():
@@ -33,44 +23,16 @@ num_tables = {
 #     yield AutoTableFormatter(config)
 
 
-def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTableFormatter, n):
-    print("Making tables for pdf", n)
-    doc = docs_bulk[n-1]
-    # for i, doc in enumerate(docs_bulk):
-    
-    config = TableDetectorConfig()
-    config.detector_base_threshold = 0.9
-    tables = []
-    if REDETECT_TABLES:
-        cropped = []
-        for page in doc:
-            cropped += detector.extract(page)
-        for crop in cropped:
-            try:
-                tables.append(formatter.extract(crop)) # , margin='auto', padding=None))
-            except Exception as e:
-                # print(e)
-                raise e
-                # pass
-                # tables.append(None)
-    else:
-        for j in range(num_tables[n]):
-            with open(f"test/outputs/bulk/pdf{n}_t{j}.info", "r") as f:
-                as_dict = json.load(f)
-                page_no = as_dict["page_no"]
-                page = doc[page_no]
-                tables.append(TATRFormattedTable.from_dict(as_dict, page))
-    return tables
 
 
 
-
-def try_jth_table(tables, pdf_no, j, config=None):
+def try_jth_table(tables, pdf_no, j, config=None, REDETECT_TABLES=False):
     
     if config is None:
         config = AutoFormatConfig()
         config.large_table_threshold = 20
         config.verbosity = 3
+        # config.semantic_spanning_cells = True
         
     # note that config_overrides and config are both not a dict
 
@@ -99,9 +61,7 @@ def try_jth_table(tables, pdf_no, j, config=None):
         # assert not os.path.exists(f"test/outputs/bulk/pdf{pdf_no}_t{j}.csv"), f"Failed to create df in pdf {pdf_no} and table {j}"
 
 class TestPdf1:
-    @pytest.fixture(scope="module")
-    def pdf1_tables(self, docs_bulk, detector, formatter):
-        yield get_tables_for_pdf(docs_bulk, detector, formatter, 1)
+
 
     def test_bulk_pdf1_t0(self, pdf1_tables):
         try_jth_table(pdf1_tables, 1, 0)
@@ -124,14 +84,12 @@ class TestPdf1:
     def test_bulk_pdf1_t9(self, pdf1_tables):
         with pytest.raises(ValueError, match="The identified boxes have significant overlap"):
             try_jth_table(pdf1_tables, 1, 9)
+    
 
 
 class TestPdf2:
     
     
-    @pytest.fixture(scope="module")
-    def pdf2_tables(self, docs_bulk, detector, formatter):
-        yield get_tables_for_pdf(docs_bulk, detector, formatter, 2)
 
     def test_bulk_pdf2_t0(self, pdf2_tables):
         try_jth_table(pdf2_tables, 2, 0)
@@ -143,9 +101,6 @@ class TestPdf2:
         try_jth_table(pdf2_tables, 2, 3)
 
 class TestPdf3:
-    @pytest.fixture(scope="module")
-    def pdf3_tables(self, docs_bulk, detector, formatter):
-        yield get_tables_for_pdf(docs_bulk, detector, formatter, 3)
 
     def test_bulk_pdf3_t0(self, pdf3_tables):
         try_jth_table(pdf3_tables, 3, 0)
@@ -157,9 +112,6 @@ class TestPdf3:
         try_jth_table(pdf3_tables, 3, 3)
 
 class TestPdf4:
-    @pytest.fixture(scope="module")
-    def pdf4_tables(self, docs_bulk, detector, formatter):
-        yield get_tables_for_pdf(docs_bulk, detector, formatter, 4)
 
     def test_bulk_pdf4_t0(self, pdf4_tables):
         try_jth_table(pdf4_tables, 4, 0)
@@ -167,9 +119,6 @@ class TestPdf4:
         try_jth_table(pdf4_tables, 4, 1)
 
 class TestPdf5:
-    @pytest.fixture(scope="module")
-    def pdf5_tables(self, docs_bulk, detector, formatter):
-        yield get_tables_for_pdf(docs_bulk, detector, formatter, 5)
 
     def test_bulk_pdf5_t0(self, pdf5_tables):
         try_jth_table(pdf5_tables, 5, 0)
@@ -177,9 +126,6 @@ class TestPdf5:
         try_jth_table(pdf5_tables, 5, 1)
     
 class TestPdf6:
-    @pytest.fixture(scope="module")
-    def pdf6_tables(self, docs_bulk, detector, formatter):
-        yield get_tables_for_pdf(docs_bulk, detector, formatter, 6)
 
     def test_bulk_pdf6_t0(self, pdf6_tables):
         try_jth_table(pdf6_tables, 6, 0)
@@ -189,9 +135,6 @@ class TestPdf6:
         try_jth_table(pdf6_tables, 6, 2)
 
 class TestPdf7:
-    @pytest.fixture(scope="module")
-    def pdf7_tables(self, docs_bulk, detector, formatter):
-        yield get_tables_for_pdf(docs_bulk, detector, formatter, 7)
 
     def test_bulk_pdf7_t0(self, pdf7_tables):
         try_jth_table(pdf7_tables, 7, 0)
@@ -201,9 +144,7 @@ class TestPdf7:
         try_jth_table(pdf7_tables, 7, 2)
 
 class TestPdf8:
-    @pytest.fixture(scope="module")
-    def pdf8_tables(self, docs_bulk, detector, formatter):
-        yield get_tables_for_pdf(docs_bulk, detector, formatter, 8)
+
     def test_bulk_pdf8_t0(self, pdf8_tables):
         try_jth_table(pdf8_tables, 8, 0)
     def test_bulk_pdf8_t1(self, pdf8_tables):

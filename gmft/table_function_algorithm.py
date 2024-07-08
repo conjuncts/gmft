@@ -76,6 +76,18 @@ def _symmetric_iob_for_rows(bbox1, bbox2):
     
     return intersect_area / min(a1 - a0, b1 - b0)
 
+def _symmetric_iob_for_columns(bbox1, bbox2):
+    """
+    Modification of iob but for columns: pretend that the bboxes are infinitely tall. For min of bbox1 and bbox2.
+    """
+    a0, a1 = bbox1[0], bbox1[2]
+    b0, b1 = bbox2[0], bbox2[2]
+    
+    intersect0, intersect1 = max(a0, b0), min(a1, b1)
+    intersect_area = max(0, intersect1 - intersect0)
+    
+    return intersect_area / min(a1 - a0, b1 - b0)
+
 def _find_rightmost_le(sorted_list, value, key_func):
     """Find rightmost value less than or equal to value
     Therefore, finds the rightmost box where box_min <= y1
@@ -296,6 +308,7 @@ def _find_all_rows_for_box(sorted_rows, bbox, threshold=0, _iob=_iob_for_rows):
     while i < len(sorted_rows):
         row = sorted_rows[i]
         iob_score = _iob(bbox, row['bbox'])
+
         if iob_score > threshold:
             rows.append(i)
         # we may break early when the row is below the textbox
@@ -366,9 +379,7 @@ def _find_best_column_for_text(sorted_columns, textbox):
     return column_num, column_max_iob
 
 
-def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_columns,
-                          calculate_semantic_column_headers=False,
-                          calculate_semantic_row_headers=True):
+def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_columns, header_indices):
     """
     Split spanning cells into 2 categories: 
     a) those within column headers (and therefore likely represent info on hierarchical column headers). These reside on top
@@ -385,14 +396,18 @@ def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_co
             # good - it is located in the header
             # if calculate_semantic_column_headers:
             all_valid_rows = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2)
-            all_valid_cols = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2, _iob=_iob_for_columns)
+            
+            # problem: we actually want to divide by the _column_ width, not the bbox
+            # since the bbox is wider
+            all_valid_cols = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2, 
+                    _iob=_symmetric_iob_for_columns)
 
             # if it only spans only 1 row, then it is a hierarchical column header
+            all_valid_rows = [x for x in all_valid_rows if x in header_indices]
             if len(all_valid_rows) == 1 and len(all_valid_cols) > 1:
-                row_idx = all_valid_rows[0]
                 
                 copy_x = {
-                    'row_idx': row_idx,
+                    'row_idx': all_valid_rows[0],
                     'col_indices': all_valid_cols,
                     **x
                 }
@@ -401,7 +416,7 @@ def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_co
                 # this suggests that it is a non-hierarchical column header where the one title
                 # has a newline in it
                 copy_x = {
-                    'col_idx': col_idx,
+                    'col_idx': all_valid_cols[0],
                     'row_indices': all_valid_rows,
                     **x
                 }
@@ -416,7 +431,9 @@ def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_co
             # further require that it spans only 1 column
             if len(all_valid_cols) == 1:
                 col_idx = all_valid_cols[0]
-                all_valid_rows = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2, _iob=_iob_for_rows)
+                # bbox may be taller than each row, so use symmetric iob
+                all_valid_rows = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2, 
+                                        _iob=_symmetric_iob_for_rows)
                 copy_x = {
                     'col_idx': col_idx,
                     'row_indices': all_valid_rows,
@@ -427,6 +444,104 @@ def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_co
             #     sorted_hier_left_headers.append(x)
     
     return sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers
+
+def _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
+                            header_indices,
+                            config):
+    """
+    Fill the table array according to semantic information from detected spanning cells.
+    (Assumes that NMS has already been applied, and there are no conflicts)
+    """
+    # Fill hierarchical left headers
+    # 1. assume that only one cell is filled. 
+    # We may also possibly assume that only the top cell should be non-empty
+    # We could also assume that this only applies to the leftmost column
+    # -- multiple subdivisions, like pdf6_t0 is possible
+    # 2. then, copy among all cells
+    if config.semantic_hierarchical_left_fill == 'deep':
+        for x in sorted_hier_left_headers:
+
+            col_num = x['col_idx']
+            content = None # assume that there is a unique text
+            for row_num in x['row_indices']:
+                cell_content = table_array[row_num, col_num]
+                if cell_content:
+                    # stuff
+                    if content is None:
+                        content = cell_content
+                    else:
+                        # two cells with text
+                        break
+            if content:
+                for row_num in x['row_indices']:
+                    table_array[row_num, col_num] = content
+    elif config.semantic_hierarchical_left_fill == 'algorithm':
+        # get counts of all column indices, then keep those >= 2
+        col_counts = {}
+        for x in sorted_hier_left_headers:
+            col_num = x['col_idx']
+            col_counts[col_num] = col_counts.get(col_num, 0) + 1
+        
+        # only expect leftmost 3 columns and more than 2 such spanning items.
+        hier_left_indices = [k for k, v in col_counts.items() if k < 3 and v >= 2]
+        
+        first_row = max(header_indices, default=-1) + 1
+        
+        content = None
+        for col_num in hier_left_indices:
+            for row_num in range(first_row, table_array.shape[0]):
+                if table_array[row_num, col_num] is not None:
+                    content = table_array[row_num, col_num]
+                else:
+                    table_array[row_num, col_num] = content
+                
+
+    
+    # Fill hierarchical top headers
+    # 1. This time, aggregate
+    # 2. then, copy among all cells
+    for x in sorted_hier_top_headers:
+        row_num = x['row_idx']
+        content = [] # this time, aggregate, and copy among all cells
+        for col_num in x['col_indices']:
+            cell_content = table_array[row_num, col_num]
+            if cell_content:
+                content.append(cell_content)
+        if content:
+            content = ' '.join(content)
+            for col_num in x['col_indices']:
+                table_array[row_num, col_num] = content
+            
+        
+    # Fill monosemantic top headers - so these are unhierarchical column headers that are all 
+    # contained in one column
+    # 0. There is only something to do when text is in both these cells
+    # 1. This time, aggregate
+    # 2. Only write to the bottom-most cell
+    # for now, less useful
+    for x in sorted_monosemantic_top_headers:
+        col_num = x['col_idx']
+        content = [] # this time, aggregate, and push it all to the bottom-most cell
+        for row_num in x['row_indices']:
+            cell_content = table_array[row_num, col_num]
+            if cell_content:
+                content.append(cell_content)
+        if len(content) > 1:
+            # TODO config options for "repeat", "bottom"
+            # if config.enable_multi_header:
+                # duplicate
+                # for row_num in x['row_indices']:
+                    # table_array[row_num, col_num] = ' \\n'.join(content)
+            # else:
+                # if not multi-header:
+                # write once, wipe the other cells
+            for row_num in x['row_indices']:
+                table_array[row_num, col_num] = None
+            # push it all to the bottom-most cell
+            bottom_most_row = x['row_indices'][-1]
+            table_array[bottom_most_row, col_num] = ' \\n'.join(content)
+                
+        
 
 def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, float, str], None, None], 
                           config: TATRFormatConfig, 
@@ -685,16 +800,35 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
                                         outliers=outliers, row_means=row_means)
     
     
-    num_rows = len(sorted_rows)
-    num_columns = len(sorted_columns)
+
     
     # create a pandas dataframe from the table array
     
+    # delete empty rows
+    if config.remove_null_rows:
+        keep_rows = [n for n in range(len(sorted_rows)) if any(x is not None for x in table_array[n, :])]
+        table_array = table_array[keep_rows]
+        sorted_rows = [sorted_rows[n] for n in keep_rows]
+    
+    num_rows = len(sorted_rows)
+    num_columns = len(sorted_columns)
+    
+    # find indices of key rows
     header_indices, projecting_indices = _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting)
 
+    # semantic spanning fill
+    if config.semantic_spanning_cells:
+        sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers = _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_columns, header_indices)
+        _non_maxima_suppression(sorted_hier_top_headers, overlap_threshold=0.1)
+        _non_maxima_suppression(sorted_monosemantic_top_headers, overlap_threshold=0.1)
+        _non_maxima_suppression(sorted_hier_left_headers, overlap_threshold=0.1)
+        _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
+                header_indices=header_indices,
+                config=config)
+    
     # extract out the headers
     header_rows = table_array[header_indices]
-    if config.enable_multi_indices and len(header_rows) > 1:
+    if config.enable_multi_header and len(header_rows) > 1:
         # Convert header rows to a list of tuples, where each tuple represents a column
         columns_tuples = list(zip(*header_rows))
 
@@ -705,12 +839,13 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     else:
         # join by '\n' if there are multiple lines
         column_headers = [' \\n'.join([row[i] for row in header_rows if row[i]]) for i in range(num_columns)]
+
     # note: header rows will be taken out
     table._df = pd.DataFrame(data=table_array, columns=column_headers)
     
     # a. mark as projecting/non-projecting
     is_projecting = [x in projecting_indices for x in range(num_rows)]
-    if any(is_projecting):
+    if projecting_indices:
         # insert at end
         table._df.insert(num_columns, 'is_projecting_row', is_projecting)
     
@@ -718,8 +853,8 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     table._df.drop(index=header_indices, inplace=True)
     table._df.reset_index(drop=True, inplace=True)
     
-    if config.remove_null_rows:
-        keep_columns = [n for n in table._df if n != 'is_projecting_row']
-        table._df.dropna(subset=keep_columns, how='all', inplace=True)
+    # if config.remove_null_rows:
+    #     keep_columns = [n for n in table._df if n != 'is_projecting_row']
+    #     table._df.dropna(subset=keep_columns, how='all', inplace=True)
     table.outliers = outliers
     return table._df

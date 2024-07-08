@@ -155,13 +155,20 @@ class TATRFormatConfig:
     remove_null_rows = True 
     """remove rows with no text"""
     
-    enable_multi_indices = False
+    enable_multi_header = False
     """Enable multi-indices in the dataframe.
     If false, then multiple headers will be merged column-wise."""
     
     semantic_spanning_cells = False
     """
     [Experimental] Enable semantic spanning cells, which often encode hierarchical multi-level indices.
+    """
+    
+    semantic_hierarchical_left_fill = 'algorithm'
+    """
+    [Experimental] When semantic spanning cells is enabled, when a left header is detected which might
+    represent a group of rows, that same value is reduplicated for each row.
+    Possible values: 'algorithm', 'deep', None
     """
     
     # ---- large table ----
@@ -217,7 +224,7 @@ class TATRFormatConfig:
     
     _smallest_supported_text_height = 0.1
     """The smallest supported text height. Text smaller than this height will be ignored. 
-    Helps prevent very small text from triggering creation of gigantic arrays under large table assumption."""
+    Helps prevent very small text from creating huge arrays under large table assumption."""
     
     # ---- deprecated ----
     # aggregate_spanning_cells = False
