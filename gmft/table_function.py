@@ -116,6 +116,7 @@ class TATRFormatConfig:
     image_processor_path: str = "microsoft/table-transformer-detection"
     formatter_path: str = "microsoft/table-transformer-structure-recognition"
     no_timm: bool = True # use a model which uses AutoBackbone. 
+    torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
     # https://huggingface.co/microsoft/table-transformer-structure-recognition/discussions/5
     # "microsoft/table-transformer-structure-recognition-v1.1-all"
     
@@ -260,6 +261,10 @@ class TATRFormatConfig:
     def deduplication_iob_threshold(self, value):
         raise DeprecationWarning("deduplication_iob_threshold is deprecated. See nms_overlap_threshold instead.")
     
+    def __init__(self, torch_device: torch.device = None):
+
+        if torch_device is not None:
+            self.torch_device = torch_device
     
 
 class TATRFormattedTable(FormattedTable):
@@ -448,7 +453,7 @@ class TATRTableFormatter(TableFormatter):
             transformers.logging.set_verbosity(transformers.logging.ERROR)
         self.image_processor = AutoImageProcessor.from_pretrained(config.image_processor_path)
         revision = "no_timm" if config.no_timm else None
-        self.structor = TableTransformerForObjectDetection.from_pretrained(config.formatter_path, revision=revision)
+        self.structor = TableTransformerForObjectDetection.from_pretrained(config.formatter_path, revision=revision).to(config.torch_device)
         self.config = config
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
@@ -469,7 +474,7 @@ class TATRTableFormatter(TableFormatter):
         margin = table._img_margin
         
         scale_factor = dpi / 72
-        encoding = self.image_processor(image, return_tensors="pt")
+        encoding = self.image_processor(image, return_tensors="pt").to(self.config.torch_device)
         with torch.no_grad():
             outputs = self.structor(**encoding)
         

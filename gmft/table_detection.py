@@ -271,6 +271,7 @@ class TableDetectorConfig:
     detector_path: str = "microsoft/table-transformer-detection"
     no_timm: bool = True # huggingface revision
     warn_uninitialized_weights: bool = False
+    torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
     
     detector_base_threshold: float = 0.9
     """Minimum confidence score required for a table"""
@@ -282,12 +283,14 @@ class TableDetectorConfig:
     def confidence_score_threshold(self, value):
         raise DeprecationWarning("Use detector_base_threshold instead.")
     
-    def __init__(self, image_processor_path: str = None, detector_path: str = None):
+    def __init__(self, image_processor_path: str = None, detector_path: str = None, torch_device: torch.device = None):
 
         if image_processor_path is not None:
             self.image_processor_path = image_processor_path
         if detector_path is not None:
             self.detector_path = detector_path
+        if torch_device is not None:
+            self.torch_device = torch_device
     
 
 class TableDetector:
@@ -316,7 +319,7 @@ class TableDetector:
         self.image_processor = AutoImageProcessor.from_pretrained(config.image_processor_path)
         
         revision = "no_timm" if config.no_timm else None
-        self.detector = TableTransformerForObjectDetection.from_pretrained(config.detector_path, revision=revision)
+        self.detector = TableTransformerForObjectDetection.from_pretrained(config.detector_path, revision=revision).to(config.torch_device)
         
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
@@ -337,7 +340,7 @@ class TableDetector:
             config = self.config
         
         img = page.get_image(72) # use standard dpi = 72, which means we don't need any scaling
-        encoding = self.image_processor(img, return_tensors="pt")
+        encoding = self.image_processor(img, return_tensors="pt").to(self.config.torch_device)
         with torch.no_grad():
             outputs = self.detector(**encoding)
         # keep only predictions of queries with 0.9+ confidence (excluding no-object class)
@@ -459,15 +462,3 @@ class RotatedCroppedTable(CroppedTable):
     #     """
     #     img = self.page.get_image()
     #     plot_results_unwr(img, [self.confidence_score], [self.label], [self.bbox], self.angle, **kwargs)
-    
-    
-
-        
-
-
-    
-    
-    
-    
-
-    
