@@ -32,6 +32,7 @@ def try_jth_table(tables, pdf_no, j, config=None, REDETECT_TABLES=False):
         config = AutoFormatConfig()
         config.large_table_threshold = 20
         config.verbosity = 3
+        config.semantic_spanning_cells = False
         # config.semantic_spanning_cells = True
         
     # note that config_overrides and config are both not a dict

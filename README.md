@@ -86,15 +86,27 @@ By subclassing the BasePDFDocument and BasePage classes, you are also able to su
 
 By subclassing TableDetector and TableFormatter, alternative table detection and structure extraction methods are also possible.
 
-# Limitations
+# Discussion
 
-Multi-indices (multiple column headers) are not yet supported.
 
-Slightly rotated tables will probably fail, especially large tables that are not perfectly level.
+## New
+
+[Experimental] Multi-indices (multiple column headers) are now supported in `v0.2` with `TATRFormatConfig.enable_multi_header = True`.
+
+[Experimental] Spanning cells are now supported in `v0.2` with `TATRFormatConfig.semantic_spanning_cells = True`.
+
+Rotated tables are now supported in `v0.0.4`.
+
+
+## Limitations
+
+False detection of references, indexes, and large columnar text.
+
+Slightly askew tables.
 
 # Acknowledgements
 
-A tremendous thank you to the TATR authors: Brandon Smock, Rohith Pesala, and Robin Abraham, for making gmft possible. The image->csv step is highly inspired by TATR's inference.py code, but it has been rewritten with some adjustments for ease of use.
+A tremendous thank you to the PubTables1M (and Table Transformer) authors: Brandon Smock, Rohith Pesala, and Robin Abraham, for making gmft possible. The image->csv step is based on from TATR's inference.py code, but it has been rewritten with some adjustments for ease of use.
 
 Thank you to Niels Rogge for porting TATR to huggingface and writing the [visualization code](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb).
 
