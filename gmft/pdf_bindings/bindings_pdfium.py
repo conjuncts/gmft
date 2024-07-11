@@ -1,3 +1,4 @@
+from __future__ import annotations # 3.7
 
 # PyPDFium2 bindings
 from typing import Generator
@@ -7,6 +8,12 @@ from gmft.common import Rect
 from gmft.pdf_bindings.common import BasePDFDocument, BasePage
 
 from PIL.Image import Image as PILImage
+
+
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from gmft.table_detection import CroppedTable
 
 
 class PyPDFium2Page(BasePage):
@@ -164,12 +171,21 @@ class PyPDFium2Utils:
         return doc.get_page(page_number)
     
     @staticmethod
-    def reload(ct: 'CroppedTable') -> 'CroppedTable':
+    def reload(ct: 'CroppedTable', doc=None) -> tuple['CroppedTable', 'PyPDFium2Document']:
         """
         Reloads the :class:`~gmft.CroppedTable` from disk.
         This is useful for a :class:`~gmft.CroppedTable` whose document has been closed.
+        
+        :param ct: The :class:`~gmft.CroppedTable` to reload.
+        :param doc: The :class:`~gmft.PyPDFium2Document` to reload from. If None, the document is loaded from disk.
         """
-        page = PyPDFium2Utils.load_page_from_dict(ct.to_dict())
+        page_number = ct.page.page_number
+        
+        if doc is None:
+            filename = ct.page.filename
+            doc = PyPDFium2Document(filename)
+        page = doc.get_page(page_number)
+        
         ct.page = page
-        return ct
+        return ct, doc # escape analysis means we need to give doc back
         

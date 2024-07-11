@@ -10,7 +10,7 @@ colors = {-1: "red", 0: "red", 1: "blue", 2: "green", 3: "yellow", 4: "orange", 
 
 
 def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None, figsize=(32,20),
-                      padding=None, margin=None,
+                      padding=None, margin=None, linewidth=3,
                       show_labels=True, return_img=False): # prob, boxes):
     """
     Helper method to visualize the results of the table detection/format model.
@@ -59,7 +59,7 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
         if filter is not None and lbl not in filter:
             continue
         ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
-                                   fill=False, color=colors[lbl], linewidth=3))
+                                   fill=False, color=colors[lbl], linewidth=linewidth))
         if lbl != -1 and show_labels:
             text = f'{id2label[lbl]}: {cl:0.2f}'
             ax.text(xmin, ymin, text, fontsize=15,

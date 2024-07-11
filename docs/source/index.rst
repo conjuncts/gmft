@@ -10,6 +10,8 @@ To see how gmft stacks up against the many alternatives, `this <https://docs.goo
 Check out the :doc:`usage` section, including
 :ref:`installation` instructions.
 
+Check out the :doc:`config` section for a description on gmft's settings.
+
 .. note::
 
    This project is under active development.
@@ -22,6 +24,6 @@ Contents
    :caption: Contents:
 
    usage
-   api   
+   config   
    gmft
    

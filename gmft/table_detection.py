@@ -283,7 +283,7 @@ class TableDetectorConfig:
     def confidence_score_threshold(self, value):
         raise DeprecationWarning("Use detector_base_threshold instead.")
     
-    def __init__(self, image_processor_path: str = None, detector_path: str = None, torch_device: torch.device = None):
+    def __init__(self, image_processor_path: str = None, detector_path: str = None, torch_device: str = None):
 
         if image_processor_path is not None:
             self.image_processor_path = image_processor_path

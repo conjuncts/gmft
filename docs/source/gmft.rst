@@ -5,7 +5,6 @@ gmft package
    :members:
    :undoc-members:
    :show-inheritance:
-   :imported-members:
 
 Subpackages
 -----------

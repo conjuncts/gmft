@@ -170,7 +170,11 @@ class TATRFormatConfig:
     """
     [Experimental] When semantic spanning cells is enabled, when a left header is detected which might
     represent a group of rows, that same value is reduplicated for each row.
-    Possible values: 'algorithm', 'deep', None
+    Possible values: 'algorithm', 'deep', None.
+    
+    'algorithm': assumes that the higher-level header is always the first row followed by several empty rows.
+    'deep': merges headers according to the spanning cells detected by the Table Transformer.
+    None: headers are not duplicated.
     """
     
     # ---- large table ----
@@ -261,7 +265,7 @@ class TATRFormatConfig:
     def deduplication_iob_threshold(self, value):
         raise DeprecationWarning("deduplication_iob_threshold is deprecated. See nms_overlap_threshold instead.")
     
-    def __init__(self, torch_device: torch.device = None):
+    def __init__(self, torch_device: str = None):
 
         if torch_device is not None:
             self.torch_device = torch_device
