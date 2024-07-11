@@ -8,6 +8,8 @@ from PIL.Image import Image as PILImage
 
 class BasePage(ABC):
     
+    width: float
+    height: float
     def __init__(self, page_number: int):
         self.page_number = page_number
     
@@ -30,6 +32,7 @@ class BasePage(ABC):
         (x0, y0, x1, y1)
         """
         raise NotImplementedError
+
     
 
 class BasePDFDocument(ABC):

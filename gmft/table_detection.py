@@ -13,12 +13,14 @@ from typing import Generator, Union
 import PIL.Image
 from PIL.Image import Image as PILImage
 
+import numpy as np
 import torch
 import transformers
 from transformers import AutoImageProcessor, TableTransformerForObjectDetection
 
 from gmft.common import Rect
 from gmft.pdf_bindings.common import BasePage, ImageOnlyPage
+from gmft.table_captioning import _find_captions
 from gmft.table_visualization import plot_results_unwr
 
 
@@ -57,6 +59,7 @@ class CroppedTable:
     _img_dpi: int
     _img_padding: tuple[int, int, int, int]
     _img_margin: tuple[int, int, int, int]
+    _word_height: float
     def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float, label=0):
         
         self.page = page
@@ -70,6 +73,7 @@ class CroppedTable:
         self._img_padding = None
         self._img_margin = None
         self.label = label
+        self._word_height = None
     
     def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None, margin: str | tuple[int, int, int, int]=None) -> PILImage:
         """
@@ -152,6 +156,50 @@ class CroppedTable:
         :return: text of the cropped table
         """
         return position_words(self.text_positions())
+    
+    def predicted_word_height(self, smallest_supported_text_height=0.1):
+        """
+        Get the predicted height of standard text in the table. 
+        If there are no words, np.nan is returned.
+        """
+        if self._word_height is not None: #
+            assert self._word_height != 0 # prevent infinite loop / disaster
+            return self._word_height
+        # get the distribution of word heights, rounded to the nearest tenth
+        word_heights = []
+        for xmin, ymin, xmax, ymax, text in self.text_positions(remove_table_offset=True):
+            height = ymax - ymin
+            if height > smallest_supported_text_height: # .1
+                word_heights.append(ymax - ymin)
+        
+        # get the mode
+        # from collections import Counter
+        # word_heights = Counter(word_heights)
+        
+        # # set the mode to be the row height
+        # # making the row less than text's height will mean that no cells are merged
+        # # but subscripts may be difficult
+        # row_height = 0.95 * max(word_heights, key=word_heights.get)
+        
+        # actually no - use the median
+        if word_heights:
+            self._word_height = 0.95 * np.median(word_heights)
+            assert self._word_height > 0
+        else: 
+            self._word_height = np.nan # empty
+        return self._word_height
+    
+    def captions(self, margin=None, line_spacing=2.5, **kwargs):
+        """
+        Look for a caption in the table.
+        
+        :param margin: margin around the table to search for captions. Positive margin = expands the table.
+        :param line_spacing: minimum line spacing to consider two lines as separate.
+        :return: list[str]: [caption_above, caption_below]
+        
+        """
+        return _find_captions(self, margin=margin, line_spacing=line_spacing, **kwargs)
+    
     
     def visualize(self, show_text=False, **kwargs):
         """

@@ -36,4 +36,4 @@ requires = ["flit_core >=3.4,<4"]
 include = ["gmft/**/*.py", "README.md", "LICENSE"]
 exclude = ["gmft/pdf_bindings/bindings_mu.py", "test/**/*", "docs/**/*", "notebooks/**/*", "samples/**/*", "reading_list.md", "*.zip",
   "*.tsv", "gmft/formatters/*.py", "*.yaml", 
-  "TODO.md", "CHANGELOG.md", "dev.md", "comparisonn.md"]
+  "TODO.md", "CHANGELOG.md", "dev.md", "comparison.md"]

@@ -3,16 +3,18 @@
 ### Features:
 - Multiple headers; multi-index tables
 - Spanning cells on both the top and left
+- Captions for tables
 - "Margin" parameter allows text outside of table bbox to be included
 - Return visualized images as PIL image; allow padding or margin around visualized
 
 ### Several tweaks to formatting algorithm that may result in different outputs compared to prior versions.
 - Automatically drop rows whose only non-null values is the "is_projecting_row" column
-- Fill in gaps between table rows, so hopefully no text is skipped
+- Fill in gaps between table rows, to reduce skipped text
 - Non-maxima suppression, as seen in inference.py
     - "total overlap" metric has become less useful in favor of "rows removed by NMS"
 - Widen out the rows to same length
 - Several tweaks to conditions, parameters, heuristics
+    - superscripts/subscripts now more likely to be merged to their parent rows
 
 ### Many possibly breaking changes to config.
 - `TableDetectorConfig.confidence_score_threshold` has been renamed to `TableDetectorConfig.detector_base_threshold`

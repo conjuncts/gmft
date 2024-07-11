@@ -107,29 +107,7 @@ def _find_leftmost_gt(sorted_list, value, key_func):
     i = bisect.bisect_left(sorted_list, value, key=key_func)
     return i
 
-def _predict_word_height(table, smallest_supported_text_height=0.1):
-    """
-    Get the predicted height of standard text in the table.
-    """
-    # get the distribution of word heights, rounded to the nearest tenth
-    word_heights = []
-    for xmin, ymin, xmax, ymax, text in table.text_positions(remove_table_offset=True):
-        height = ymax - ymin
-        if height > smallest_supported_text_height: # .1
-            word_heights.append(ymax - ymin)
-    
-    # get the mode
-    # from collections import Counter
-    # word_heights = Counter(word_heights)
-    
-    # # set the mode to be the row height
-    # # making the row less than text's height will mean that no cells are merged
-    # # but subscripts may be difficult
-    # row_height = 0.95 * max(word_heights, key=word_heights.get)
-    
-    # actually no - use the median
-    row_height = 0.95 * np.median(word_heights)
-    return row_height
+
 
 def _widen_and_even_out_rows(sorted_rows, sorted_headers):
     # widen the rows to the full width of the table
@@ -183,13 +161,7 @@ def _is_within_header(bbox, sorted_headers, _iob=_iob_for_rows, header_threshold
     return any(_iob(bbox, header['bbox']) > header_threshold for header in sorted_headers)
     
 
-def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFormatConfig, sorted_rows, sorted_headers, known_means=None, known_height=None):
-    if known_height:
-        word_height = known_height
-    else:
-        # get the distribution of word heights, rounded to the nearest tenth        
-        word_height = _predict_word_height(table, smallest_supported_text_height=config._smallest_supported_text_height)
-    
+def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFormatConfig, sorted_rows, sorted_headers, row_height, known_means=None):
     if not sorted_rows:
         return []
     # construct bbox for each row
@@ -217,12 +189,12 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFo
         
 
     # fail-safe: if it predicts a very large table, raise
-    est_num_rows = (table_ymax - y) / word_height
+    est_num_rows = (table_ymax - y) / row_height
     if est_num_rows > config.large_table_maximum_rows:
         if config.verbosity >= 1:
             print(f"Estimated number of rows {est_num_rows} is too large")
         table.outliers['excessive rows'] = max(table.outliers.get('excessive rows', 0), est_num_rows)
-        word_height = (table_ymax - y) / 100
+        row_height = (table_ymax - y) / 100
     
     if known_means:
         # print(known_means)
@@ -233,18 +205,18 @@ def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFo
             if mean < starting_y:
                 # do not observe the header
                 continue
-            y = mean - word_height / 2
+            y = mean - row_height / 2
             # do NOT construct mini row if there is a gap
             # if prev_height is not None and y < prev_height:
                 # new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, prev_height, rightmost, y]})
-            new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, y, rightmost, y + word_height]})
-            prev_height = y + word_height
+            new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, y, rightmost, y + row_height]})
+            prev_height = y + row_height
             
     else:
         # this is reminiscent of the proof that the rationals are dense in the reals
         while y < table_ymax:
-            new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, y, rightmost, y + word_height]})
-            y += word_height
+            new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, y, rightmost, y + row_height]})
+            y += row_height
     # 2a. sort by ymax, just in case
     new_rows.sort(key=lambda x: x['bbox'][3])
     return new_rows
@@ -692,7 +664,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     
     _widen_and_even_out_rows(sorted_rows, sorted_headers)
     
-    word_height = _predict_word_height(table)
+    word_height = table.predicted_word_height(smallest_supported_text_height=config._smallest_supported_text_height)
     _fill_in_gaps(sorted_rows, word_height)
     
     # 4a. calculate total row overlap. If higher than a threshold, invoke the large table assumption
@@ -718,7 +690,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         if config.verbosity >= 1:
             print("Invoking large table row guess! set TATRFormatConfig.force_large_table_assumption to False to disable this.")
         
-        sorted_rows = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, known_height=word_height)
+        sorted_rows = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, row_height=word_height)
         left_corner = sorted_rows[0]['bbox']
         right_corner = sorted_rows[-1]['bbox']
         # (ymax - ymin) * (xmax - xmin)
@@ -747,11 +719,12 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         known_height = np.median(differences)
         
         # means are within 0.2 * known_height of each other, consolidate them
+        # actually no - use 0.6 * WORD_HEIGHT 
         i = 1
         while i < len(known_means):
             prev = known_means[i-1]
             cur = known_means[i]
-            if abs(cur - prev) < config._large_table_merge_distance * known_height: # default: 0.2
+            if abs(cur - prev) < config._large_table_merge_distance * word_height: # default: 0.2
                 # merge by averaging
                 known_means[i-1] = (prev + cur) / 2
                 known_means.pop(i)
@@ -760,7 +733,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
             i += 1
         
         sorted_rows = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, 
-                known_means=known_means, known_height=known_height)
+                known_means=known_means, row_height=known_height)
         
     # nms takes care of deduplication
     

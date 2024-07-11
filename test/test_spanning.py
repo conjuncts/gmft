@@ -28,6 +28,7 @@ def try_jth_table(tables, pdf_no, j, expected, config=None):
 
     ft = tables[j]
     # try:
+    ft._df = None
     df = ft.df(config_overrides=config)
     actual = df.to_csv(index=False, lineterminator="\n")
     if expected != actual:

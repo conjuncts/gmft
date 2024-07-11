@@ -59,9 +59,10 @@ class FormattedTable(RotatedCroppedTable):
     
     
     
-    def df(self):
+    def df(self, recalculate=False):
         """
         Return the table as a pandas dataframe.
+        :param recalculate: By default, a cached dataframe is returned.
         """
         return self._df
     
@@ -218,8 +219,8 @@ class TATRFormatConfig:
     """Non-maxima suppression: if two rows overlap by > threshold (default: 10%), then the one with the lower confidence is removed.
     A subsequent technique is able to fill in gaps created by NMS."""
     
-    _large_table_merge_distance = 0.2
-    """In the large_table method, if two means are within (20% * text_height) of each other, then they are merged.
+    _large_table_merge_distance = 0.6
+    """In the large_table method, if two means are within (60% * text_height) of each other, then they are merged.
     This may be useful to adjust if text is being split due to subscripts/superscripts."""
     
     _smallest_supported_text_height = 0.1
@@ -313,12 +314,13 @@ class TATRFormattedTable(FormattedTable):
             config = TATRFormatConfig()
         self.config = config
         self.outliers = None
-    def df(self, config_overrides: TATRFormatConfig=None):
+    def df(self, recalculate=False, config_overrides: TATRFormatConfig=None):
         """
         Return the table as a pandas dataframe. 
+        :param recalculate: by default, the dataframe is cached
         :param config_overrides: override the config settings for this call only
         """
-        if self._df is not None: # cache
+        if recalculate == False and config_overrides is None and self._df is not None: # cache
             return self._df
         
         if config_overrides is not None:
@@ -337,6 +339,8 @@ class TATRFormattedTable(FormattedTable):
         
         :param filter: filter the labels to visualize. See TATRFormattedTable.id2label
         :param dpi: Sets the dpi. If none, then the dpi of the cached image is used.
+        :param padding: padding around the table. If None, then the padding of the cached image is used.
+        :param margin: margin around the table. If None, then the margin of the cached image is used.
         :param effective: if True, visualize the effective rows and columns, which may differ from the table transformer's output.
         """
         if dpi is None: # dpi = needed_dpi
