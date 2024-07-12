@@ -56,6 +56,7 @@ class FormattedTable(RotatedCroppedTable):
         self._img_dpi = cropped_table._img_dpi
         self._img_padding = cropped_table._img_padding
         self._img_margin = cropped_table._img_margin
+        self._word_height = cropped_table._word_height
     
     
     
@@ -476,6 +477,8 @@ class TATRTableFormatter(TableFormatter):
         image = table.image(dpi=dpi, padding=padding, margin=margin) # (20, 20, 20, 20)
         padding = table._img_padding
         margin = table._img_margin
+        
+        
         
         scale_factor = dpi / 72
         encoding = self.image_processor(image, return_tensors="pt").to(self.config.torch_device)

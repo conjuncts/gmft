@@ -162,21 +162,23 @@ Mesh size,x4,50–150,50,100,150
         try_jth_table(pdf1_tables, 1, 1, expected, config=config2)
     
     def test_pdf2_t2(self, pdf2_tables):
-        expected = """ManNAc dose,Q8H for 30 days,Q8H for 30 days,Q12H for 30 days,Q12H for 30 days,Q24H for 30 days,Q24H for 30 days,is_projecting_row
-nan,Median,5th–95th percentiles,Median,5th–95th percentiles,Median,5th–95th percentiles,
-Plasma ManNAc,"Css,ave (ng/mL)",,,,,,True
-3 g,922,501–1550,642,359–1060,365,223–570,False
-4 g,1060,573–1790,729,404–1220,411,246–650,False
-6 g,1290,692–2180,881,480–1480,483,281–780,False
-10 g,1650,883–2810,1120,607–1900,603,340–989,False
-Plasma Neu5Ac,"Css,ave (ng/mL)",,,,,,True
-3 g,633,247–2010,484,209–1420,338,174–825,False
-4 g,702,265–2300,533,222–1610,364,181–921,False
-6 g,818,296–2780,612,242–1930,405,190–1080,False
-10 g,1020,344–3540,735,274–2440,464,204–1330,False
+        expected = """ManNAc dose,Q8H for 30 days,Q8H for 30 days,Q12H for 30 days,Q12H for 30 days,Q24H for 30 days,Q24H for 30 days
+nan,Median,5th–95th percentiles,Median,5th–95th percentiles,Median,5th–95th percentiles
+Plasma ManNAc,"Css,ave (ng/mL)",,,,,
+3 g,922,501–1550,642,359–1060,365,223–570
+4 g,1060,573–1790,729,404–1220,411,246–650
+6 g,1290,692–2180,881,480–1480,483,281–780
+10 g,1650,883–2810,1120,607–1900,603,340–989
+Plasma Neu5Ac,"Css,ave (ng/mL)",,,,,
+3 g,633,247–2010,484,209–1420,338,174–825
+4 g,702,265–2300,533,222–1610,364,181–921
+6 g,818,296–2780,612,242–1930,405,190–1080
+10 g,1020,344–3540,735,274–2440,464,204–1330
 """
 
         try_jth_table(pdf2_tables, 2, 2, expected, config=config2)
+        
+        assert pdf2_tables[2]._projecting_indices == [0, 5]
     
     # pdf4 t1 is arguably HierTop, but the ground truth is not yet clear
     

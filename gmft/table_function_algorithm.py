@@ -424,6 +424,8 @@ def _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosem
     Fill the table array according to semantic information from detected spanning cells.
     (Assumes that NMS has already been applied, and there are no conflicts)
     """
+    
+    _hier_left_indices = [] # keep track of columns for the user
     # Fill hierarchical left headers
     # 1. assume that only one cell is filled. 
     # We may also possibly assume that only the top cell should be non-empty
@@ -455,17 +457,19 @@ def _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosem
             col_counts[col_num] = col_counts.get(col_num, 0) + 1
         
         # only expect leftmost 3 columns and more than 2 such spanning items.
-        hier_left_indices = [k for k, v in col_counts.items() if k < 3 and v >= 2]
+        _hier_left_indices = [k for k, v in col_counts.items() if k < 3 and v >= 2]
         
         first_row = max(header_indices, default=-1) + 1
         
         content = None
-        for col_num in hier_left_indices:
+        for col_num in _hier_left_indices:
             for row_num in range(first_row, table_array.shape[0]):
                 if table_array[row_num, col_num] is not None:
                     content = table_array[row_num, col_num]
                 else:
                     table_array[row_num, col_num] = content
+        
+    
                 
 
     
@@ -512,6 +516,8 @@ def _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosem
             # push it all to the bottom-most cell
             bottom_most_row = x['row_indices'][-1]
             table_array[bottom_most_row, col_num] = ' \\n'.join(content)
+    
+    return _hier_left_indices
                 
         
 
@@ -795,9 +801,22 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         _non_maxima_suppression(sorted_hier_top_headers, overlap_threshold=0.1)
         _non_maxima_suppression(sorted_monosemantic_top_headers, overlap_threshold=0.1)
         _non_maxima_suppression(sorted_hier_left_headers, overlap_threshold=0.1)
-        _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
+        hier_left_idxs = _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
                 header_indices=header_indices,
                 config=config)
+        table._hier_left_indices = hier_left_idxs 
+    else:
+        table._hier_left_indices = [] # for the user
+    
+    # technically these indices will be off by the number of header rows ;-;
+    if config.enable_multi_header:
+        table._header_indices = header_indices
+    else:
+        table._header_indices = [0] if header_indices else []
+        
+        
+        
+
     
     # extract out the headers
     header_rows = table_array[header_indices]
@@ -817,10 +836,16 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     table._df = pd.DataFrame(data=table_array, columns=column_headers)
     
     # a. mark as projecting/non-projecting
-    is_projecting = [x in projecting_indices for x in range(num_rows)]
     if projecting_indices:
+        is_projecting = [x in projecting_indices for x in range(num_rows)]
+        # remove the header_indices
+        # TODO this could be made O(n)
+        is_projecting = [x for i, x in enumerate(is_projecting) if i not in header_indices]
+        table._projecting_indices = [i for i, x in enumerate(is_projecting) if x]
+    
+    # if projecting_indices:
         # insert at end
-        table._df.insert(num_columns, 'is_projecting_row', is_projecting)
+        # table._df.insert(num_columns, 'is_projecting_row', is_projecting)
     
     # b. drop the former header rows always
     table._df.drop(index=header_indices, inplace=True)

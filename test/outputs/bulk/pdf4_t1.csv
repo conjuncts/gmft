@@ -1,19 +1,19 @@
-Data Platform,,Number of Features,,Number of tumors,is_projecting_row
-Number of features and tumors,in different data,platforms,,,True
-Radiomics,,38,,91,False
-Gene expressions,20531,genes (186,pathways),91,False
-Copy number variations,19950,genes (186,pathways),91,False
-miRNA expressions,,1046,,91,False
-Protein expressions,,142,,62,False
-Mutated genes,,3734,,91,False
-Number of tumors with different,pathological,stages,,,False
-Pathological Stage,T,M,N,Overall,False
-0,,91,46,,False
-I,38,,34,22,False
-II,50,,6,58,False
-III,3,,4,11,False
-X,,,1,,False
-Number of tumors with different,molecular,receptor statuses,,,True
-Receptor Status,ER,,PR,HER2,False
-Negative,14,,19,72,False
-Positive,77,,72,19,False
+Data Platform,,Number of Features,,Number of tumors
+Number of features and tumors,in different data,platforms,,
+Radiomics,,38,,91
+Gene expressions,20531,genes (186,pathways),91
+Copy number variations,19950,genes (186,pathways),91
+miRNA expressions,,1046,,91
+Protein expressions,,142,,62
+Mutated genes,,3734,,91
+Number of tumors with different,pathological,stages,,
+Pathological Stage,T,M,N,Overall
+0,,91,46,
+I,38,,34,22
+II,50,,6,58
+III,3,,4,11
+X,,,1,
+Number of tumors with different,molecular,receptor statuses,,
+Receptor Status,ER,,PR,HER2
+Negative,14,,19,72
+Positive,77,,72,19
