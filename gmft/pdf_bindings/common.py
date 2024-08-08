@@ -47,12 +47,19 @@ class BasePDFDocument(ABC):
     def __len__(self) -> int:
         raise NotImplementedError
     
+    @abstractmethod
+    def get_filename(self) -> str:
+        raise NotImplementedError
+    
     def __getitem__(self, n: int) -> BasePage:
         return self.get_page(n)
     
     def __iter__(self) -> Generator[BasePage, None, None]:
         for i in range(len(self)):
             yield self.get_page(i)
+    
+    def close(self):
+        pass
 
 
 class ImageOnlyPage(BasePage):
@@ -86,6 +93,7 @@ class ImageOnlyPage(BasePage):
         self.img.close()
         self.img = None
     
-    def __del__(self):
-        if self.img is not None:
-            self.close()
+    # def __del__(self):
+        # pass
+        # if self.img is not None:
+        #     self.close()

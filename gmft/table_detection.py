@@ -60,7 +60,17 @@ class CroppedTable:
     _img_padding: tuple[int, int, int, int]
     _img_margin: tuple[int, int, int, int]
     _word_height: float
+    _captions: list[str]
     def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float, label=0):
+        """
+        Construct a CroppedTable object.
+        :param page: BasePage
+        :param bbox: tuple of (xmin, ymin, xmax, ymax) or Rect object
+        :param confidence_score: confidence score of the table detection
+        :param label: label of the table detection. 
+            0 means table
+            1 means rotated table
+        """
         
         self.page = page
         if isinstance(bbox, Rect):
@@ -74,6 +84,7 @@ class CroppedTable:
         self._img_margin = None
         self.label = label
         self._word_height = None
+        self._captions = []
     
     def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None, margin: str | tuple[int, int, int, int]=None) -> PILImage:
         """
@@ -191,14 +202,20 @@ class CroppedTable:
     
     def captions(self, margin=None, line_spacing=2.5, **kwargs):
         """
-        Look for a caption in the table.
+        Look for a caption in the table. 
+        
+        Since this method is somewhat slow, the result is cached if captions() is called with default arguments.
         
         :param margin: margin around the table to search for captions. Positive margin = expands the table.
         :param line_spacing: minimum line spacing to consider two lines as separate.
         :return: list[str]: [caption_above, caption_below]
         
         """
-        return _find_captions(self, margin=margin, line_spacing=line_spacing, **kwargs)
+        if self._captions and (margin is None or line_spacing == 2.5): # only cache if all default args
+            return self._captions
+        self._captions = _find_captions(self, margin=margin, line_spacing=line_spacing, **kwargs)
+        
+        return self._captions
     
     
     def visualize(self, show_text=False, **kwargs):
@@ -218,13 +235,16 @@ class CroppedTable:
         plot_results_unwr(img, confidence=confidences, labels=labels, boxes=bboxes, id2label=None, **kwargs)
     
     def to_dict(self):
-        return {
+        obj = {
             "filename": self.page.get_filename(),
             "page_no": self.page.page_number,
             "bbox": self.rect.bbox,
             "confidence_score": self.confidence_score,
             "label": self.label
         }
+        # if self._captions:
+            # obj['captions'] = self._captions
+        return obj
     
     @staticmethod
     def from_dict(d: dict, page: BasePage):
@@ -240,7 +260,9 @@ class CroppedTable:
         """
         if 'angle' in d:
             return RotatedCroppedTable.from_dict(d, page)
-        return CroppedTable(page, d['bbox'], d['confidence_score'], d['label'])
+        table = CroppedTable(page, d['bbox'], d['confidence_score'], d['label'])
+        table._captions = d.get('captions', [])
+        return table
     
     @staticmethod
     def from_image_only(img: PILImage) -> 'CroppedTable':
@@ -454,7 +476,9 @@ class RotatedCroppedTable(CroppedTable):
         """
         if 'angle' not in d:
             return CroppedTable.from_dict(d, page)
-        return RotatedCroppedTable(page, d['bbox'], d['confidence_score'], d['angle'], d['label'])
+        table = RotatedCroppedTable(page, d['bbox'], d['confidence_score'], d['angle'], d['label'])
+        table._captions = d.get('captions', [])
+        return table
     
     # def visualize(self, **kwargs):
     #     """

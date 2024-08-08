@@ -7,6 +7,7 @@ dist
 .venv
 test/outputs/actual
 test/outputs/actual*
+test/refs/attn/*
 test/holdout
 test/outputs/nmr
 test/samples

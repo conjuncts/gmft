@@ -24,6 +24,11 @@ dependencies = [
   
 ]
 
+[project.optional-dependencies]
+pymupdf = [
+  "pymupdf"
+]
+
 [project.urls]
 Homepage = "https://github.com/conjuncts/gmft"
 Issues = "https://github.com/conjuncts/gmft/issues"

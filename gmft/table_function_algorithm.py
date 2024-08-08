@@ -810,12 +810,9 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     
     # technically these indices will be off by the number of header rows ;-;
     if config.enable_multi_header:
-        table._header_indices = header_indices
+        table._top_header_indices = header_indices
     else:
-        table._header_indices = [0] if header_indices else []
-        
-        
-        
+        table._top_header_indices = [0] if header_indices else []
 
     
     # extract out the headers

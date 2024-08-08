@@ -1,6 +1,5 @@
 pypdfium2
 transformers[torch]
-timm
 matplotlib
 pillow
 pandas

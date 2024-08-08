@@ -1,4 +1,8 @@
-## v0.2.0rc1
+## v0.2.1
+
+- GPU support, thank you @MathiasToftas!
+
+## v0.2.0
 
 ### Features:
 - Multiple headers; multi-index tables

@@ -27,9 +27,16 @@ class PyPDFium2Page(BasePage):
         self.filename = filename
         self.width = page.get_width()
         self.height = page.get_height()
+        self._positions_and_text = [] # cache results, because this appears to be slow
         super().__init__(page_no)
     
     def get_positions_and_text(self) -> Generator[tuple[float, float, float, float, str], None, None]:
+        """
+        A generator of text and positions.
+        The tuple is (x0, y0, x1, y1, "string")
+        
+        Warning: PyPDFium2Page caches the results of this method.
+        """
         # {0: '?', 1: 'text', 2: 'path', 3: 'image', 4: 'shading', 5: 'form'}
         
         # problem: num_rect is not finely grained enough, as it tends to clump multiple words together
@@ -44,6 +51,14 @@ class PyPDFium2Page(BasePage):
         #     yield *adjusted, text
         
         # this is a bit more fine-grained
+        
+        # cache results, because this appears to be slow
+        if self._positions_and_text:
+            for item in self._positions_and_text:
+                yield item
+            return
+        
+        result = []
         text_page = self.page.get_textpage()
         
         # "char" seems to not actually be a char, but a string-like token
@@ -55,17 +70,16 @@ class PyPDFium2Page(BasePage):
         # Aggregate chars into words
         current_word = ""
         current_bbox = None
-        # text_bboxes = []
         for index in range(text_page.count_chars()):
             bbox = text_page.get_charbox(index)
             char = text_page.get_text_range(index, 1)
             # if is whitespace
             if char.isspace():
                 if current_word:
-                    # text_bboxes.append((current_word, current_bbox))
                     # perform negation
                     current_bbox = (current_bbox[0], self.height - current_bbox[3], 
                                     current_bbox[2], self.height - current_bbox[1])
+                    result.append((*current_bbox, current_word)) # cache, because it is slow
                     yield *current_bbox, current_word
                     current_word = ""
                     current_bbox = None
@@ -83,10 +97,10 @@ class PyPDFium2Page(BasePage):
         if current_word:
             current_bbox = (current_bbox[0], self.height - current_bbox[3], 
                             current_bbox[2], self.height - current_bbox[1])
-            # text_bboxes.append((current_word, current_bbox))
+            result.append((*current_bbox, current_word))
             yield *current_bbox, current_word
         
-        # Clean up
+        self._positions_and_text = result
     
     def get_filename(self) -> str:
         return self.filename
@@ -135,6 +149,9 @@ class PyPDFium2Document(BasePDFDocument):
         Get 0-indexed page
         """
         return PyPDFium2Page(self._doc[n], self.filename, n)
+    
+    def get_filename(self) -> str:
+        return self.filename
     
     def __len__(self) -> int:
         return len(self._doc)

@@ -9,7 +9,7 @@ class Rect:
 
     
     def intersect(self, other: tuple[float, float, float, float]):
-        if isinstance(other, Rect):
+        if hasattr(other, 'bbox'): # should be Rect
             other = other.bbox
         xmin = max(self.bbox[0], other[0])
         ymin = max(self.bbox[1], other[1])
@@ -21,7 +21,7 @@ class Rect:
         return self
 
     def is_intersecting(self, other: tuple[float, float, float, float]):
-        if isinstance(other, Rect):
+        if hasattr(other, 'bbox'): # should be Rect
             other = other.bbox
         xmin = max(self.bbox[0], other[0])
         ymin = max(self.bbox[1], other[1])

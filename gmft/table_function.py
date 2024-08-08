@@ -57,6 +57,7 @@ class FormattedTable(RotatedCroppedTable):
         self._img_padding = cropped_table._img_padding
         self._img_margin = cropped_table._img_margin
         self._word_height = cropped_table._word_height
+        self._captions = cropped_table._captions
     
     
     
@@ -312,6 +313,10 @@ class TATRFormattedTable(FormattedTable):
     effective_spanning: list[tuple]
     "Spanning cells as seen by the image --> df algorithm."
     
+    _top_header_indices: list[int]=None
+    _projecting_indices: list[int]=None
+    _hier_left_indices: list[int]=None
+    
     def __init__(self, cropped_table: CroppedTable, fctn_results: dict, 
                 #  fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int], 
                  config: TATRFormatConfig=None):
@@ -398,13 +403,20 @@ class TATRFormattedTable(FormattedTable):
             parent = RotatedCroppedTable.to_dict(self)
         else:
             parent = CroppedTable.to_dict(self)
+        optional = {}
+        if self._projecting_indices is not None:
+            optional['_projecting_indices'] = self._projecting_indices
+        if self._hier_left_indices is not None:
+            optional['_hier_left_indices'] = self._hier_left_indices
+        if self._top_header_indices is not None:
+            optional['_top_header_indices'] = self._top_header_indices
         return {**parent, **{
             # 'fctn_scale_factor': self.fctn_scale_factor,
             # 'fctn_padding': list(self.fctn_padding),
             'config': self.config.__dict__,
             'outliers': self.outliers,
             'fctn_results': self.fctn_results,
-        }}
+        }, **optional}
     
     @staticmethod
     def from_dict(d: dict, page: BasePage):
