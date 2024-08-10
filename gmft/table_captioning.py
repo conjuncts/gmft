@@ -307,7 +307,7 @@ if TYPE_CHECKING:
     
     
         
-def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5, stop_y_dist=None, rolling_n=5):
+def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5, stop_y_factor=None, stop_y_dist=None, rolling_n=5):
     """
     Finds the first gap in the words list.
     :param words: list of words
@@ -317,8 +317,10 @@ def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5,
     :param step: step size
     :param line_spacing: line spacing. That is, if 2 words differ in y-value more than line_spacing * word_height, 
         then that is considered a gap.
-    :param stop_y_dist: if we drift by a total of more than stop_y_dist, we stop. THis is intended to
-        eliminate paragraphs.
+    :param stop_y_factor: if we drift by a total of more than stop_y_factor * word_height, we stop.
+        This is intended to eliminate paragraphs. This parameter is preferred over stop_y_dist.
+    :param stop_y_dist: if we drift by a total of more than stop_y_dist, we stop. This is intended to
+        eliminate paragraphs. 
     :param rolling_n: a rolling estimate is used to estimate the word height, intended to account for differences between
         table word height and caption word height. Higher = more weight to initial estimate.
     :return int: the index of the first word which has been separated by a gap.
@@ -331,8 +333,14 @@ def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5,
     
     yorig = (words[start_i][1] + words[start_i][3]) / 2
     yprev = yorig
-    stop_y_dist = stop_y_dist if stop_y_dist is not None else 12.5 * init_word_height
-    # stop_y = yorig + (stop_y_dist * step)
+    if stop_y_dist is None:
+        if stop_y_factor is None:
+            stop_y_factor = 12.5
+        
+    # case 1: dist is None, factor is None (default) --> change to case 2
+    # case 2: dist is None, factor is not None --> factor used
+    # case 3: dist is not None, factor is None --> dist used
+    # case 4: dist is not None, factor is not None --> factor preferred.
     
     # keep a rolling word height.
     # this is because the table's median word height might not be the paragraph's or the caption's.
@@ -349,14 +357,12 @@ def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5,
         rolling_n += 1
         if yprev is not None and abs(yavg - yprev) > line_spacing * word_height:
             return i
-        if abs(yavg - yorig) > stop_y_dist:
+        # need to update stop_y_dist based on new and improved word height
+        stop_dist = stop_y_factor * word_height if stop_y_factor is not None else stop_y_dist
+        if abs(yavg - yorig) > stop_dist:
             return None
         yprev = yavg
     return end_i
-    
-        
-        
-        
     
         
 # rewrite time
@@ -364,9 +370,12 @@ def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5,
 def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5, stop_y_factor_above=10, stop_y_factor_below=10) -> tuple[str, str]:
     """
     Find captions in a table.
+    
+    :param stop_y_factor_above: if the top caption gets taller than stop_y_factor_above * caption_word_height, we stop. This is intended to eliminate paragraphs.
+    :param stop_y_factor_below: if the bottom caption gets taller than stop_y_factor_below * caption_word_height, we stop. This is intended to eliminate paragraphs.
     """
     # if max_gap_space is None:
-    word_height = ct.predicted_word_height()
+    # word_height = ct.predicted_word_height()
     # max_gap_space = ct.predicted_word_height() * 2.5
     # maximum_supported_rows=5
     if margin is None:
@@ -495,14 +504,14 @@ def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5, stop_y_facto
             assert len(below_heights), f"logic error"
             height_estimate = np.mean(below_heights)
             height_estimate_n = len(below_heights)
-        prior = _find_gap(words, height_estimate, first, stop_i, -1, line_spacing=line_spacing, stop_y_dist=stop_y_factor_above*word_height, 
+        prior = _find_gap(words, height_estimate, first, stop_i, -1, line_spacing=line_spacing, stop_y_factor=stop_y_factor_above, 
                           rolling_n=height_estimate_n)
         if prior is not None:
             #post
             stop_i = len(words)
             if last < table_minimum_idx:
                 stop_i = table_minimum_idx
-            post = _find_gap(words, height_estimate, last, stop_i, line_spacing=line_spacing, stop_y_dist=stop_y_factor_below*word_height,
+            post = _find_gap(words, height_estimate, last, stop_i, line_spacing=line_spacing, stop_y_factor=stop_y_factor_below,
                              rolling_n=height_estimate_n)
             if post is not None:
                 caption = " ".join([words[i][4] for i in range(prior+1, post)])

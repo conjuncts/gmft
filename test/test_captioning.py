@@ -217,7 +217,7 @@ class TestCaptionBulk7:
 
     def test_bulk_pdf7_t1(self, pdf7_tables):
         tbl = pdf7_tables[1]
-        captions = tbl.captions()
+        captions = tbl.captions() # stop_y_factor_below=17.5)
         assert captions[0] == 'Table 2 Host and viral baseline parameters in patients with and without treatment response'
         assert captions[1] == 'a Mann-Whitney U test. \
 b Fisher’s exact test. \
