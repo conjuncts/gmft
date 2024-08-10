@@ -84,7 +84,7 @@ class CroppedTable:
         self._img_margin = None
         self.label = label
         self._word_height = None
-        self._captions = []
+        self._captions = None
     
     def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None, margin: str | tuple[int, int, int, int]=None) -> PILImage:
         """
@@ -200,7 +200,7 @@ class CroppedTable:
             self._word_height = np.nan # empty
         return self._word_height
     
-    def captions(self, margin=None, line_spacing=2.5, **kwargs):
+    def captions(self, margin=None, line_spacing=2.5, **kwargs) -> tuple[str, str]:
         """
         Look for a caption in the table. 
         
@@ -208,7 +208,7 @@ class CroppedTable:
         
         :param margin: margin around the table to search for captions. Positive margin = expands the table.
         :param line_spacing: minimum line spacing to consider two lines as separate.
-        :return: list[str]: [caption_above, caption_below]
+        :return: tuple[str, str]: [caption_above, caption_below]
         
         """
         if self._captions and (margin is None or line_spacing == 2.5): # only cache if all default args

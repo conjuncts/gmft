@@ -307,7 +307,7 @@ if TYPE_CHECKING:
     
     
         
-def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5, stop_y_dist=None):
+def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5, stop_y_dist=None, rolling_n=5):
     """
     Finds the first gap in the words list.
     :param words: list of words
@@ -319,6 +319,8 @@ def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5,
         then that is considered a gap.
     :param stop_y_dist: if we drift by a total of more than stop_y_dist, we stop. THis is intended to
         eliminate paragraphs.
+    :param rolling_n: a rolling estimate is used to estimate the word height, intended to account for differences between
+        table word height and caption word height. Higher = more weight to initial estimate.
     :return int: the index of the first word which has been separated by a gap.
     Returns end_i if no gap is found.
     If number of lines exceeds maxlines, then None is returned.
@@ -335,7 +337,8 @@ def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5,
     # keep a rolling word height.
     # this is because the table's median word height might not be the paragraph's or the caption's.
     
-    rolling_n = 5 # initialize rolling_n; assume that init_word_height (table's word height) is somewhat close
+    # rolling_n = estimate_strength 
+    # # initialize rolling_n; assume that init_word_height (table's word height) is somewhat close
     word_height = init_word_height
     
     for i in range(start_i+step, end_i, step):
@@ -358,7 +361,7 @@ def _find_gap(words, init_word_height, start_i, end_i, step=1, line_spacing=2.5,
         
 # rewrite time
 
-def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5) -> list[str]:
+def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5, stop_y_factor_above=10, stop_y_factor_below=10) -> tuple[str, str]:
     """
     Find captions in a table.
     """
@@ -394,6 +397,8 @@ def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5) -> list[str]
     # first, prefer our neighbors in reading order
     candidate_above = None
     candidate_below = None
+    above_heights = []
+    below_heights = []
     _candidate_y = None
     
     # place the immediate predecessor
@@ -403,9 +408,11 @@ def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5) -> list[str]
         y = (wbox.ymin + wbox.ymax) / 2
         if wbox.is_intersecting(search_rect_above):
             candidate_above = cand
+            above_heights.append(wbox.ymax - wbox.ymin)
             _candidate_y = y
         elif wbox.is_intersecting(search_rect_below):
             candidate_below = cand
+            below_heights.append(wbox.ymax - wbox.ymin)
             _candidate_y = y
     
     # place the immediate successor
@@ -416,25 +423,26 @@ def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5) -> list[str]
         if wbox.is_intersecting(search_rect_above):
             if candidate_above is None or abs(_candidate_y - ct.rect.ymin) > abs(y - ct.rect.ymin):
                 # if the other cand exists, prefer the one that is closer to the table
-                candidate_above = cand # (cand, cand)
+                candidate_above = cand
+            above_heights.append(wbox.ymax - wbox.ymin)
             
         elif wbox.is_intersecting(search_rect_below):
             if candidate_below is None or abs(_candidate_y - ct.rect.ymax) > abs(y - ct.rect.ymax):
                 # if the other cand exists, prefer the one that is closer to the table
-                candidate_below = cand # (cand, cand)
+                candidate_below = cand
+            below_heights.append(wbox.ymax - wbox.ymin)
     
     if not candidate_above:
         # resort to looking at bbox
         # strict: do not accidentally take from other column, so the x must be above the table's
         search_rect_above_strict = Rect((ct.rect.xmin - margin[0], ct.rect.ymin - margin[1], ct.rect.xmax + margin[2], midpoint))
-        # first_proximal = None
-        # last_proximal = None
         best_proximal = None
         best_proximal_y = None
         for i, w in enumerate(words):
             wbox = Rect(w[:4])
             y = (wbox.ymin + wbox.ymax) / 2
             if wbox.is_intersecting(search_rect_above_strict) and not wbox.is_intersecting(ct.bbox):
+                above_heights.append(wbox.ymax - wbox.ymin)
                 if best_proximal is None or abs(best_proximal_y - ct.rect.ymin) > abs(y - ct.rect.ymin):
                     best_proximal = i
                     best_proximal_y = y
@@ -443,13 +451,7 @@ def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5) -> list[str]
         # we need to do this because of the x: it might be right of the table
         
         if best_proximal is not None:
-            # stop_i = len(words)
-            # if best_proximal < table_minimum_idx: # collect right up to table
-            #     stop_i = table_minimum_idx
-            # last_gapped = _find_gap(words, max_gap_space, best_proximal, end_i=stop_i, stop_y_dist=10*word_height)
-            # if last_gapped is not None:
-                # candidate_above = (best_proximal, last_gapped- 1)
-            candidate_above = best_proximal # (best_proximal, best_proximal)
+            candidate_above = best_proximal
     
     if not candidate_below:
         # resort to looking at bbox
@@ -461,18 +463,13 @@ def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5) -> list[str]
             wbox = Rect(w[:4])
             y = (wbox.ymin + wbox.ymax) / 2
             if wbox.is_intersecting(search_rect_below_strict) and not wbox.is_intersecting(ct.bbox):
+                below_heights.append(wbox.ymax - wbox.ymin)
                 if best_proximal is None or abs(best_proximal_y - ct.rect.ymax) > abs(y - ct.rect.ymax):
                     best_proximal = i
                     best_proximal_y = y  
         # now, retreat first_proximal until we find a gap
         # we need to do this because of the x: it might be left of the table
         if best_proximal is not None:
-            # stop_i = 0
-            # if table_maximum_idx < best_proximal:
-            #     stop_i = table_maximum_idx
-            # first_gapped = _find_gap(words, max_gap_space, best_proximal, stop_i, -1, stop_y_dist=10*word_height)
-            # if first_gapped is not None:
-            # candidate_below = (first_gapped+ 1, best_proximal)
             candidate_below = best_proximal
     
     captions = []
@@ -487,18 +484,31 @@ def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5) -> list[str]
         stop_i = -1
         if table_maximum_idx < first:
             stop_i = table_maximum_idx
-        prior = _find_gap(words, word_height, first, stop_i, -1, line_spacing=line_spacing, stop_y_dist=10*word_height)
+        
+        # estimate word height
+        # height_estimate = word_height
+        if cand == candidate_above:
+            assert len(above_heights), f"logic error"
+            height_estimate = np.mean(above_heights)
+            height_estimate_n = len(above_heights)
+        else:
+            assert len(below_heights), f"logic error"
+            height_estimate = np.mean(below_heights)
+            height_estimate_n = len(below_heights)
+        prior = _find_gap(words, height_estimate, first, stop_i, -1, line_spacing=line_spacing, stop_y_dist=stop_y_factor_above*word_height, 
+                          rolling_n=height_estimate_n)
         if prior is not None:
             #post
             stop_i = len(words)
             if last < table_minimum_idx:
                 stop_i = table_minimum_idx
-            post = _find_gap(words, word_height, last, stop_i, line_spacing=line_spacing, stop_y_dist=10*word_height)
+            post = _find_gap(words, height_estimate, last, stop_i, line_spacing=line_spacing, stop_y_dist=stop_y_factor_below*word_height,
+                             rolling_n=height_estimate_n)
             if post is not None:
                 caption = " ".join([words[i][4] for i in range(prior+1, post)])
         captions.append(caption)
     
-    return captions # [caption_above, caption_below]
+    return (captions[0], captions[1]) # [caption_above, caption_below]
     
     
     
