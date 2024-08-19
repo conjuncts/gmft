@@ -232,7 +232,7 @@ class CroppedTable:
             confidences += [0.9] * len(text_positions)
             labels += [-1] * len(text_positions)
             bboxes += text_positions
-        plot_results_unwr(img, confidence=confidences, labels=labels, boxes=bboxes, id2label=None, **kwargs)
+        return plot_results_unwr(img, confidence=confidences, labels=labels, boxes=bboxes, id2label=None, **kwargs)
     
     def to_dict(self):
         obj = {
