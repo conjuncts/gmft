@@ -1,9 +1,10 @@
 [project]
 name = "gmft"
-version = "0.2.1"
-description = "Lightweight, performant, configurable, deep table extraction"
+version = "0.2.2"
+description = "Lightweight, performant, deep table extraction"
 authors = [
-  {name = "conjunct"}
+  {name = "conjunct"},
+  {name = "conjuncts"}
 ]
 license = {text = "MIT License"}
 readme = "README.md"
@@ -17,10 +18,9 @@ classifiers = [
 dependencies = [
   "pypdfium2 >= 4",
   "transformers >= 4.24.0",
-  "timm",
   "pillow",
   "pandas",
-  "matplotlib",
+  "matplotlib"
   
 ]
 
@@ -39,6 +39,6 @@ requires = ["flit_core >=3.4,<4"]
 
 [tool.flit.sdist]
 include = ["gmft/**/*.py", "README.md", "LICENSE"]
-exclude = ["gmft/pdf_bindings/bindings_mu.py", "test/**/*", "docs/**/*", "notebooks/**/*", "samples/**/*", "reading_list.md", "*.zip",
+exclude = ["test/**/*", "docs/**/*", "notebooks/**/*", "samples/**/*", "reading_list.md", "*.zip",
   "*.tsv", "gmft/formatters/*.py", "*.yaml", 
   "TODO.md", "CHANGELOG.md", "dev.md", "comparison.md"]

@@ -10,6 +10,8 @@ from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.table_detection import TableDetector, TableDetectorConfig
 from gmft import AutoTableDetector, AutoTableFormatter
 
+# from gmft_pymupdf import PyMuPDFDocument
+
 
 @pytest.fixture(scope="session")
 def detector():
@@ -31,6 +33,7 @@ def docs_bulk():
     docs = []
     for i in range(1, 9):
         doc = PyPDFium2Document(f"test/samples/{i}.pdf")
+        # doc = PyMuPDFDocument(f"test/samples/{i}.pdf")
         docs.append(doc)
 
     yield docs
