@@ -5,13 +5,6 @@ from gmft.table_detection import TableDetector
 from gmft import AutoTableFormatter
 
 
-@pytest.fixture(scope="session")
-def doc_tiny():
-    doc = PyPDFium2Document("test/samples/tiny.pdf")
-    yield doc
-    # cleanup
-    doc.close()
-
 
 
 def test_tiny_df(doc_tiny):

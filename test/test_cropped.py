@@ -8,12 +8,6 @@ from gmft.pdf_bindings import PyPDFium2Document
 from gmft.table_detection import CroppedTable, RotatedCroppedTable
 
 
-@pytest.fixture
-def doc_tiny():
-    doc = PyPDFium2Document("test/samples/tiny.pdf")
-    yield doc
-    # cleanup
-    doc.close()
     
 def are_bboxes_close(reference, actual, EPS=0.01):
     for ref, pos in zip(reference, actual):

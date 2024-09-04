@@ -6,12 +6,6 @@ from gmft.table_detection import TableDetector, TableDetectorConfig
 from gmft.table_function import TATRFormatConfig, TATRTableFormatter
 
 
-@pytest.fixture
-def doc_tiny():
-    doc = PyPDFium2Document("test/samples/tiny.pdf")
-    yield doc
-    doc.close()
-
 def test_cuda(doc_tiny):
     if not torch.cuda.is_available():
         pytest.skip("cannot test device settings without cuda")

@@ -6,13 +6,6 @@ import pytest
 import gmft
 from gmft.pdf_bindings import PyPDFium2Document
 
-
-@pytest.fixture(scope="session")
-def doc_tiny():
-    doc = PyPDFium2Document("test/samples/tiny.pdf")
-    yield doc
-    # cleanup
-    doc.close()
     
 
 def test_pypdfium2_bindings(doc_tiny):

@@ -17,7 +17,7 @@ classifiers = [
 
 dependencies = [
   "pypdfium2 >= 4",
-  "transformers >= 4.24.0",
+  "transformers >= 4.35.2", # need the no_timm revision
   "pillow",
   "pandas",
   "matplotlib"

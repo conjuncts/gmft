@@ -3,6 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import Generator
 
+import numpy as np
+
 from gmft.common import Rect
 from PIL.Image import Image as PILImage
 
@@ -32,6 +34,12 @@ class BasePage(ABC):
         (x0, y0, x1, y1)
         """
         raise NotImplementedError
+    
+    def _get_positions_and_text_and_lines(self) -> Generator[tuple[float, float, float, float, str, int, int, int], None, None]:
+        """
+        warning: experimental, subject to change
+        """
+        return _infer_line_breaks(self.get_positions_and_text())
 
     
 
@@ -97,3 +105,34 @@ class ImageOnlyPage(BasePage):
         # pass
         # if self.img is not None:
         #     self.close()
+
+def _infer_line_breaks(generator_in: Generator[tuple[float,float,float,float,str],None,None]):
+    """
+    warning: experimental
+    """
+    # pass 1: set the line height to the average line height
+    all_words = list(generator_in)
+    # sort by y, then x
+    all_words.sort(key=lambda x: (x[1], x[0]))
+    
+    if not all_words:
+        return
+    
+    avg_line_height = np.mean([y1 - y0 for x0, y0, x1, y1, text in all_words]) * 0.8
+    
+    # pass 2: infer line breaks
+    line_ctr = 0
+    prev_anchor = all_words[0][1]
+    word_ctr = 0
+    for i, (x0, y0, x1, y1, text) in enumerate(all_words):
+        if y0 - prev_anchor > avg_line_height:
+            line_ctr += 1
+            prev_anchor = y0
+            word_ctr = 0
+        else:
+            word_ctr += 1
+        yield x0, y0, x1, y1, text, 0, line_ctr, word_ctr
+    
+    
+    
+    

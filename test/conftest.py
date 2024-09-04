@@ -27,6 +27,14 @@ def doc_pubt():
     yield doc
     # cleanup
     doc.close()
+
+
+@pytest.fixture(scope="session")
+def doc_tiny():
+    doc = PyPDFium2Document("test/samples/tiny.pdf")
+    yield doc
+    # cleanup
+    doc.close()
     
 @pytest.fixture(scope="session")
 def docs_bulk():

@@ -164,9 +164,9 @@ class PyPDFium2Document(BasePDFDocument):
             self._doc.close()
         self._doc = None
     
-    def __del__(self):
-        if self._doc is not None:
-            self.close()
+    # def __del__(self):
+    #     if self._doc is not None:
+    #         self.close()
 
 class PyPDFium2Utils:
     """

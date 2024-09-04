@@ -11,12 +11,6 @@ from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
 from gmft.table_detection import RotatedCroppedTable
 from gmft.table_function import TATRFormattedTable
 
-@pytest.fixture(scope="session")
-def doc_tiny():
-    doc = PyPDFium2Document("test/samples/tiny.pdf")
-    yield doc
-    # cleanup
-    doc.close()
 
 @pytest.fixture(scope="session")
 def doc_9():

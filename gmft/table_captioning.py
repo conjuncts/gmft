@@ -2,7 +2,8 @@
 from __future__ import annotations # 3.7
 
 
-from typing import TYPE_CHECKING
+import re
+from typing import TYPE_CHECKING, Tuple
 
 import numpy as np
 
@@ -520,10 +521,56 @@ def _find_captions(ct: CroppedTable, margin=None, line_spacing=2.5, stop_y_facto
     return (captions[0], captions[1]) # [caption_above, caption_below]
     
     
-    
 
                     
-            
+def _detect_caption_with_mu(table_bbox: Tuple[float, float, float, float], block: Tuple[float, float, float, float, str], max_abs_dist: float = 2.5) -> Tuple[str,str]:
+    x1, y1, x2, y2 = block[:4]
+    text = block[4]
+
+    # Block in PyMupdf can consist of multiple lines of text
+    n_lines = text.count('\n') + 1
+
+
+    normalized_dist = 1000
+    top_caption, bottom_caption = "", ""
+
+    # Take care of captions above the table
+    if y2 < table_bbox[1]: # block in question is above the table
+        # Normalized distance = how many word "lines" this current sentence is from the table
+        normalized_dist =  (y2-table_bbox[1])/((y2-y1) / n_lines)
+        if abs(normalized_dist) < max_abs_dist:
+            top_caption = block[4]
+    
+    # Take care of captions below the table
+    elif y1 > table_bbox[3]: # block in question is below the table
+        normalized_dist =  (y1-table_bbox[3])/((y2-y1)/n_lines)
+        if abs(normalized_dist) < max_abs_dist:
+            bottom_caption = block[4]
+    return top_caption, bottom_caption
+
+
+# Extract captions using PyMuPDF, assumes we have table bbox
+
+def _find_caption_with_mu(ct: CroppedTable, **kwargs):
+    
+    # import gmft_pymupdf
+    import pymupdf
+    page = ct.page.page # type: pymupdf.TextPage
+    blocks = page.get_text_blocks()
+
+    top_captions, bottom_captions = [], []
+    for block in blocks:
+        top_cap, bottom_cap = _detect_caption_with_mu(table_bbox=ct.bbox, block=block)
+        top_captions.append(top_cap)
+        bottom_captions.append(bottom_cap)
+
+    top_captions = '\n'.join([c for c in top_captions if c]) # clear out empty captions
+    bottom_captions = '\n'.join([c for c in bottom_captions if c])
+    
+    whitespace_re = re.compile('\s*[\u202f\u2002\u2009\u00A0]\s*') #  \u2002 \u2009
+    top_captions = re.sub(whitespace_re, ' ', top_captions).replace('\n', '')
+    bottom_captions = re.sub(whitespace_re, ' ', bottom_captions).replace('\n', '')
+    return top_captions, bottom_captions # ('\n'.join(top_captions), '\n'.join(bottom_captions))
                 
     
     
