@@ -721,8 +721,27 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
                 bins[i].append(yavg)
         known_means = [np.mean(x) for x in bins if len(x)]
         
+        if not known_means:
+            # no text was detected
+            outliers['no text'] = True
+            table.effective_rows = []
+            table.effective_columns = []
+            table.effective_headers = []
+            table.effective_projecting = []
+            table.effective_spanning = []
+            table._top_header_indices = []
+            table._projecting_indices = []
+            table._hier_left_indices = []
+            table._df = pd.DataFrame()
+            table.outliers = outliers
+            return table._df
+        
         differences = [known_means[i+1] - known_means[i] for i in range(len(known_means) - 1)]
-        known_height = np.median(differences)
+        if len(differences):
+            known_height = np.median(differences)
+        else:
+            # if there is only one row, then we're stuck. set to table height.
+            known_height = bottom - top
         
         # means are within 0.2 * known_height of each other, consolidate them
         # actually no - use 0.6 * WORD_HEIGHT 

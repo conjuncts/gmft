@@ -1,3 +1,17 @@
+## v0.2.3-pre
+
+Bugfix:
+- divide by 0 when taking median of empty list in row height estimate
+
+## v0.2.2
+
+- `is_projecting_row` is removed, with the information now available under `FormattedTable._projecting_indices`
+- Formally removed `timm` as a dependency
+- Slight tweak to captions with the aim to better reflect paragraph word height, still WIP. See #8 and be93159
+- Fix: return result so image can be used outside of notebook by @brycedrennan in https://github.com/conjuncts/gmft/pull/15
+
+**Full Changelog**: https://github.com/conjuncts/gmft/compare/v0.2.1...v0.2.2
+
 ## v0.2.1
 
 - GPU support, thank you @MathiasToftas!
@@ -30,10 +44,10 @@
 
 ## v0.1.1
 
-- Created AutoTableFormatter and AutoTableDetector for future flexibility
 
-## v0.1.0
+Older:
+- Created AutoTableFormatter and AutoTableDetector for future flexibility (v0.1.1, a840488)
+- Renamed is_spanning_row to is_projecting_row (v0.1.1, a840488)
+- Added support for rotated tables (v0.0.4, 5aeb80d)
+- Even better accuracy for large tables (v0.1.0, 8c537ed)
 
-- Added support for rotated tables (since v0.0.4)
-- Even better accuracy for large tables
-- Renamed is_spanning_row to is_projecting_row
