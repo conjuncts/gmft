@@ -1,25 +1,22 @@
 gmft package
 ============
 
+Top Level Aliases
+------------------
+
 .. automodule:: gmft
    :members:
    :undoc-members:
    :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   pdf_bindings/index
-
-Submodules
+Contents
 ----------
 
 .. toctree::
-   :maxdepth: 1
-
+   :maxdepth: 2
+   
+   pdf_bindings/index
+   
    gmft.common
    gmft.presets
    gmft.table_detection

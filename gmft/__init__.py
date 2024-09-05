@@ -12,24 +12,24 @@ from gmft.pdf_bindings import BasePDFDocument, BasePage
 
 class AutoTableFormatter(TATRTableFormatter):
     """
-    The recommended :class:`TableFormatter`. Currently points to :class:`~gmft.TATRTableFormatter`.
+    The recommended :class:`~gmft.table_function.TableFormatter`. Currently points to :class:`~gmft.table_function.TATRTableFormatter`.
     Uses a TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
-    Using :meth:`extract`, a :class:`~gmft.FormattedTable` is produced, which can be exported to csv, df, etc.
+    Using :meth:`extract`, a :class:`~gmft.table_function.FormattedTable` is produced, which can be exported to csv, df, etc.
     """
     pass
 
 class AutoFormatConfig(TATRFormatConfig):
     """
-    Configuration for the recommended :class:`TableFormatter`. Currently points to :class:`~gmft.TATRFormatConfig`.
+    Configuration for the recommended :class:`~gmft.table_function.TableFormatter`. Currently points to :class:`~gmft.table_function.TATRFormatConfig`.
     """
     pass
 
 class AutoTableDetector(TATRTableDetector):
     """
-    The recommended :class:`~gmft.TableDetector`. Currently points to :class:`~gmft.TATRTableDetector`.
+    The recommended :class:`~gmft.table_detection.TableDetector`. Currently points to :class:`~gmft.table_detection.TATRTableDetector`.
     Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
-    Using :meth:`extract` produces a :class:`~gmft.FormattedTable`, which can be exported to csv, df, etc.
+    Using :meth:`extract` produces a :class:`~gmft.table_function.FormattedTable`, which can be exported to csv, df, etc.
     """
     pass

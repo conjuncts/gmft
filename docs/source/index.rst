@@ -16,14 +16,16 @@ Check out the :doc:`config` section for a description on gmft's settings.
 
    This project is under active development.
 
-Contents
---------
+Table of Contents
+------------------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+   :caption: Pages
 
    usage
-   config   
-   gmft
+   config
+   faq
+   gmft_toplevel
+
    

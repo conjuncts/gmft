@@ -4,6 +4,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 project = 'gmft'
@@ -11,7 +12,7 @@ copyright = '2024, conjunct'
 author = 'conjunct'
 
 release = '0.2'
-version = '0.2.1'
+version = '0.2.2'
 
 # -- General configuration
 
@@ -37,7 +38,7 @@ templates_path = ['_templates']
 #     'imported-members': True,
 # }
 
-autodoc_mock_imports = ['transformers'] # , 'torch', 'numpy', 'pandas']
+autodoc_mock_imports = ['transformers', 'PIL', 'numpy', 'torch', 'matplotlib', 'pandas', 'pypdfium2'] # , 'torch', 'numpy', 'pandas']
 
 # -- Options for HTML output
 
@@ -47,4 +48,10 @@ html_theme = 'sphinx_rtd_theme'
 epub_show_urls = 'footnote'
 
 # def setup(app):
-    # app.add_css_file('custom.css')
+#     app.add_css_file('custom.css')
+    
+html_static_path = ['_static']
+html_css_files = ['custom.css']
+
+# autosummary_generate = False
+autoclass_content = 'both'

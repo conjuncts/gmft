@@ -64,6 +64,7 @@ class CroppedTable:
     def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float, label=0):
         """
         Construct a CroppedTable object.
+        
         :param page: BasePage
         :param bbox: tuple of (xmin, ymin, xmax, ymax) or Rect object
         :param confidence_score: confidence score of the table detection
@@ -267,7 +268,7 @@ class CroppedTable:
     @staticmethod
     def from_image_only(img: PILImage) -> 'CroppedTable':
         """
-        Create a :class:`~gmft.CroppedTable` object from an image only.
+        Create a :class:`~gmft.table_detection.CroppedTable` object from an image only.
         
         :param img: PIL image
         :return: CroppedTable object
@@ -472,7 +473,7 @@ class RotatedCroppedTable(CroppedTable):
     @staticmethod
     def from_dict(d: dict, page: BasePage) -> Union[CroppedTable, 'RotatedCroppedTable']:
         """
-        Create a :class:`CroppedRotatedTable` object from dict.
+        Create a :class:`~gmft.table_detection.CroppedRotatedTable` object from dict.
         """
         if 'angle' not in d:
             return CroppedTable.from_dict(d, page)

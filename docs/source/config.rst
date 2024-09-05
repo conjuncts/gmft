@@ -27,6 +27,9 @@ For example:
     config.enable_multi_header = True
     df = ft.df(config_overrides=config_overrides) # uses settings of config + config_overrides
 
+
+.. _semantic_spanning_cells:
+
 Semantic Spanning
 ------------------
 
@@ -182,6 +185,7 @@ Multi-line (and hence hierarchical) information is preserved through ``\n`` char
     </div>
     <br>
 
+.. _large_table_assumption:
 
 Large Table Assumption
 -----------------------
@@ -193,10 +197,11 @@ Here, algorithmically generated rows are used instead of deep learning.
 By default, large table assumption activates under these conditions:
 
 At least one of these:
-* More than ``large_table_if_n_rows_removed`` rows are removed (default: >= 8)
-* OR all of the following are true:
-  * Measured overlap of rows exceeds ``large_table_row_overlap_threshold`` (default: 20%)
-  * AND the number of rows is greater than ``large_table_threshold`` (default: >= 10)
+1. More than ``large_table_if_n_rows_removed`` rows are removed (default: >= 8)
+2. OR all of the following are true:
+
+   * Measured overlap of rows exceeds ``large_table_row_overlap_threshold`` (default: 20%)
+   * AND the number of rows is greater than ``large_table_threshold`` (default: >= 10)
 
 Large table assumption can be directly turned on/off with ``config.large_table_assumption = True/False``.
 
@@ -211,5 +216,6 @@ Large table assumption can be directly turned on/off with ``config.large_table_a
 
            Fig 4. Large Table Assumption on
 
-      
-*Credits: © C. Dougherty 2001, 2002 (c.dougherty@lse.ac.uk). These tables have been computed to accompany the text C. Dougherty Introduction to Econometrics (second edition 2002, Oxford University Press, Oxford). They may be reproduced freely provided that this attribution is retained.*
+.. blockquote::
+    
+    *Fig. 3 and 4 Credits: © C. Dougherty 2001, 2002 (c.dougherty@lse.ac.uk). These tables have been computed to accompany the text C. Dougherty Introduction to Econometrics (second edition 2002, Oxford University Press, Oxford). They may be reproduced freely provided that this attribution is retained.*

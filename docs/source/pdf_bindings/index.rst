@@ -1,18 +1,7 @@
-gmft.pdf\_bindings package
+PDF options
 ==========================
 
-Submodules
-----------
-
-gmft.pdf\_bindings.bindings\_mu module
---------------------------------------
-
-.. automodule:: gmft.pdf_bindings.bindings_mu
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-gmft.pdf\_bindings.bindings\_pdfium module
+PyPDFium2 bindings
 ------------------------------------------
 
 .. automodule:: gmft.pdf_bindings.bindings_pdfium
@@ -20,7 +9,7 @@ gmft.pdf\_bindings.bindings\_pdfium module
    :undoc-members:
    :show-inheritance:
 
-gmft.pdf\_bindings.common module
+Common PDF bindings
 --------------------------------
 
 .. automodule:: gmft.pdf_bindings.common
