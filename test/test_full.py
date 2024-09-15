@@ -1,6 +1,6 @@
 import json
 import pytest
-from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
+from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.table_detection import TableDetector
 from gmft import AutoTableFormatter
 

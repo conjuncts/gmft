@@ -2,7 +2,7 @@ import json
 import os
 import pytest
 from gmft import AutoFormatConfig, AutoTableDetector, AutoTableFormatter
-from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
+from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.presets import ingest_pdf
 from gmft.table_detection import TableDetectorConfig
 from gmft.table_function import TATRFormattedTable

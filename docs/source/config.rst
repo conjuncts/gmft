@@ -216,6 +216,7 @@ Large table assumption can be directly turned on/off with ``config.large_table_a
 
            Fig 4. Large Table Assumption on
 
-.. blockquote::
-    
-    *Fig. 3 and 4 Credits: © C. Dougherty 2001, 2002 (c.dougherty@lse.ac.uk). These tables have been computed to accompany the text C. Dougherty Introduction to Econometrics (second edition 2002, Oxford University Press, Oxford). They may be reproduced freely provided that this attribution is retained.*
+
+.. raw:: html
+
+    <small>Fig. 3 and 4 Credits: © C. Dougherty 2001, 2002 (c.dougherty@lse.ac.uk). These tables have been computed to accompany the text C. Dougherty Introduction to Econometrics (second edition 2002, Oxford University Press, Oxford). They may be reproduced freely provided that this attribution is retained.</small>

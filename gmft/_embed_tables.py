@@ -1,5 +1,5 @@
 from gmft import AutoTableFormatter, AutoTableDetector
-from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document, PyPDFium2Page
+from gmft.pdf_bindings.pdfium import PyPDFium2Document, PyPDFium2Page
 from gmft.table_function import FormattedTable
 
 

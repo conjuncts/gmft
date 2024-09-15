@@ -98,7 +98,7 @@ See the [docs](https://gmft.readthedocs.io/en/latest/usage.html) and the [config
 from gmft import CroppedTable, TableDetector, AutoTableFormatter
 from gmft.pdf_bindings import PyPDFium2Document
 
-detector = TableDetector()
+detector = AutoTableDetector()
 formatter = AutoTableFormatter()
 
 def ingest_pdf(pdf_path): # produces list[CroppedTable]

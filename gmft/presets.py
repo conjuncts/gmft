@@ -1,5 +1,6 @@
-from gmft.pdf_bindings.bindings_pdfium import PyPDFium2Document
-from gmft.table_detection import CroppedTable, TableDetector
+from gmft.pdf_bindings.pdfium import PyPDFium2Document
+from gmft.table_detection import CroppedTable
+from gmft import AutoTableDetector
 
 
 default_detector = None
@@ -11,7 +12,7 @@ def ingest_pdf(pdf_path) -> list[CroppedTable]:
     doc = PyPDFium2Document(pdf_path)
     global default_detector
     if default_detector is None:
-        default_detector = TableDetector()
+        default_detector = AutoTableDetector()
 
     tables = []
     for page in doc:
