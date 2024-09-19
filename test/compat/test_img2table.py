@@ -1,5 +1,5 @@
 import pytest
-from gmft.detectors.detect_img2table import Img2TablePDFDocument
+from gmft.detectors.detect_img2table import Img2TableDetector, Img2TablePDFDocument
 from gmft.formatters.format_img2table import Img2TableFormatter
 from gmft.table_detection import CroppedTable
 
@@ -45,26 +45,39 @@ Water Freezing Point	0	32
 Water Boiling Point	100	212
 Body Temperature	37	98.6
 """
-    
-def test_i2t_format(doc_tiny):
-    ct = CroppedTable.from_dict({
-        'filename': 'test/samples/tiny.pdf',
-        'page_number': 0,
-        'bbox': [
-            76.66205596923828,
-            162.82687377929688,
-            440.9659729003906,
-            248.67056274414062
-        ],
-        'confidence_score': 1,
-        'label': 0}, doc_tiny[0])
-    
-    fmtr = Img2TableFormatter()
-    
-    formatted = fmtr.extract(ct)
-    assert formatted.df().to_csv(index=False, sep='\t', lineterminator='\n') == """0	1	2
+
+def test_i2t_detect(doc_tiny):
+    detector = Img2TableDetector()
+    cts = detector.extract(doc_tiny[0])
+    assert len(cts) == 1
+    assert cts[0].df().to_csv(index=False, sep='\t', lineterminator='\n') == """0	1	2
 Name	Celsius	Fahrenheit
 Water Freezing Point	0	32
 Water Boiling Point	100	212
 Body Temperature	37	98.6
 """
+    
+    
+    
+# def test_i2t_format(doc_tiny):
+#     ct = CroppedTable.from_dict({
+#         'filename': 'test/samples/tiny.pdf',
+#         'page_number': 0,
+#         'bbox': [
+#             76.66205596923828,
+#             162.82687377929688,
+#             440.9659729003906,
+#             248.67056274414062
+#         ],
+#         'confidence_score': 1,
+#         'label': 0}, doc_tiny[0])
+    
+#     fmtr = Img2TableFormatter()
+    
+#     formatted = fmtr.extract(ct)
+#     assert formatted.df().to_csv(index=False, sep='\t', lineterminator='\n') == """0	1	2
+# Name	Celsius	Fahrenheit
+# Water Freezing Point	0	32
+# Water Boiling Point	100	212
+# Body Temperature	37	98.6
+# """

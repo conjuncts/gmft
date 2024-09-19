@@ -106,3 +106,10 @@ How to get tables formatted inline with text?
 
 This feature is a work in progress. For an interim solution, see github issue `#12 <https://github.com/conjuncts/gmft/issues/12>`_.
 
+Cannot close object, library is destroyed. 
+------------------------------------------
+
+.. code-block:: python
+    -> Cannot close object, library is destroyed. This may cause a memory leak!
+    
+This warning may be an indication that you forgot to explicitly call PyPdfium2Document.close(), which is **required**.

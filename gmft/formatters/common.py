@@ -10,11 +10,25 @@ class FormattedTable(RotatedCroppedTable):
     """
     This is a table that is "formatted", which is to say it is functionalized with header and data information through structural analysis.
     Therefore, it can be converted into df, csv, etc.
+    
+    Warning: This class is not meant to be instantiated directly. Use a :class:`~gmft.TableFormatter` to convert a :class:`~gmft.CroppedTable` to a :class:`~gmft.FormattedTable`.
     """
     
     
     def __init__(self, cropped_table: CroppedTable, df: pd.DataFrame=None):
         self._df = df
+        
+        if cropped_table is None:
+            # this is a tough position, but assume that 
+            # the user will handle CroppedTable.__init__ themselves
+            # and that they know what they are doing (trying to subclass FormattedTable)
+            self._img = None
+            self._img_dpi = None
+            self._img_padding = None
+            self._img_margin = None
+            self._word_height = None
+            self._captions = None
+            return
         
         # create shallow copy
         if 'angle' in cropped_table.__dict__:

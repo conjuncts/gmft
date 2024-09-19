@@ -132,9 +132,9 @@ class PyPDFium2Page(BasePage):
         self.page.close()
         self.page = None
     
-    def __del__(self):
-        if self.page is not None:
-            self.close()
+    # def __del__(self):
+    #     if self.page is not None:
+    #         self.close()
     
     def close_document(self):
         if self.page.parent:
