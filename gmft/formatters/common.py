@@ -41,7 +41,7 @@ class FormattedTable(RotatedCroppedTable):
     
     
     
-    def df(self, recalculate=False):
+    def df(self, recalculate=False, config_overrides=None) -> pd.DataFrame:
         """
         Return the table as a pandas dataframe.
         :param recalculate: By default, a cached dataframe is returned.
@@ -73,7 +73,7 @@ class FormattedTable(RotatedCroppedTable):
 
 
 
-class TableFormatter(ABC):
+class BaseFormatter(ABC):
     """
     Abstract class for converting a :class:`~gmft.CroppedTable` to a :class:`~gmft.FormattedTable`.
     Allows export to csv, df, etc.
@@ -86,6 +86,16 @@ class TableFormatter(ABC):
         Produces a :class:`~gmft.FormattedTable` instance, from which data can be exported in csv, html, etc.
         """
         raise NotImplementedError
+    
+    
+    def format(self, table: CroppedTable, **kwargs) -> FormattedTable:
+        """
+        Alias for :meth:`extract`.
+        """
+        return self.extract(table, **kwargs)
+
+class TableFormatter(BaseFormatter):
+    pass
 
 def _normalize_bbox(bbox: tuple[float, float, float, float], used_scale_factor: float, 
                     used_padding: tuple[float, float], used_margin: tuple[float, float] =None):

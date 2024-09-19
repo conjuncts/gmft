@@ -3,6 +3,10 @@
 Bugfix:
 - divide by 0 when taking median of empty list in row height estimate
 
+Changes:
+- refactor of code into organizational modules
+- Tentative _rich_text module and FormattedPage for direct RAG embedding usage
+
 ## v0.2.2
 
 - `is_projecting_row` is removed, with the information now available under `FormattedTable._projecting_indices`

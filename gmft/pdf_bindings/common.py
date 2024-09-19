@@ -35,11 +35,24 @@ class BasePage(ABC):
         """
         raise NotImplementedError
     
-    def _get_positions_and_text_and_lines(self) -> Generator[tuple[float, float, float, float, str, int, int, int], None, None]:
+    def _get_positions_and_text_and_breaks(self) -> Generator[tuple[float, float, float, float, str, int, int, int], None, None]:
         """
         warning: experimental, subject to change
         """
         return _infer_line_breaks(self.get_positions_and_text())
+    
+    def _get_text_with_breaks(self) -> str:
+        """
+        warning: experimental, subject to change
+        """
+        result = ""
+        for x0, y0, x1, y1, text, _, _, wordno in self._get_positions_and_text_and_breaks():
+            if wordno == 0:
+                result += "\n"
+            else:
+                result += ' '
+            result += text
+        return result.lstrip()
 
     
 

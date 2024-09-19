@@ -5,7 +5,7 @@ from typing import Generator
 import pypdfium2 as pdfium
 
 from gmft.common import Rect
-from gmft.pdf_bindings.common import BasePDFDocument, BasePage
+from gmft.pdf_bindings.common import BasePDFDocument, BasePage, _infer_line_breaks
 
 from PIL.Image import Image as PILImage
 
@@ -28,6 +28,7 @@ class PyPDFium2Page(BasePage):
         self.width = page.get_width()
         self.height = page.get_height()
         self._positions_and_text = [] # cache results, because this appears to be slow
+        self._positions_and_text_and_breaks = []
         super().__init__(page_no)
     
     def get_positions_and_text(self) -> Generator[tuple[float, float, float, float, str], None, None]:
@@ -53,6 +54,12 @@ class PyPDFium2Page(BasePage):
         # this is a bit more fine-grained
         
         # cache results, because this appears to be slow
+        # from the superior data, pilfer what we need
+        if self._positions_and_text_and_breaks:
+            for x0, x1, y0, y1, text, _, _, _ in self._positions_and_text_and_breaks:
+                yield x0, y0, x1, y1, text
+            return
+        
         if self._positions_and_text:
             for item in self._positions_and_text:
                 yield item
@@ -133,6 +140,23 @@ class PyPDFium2Page(BasePage):
         if self.page.parent:
             self.page.parent.close()
         self.page = None
+    
+    def _get_positions_and_text_and_breaks(self):
+        """
+        [Experimental] This is a generator that returns the positions and text of the page, as well as the breaks.
+        """
+        # cache, since it is slow
+        if self._positions_and_text_and_breaks:
+            for item in self._positions_and_text_and_breaks:
+                yield item
+            return
+    
+        # generate
+        words = list(_infer_line_breaks(self.get_positions_and_text()))
+        self._positions_and_text_and_breaks = words
+        for item in words:
+            yield item
+        
 
 class PyPDFium2Document(BasePDFDocument):
     """

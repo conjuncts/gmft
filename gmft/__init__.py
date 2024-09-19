@@ -5,7 +5,7 @@ It is recommended to import classes using **this** top-level file. Exact paths m
 """
 
 
-from gmft.table_detection import CroppedTable, TATRTableDetector, TableDetector, TableDetectorConfig
+from gmft.table_detection import CroppedTable, RotatedCroppedTable, TATRTableDetector, TableDetector, TableDetectorConfig
 from gmft.common import Rect
 from gmft.table_function import TATRFormatConfig, TATRFormattedTable, TATRTableFormatter, FormattedTable
 from gmft.pdf_bindings import BasePDFDocument, BasePage

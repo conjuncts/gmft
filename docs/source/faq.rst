@@ -28,6 +28,45 @@ See the :ref:`semantic_spanning_cells` section for more information.
 Therefore, tables with cells that are merged in the middle of the table are not supported.
 
 
+I always know the location of my table. How do I specify a known location?
+---------------------------------------------------------------------------
+
+If you know that a table is always located within a certain bbox on some page, the easiest way is to pass the bbox directly to the :class:`~gmft.table_detection.CroppedTable` constructor.
+
+.. code-block:: python
+
+    from gmft.table_detection import CroppedTable
+    table = CroppedTable(page, bbox=(x0, y0, x1, y0))
+
+I need to tweak something (location/rotation) about a table. How do I do this?
+---------------------------------------------------------------------------------
+
+When modifying a table's location, bbox, or rotation, make sure to do so *before* passing the table to the formatter.
+
+
+If you need to nudge a table, you can modify the bbox parameter.
+
+.. code-block:: python
+    for table in tables:
+        table.bbox[1] -= 15 # moves y0 up by 15 pdf units
+    fts = [formatter.extract(table) for table in tables]
+
+
+Likewise, you can force tables to always be unrotated (or rotated!)
+
+.. code-block:: python
+
+    from gmft.presets import ingest_pdf
+    
+    tables, doc = ingest_pdf("path/to/pdf")
+    for table in tables:
+        if isinstance(table, RotatedCroppedTable):
+            table.angle = 0
+        # always rotated: 
+        # tables[i] = RotatedCroppedTable(page=table.page, bbox=table.bbox, confidence_score=table.confidence_score, label=table.label, angle=90)
+        ft = formatter.extract(table)
+        # ...
+
 ValueError: The identified boxes have significant overlap
 ----------------------------------------------------------
 

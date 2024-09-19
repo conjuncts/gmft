@@ -59,7 +59,7 @@ class CroppedTable:
     _img_margin: tuple[int, int, int, int]
     _word_height: float
     _captions: list[str]
-    def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float, label=0):
+    def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float=1.0, label=0):
         """
         Construct a CroppedTable object.
         
@@ -313,6 +313,12 @@ class BaseDetector(ABC, Generic[ConfigT]):
         :return: list of CroppedTable objects
         """
         pass
+    
+    def detect(self, page: BasePage, config_overrides: ConfigT=None, **kwargs) -> list[CroppedTable]:
+        """
+        Alias for :meth:`extract`.
+        """
+        return self.extract(page, config_overrides, **kwargs)
 
 
 class RotatedCroppedTable(CroppedTable):
