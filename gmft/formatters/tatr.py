@@ -14,7 +14,7 @@ from gmft.table_visualization import plot_results_unwr
 
 class TATRFormatterConfig:
     """
-    Configuration for :class:`~gmft.TATRTableFormatter`.
+    Configuration for :class:`.TATRTableFormatter`.
     """
     
     # ---- model settings ----
@@ -181,7 +181,7 @@ class TATRFormatterConfig:
 class TATRFormattedTable(FormattedTable):
     """
     FormattedTable, as seen by a Table Transformer (TATR).
-    See :class:`~gmft.TATRTableFormatter`.
+    See :class:`.TATRTableFormatter`.
     """
     
     _POSSIBLE_ROWS = ['table row', 'table spanning cell', 'table projected row header'] # , 'table column header']
@@ -360,7 +360,7 @@ class TATRFormatter(TableFormatter):
     """
     Uses a TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
-    Using :meth:`extract`, a :class:`~gmft.FormattedTable` is produced, which can be exported to csv, df, etc.
+    Using :meth:`extract`, a :class:`.FormattedTable` is produced, which can be exported to csv, df, etc.
     """
     
     def __init__(self, config: TATRFormatterConfig=None):

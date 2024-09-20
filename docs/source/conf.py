@@ -11,8 +11,8 @@ project = 'gmft'
 copyright = '2024, conjunct'
 author = 'conjunct'
 
-release = '0.2'
-version = '0.2.2'
+release = '0.3'
+version = '0.3.0'
 
 # -- General configuration
 
@@ -38,7 +38,7 @@ templates_path = ['_templates']
 #     'imported-members': True,
 # }
 
-autodoc_mock_imports = ['transformers', 'PIL', 'numpy', 'torch', 'matplotlib', 'pandas', 'pypdfium2'] # , 'torch', 'numpy', 'pandas']
+autodoc_mock_imports = ['transformers', 'PIL', 'numpy', 'torch', 'matplotlib', 'pandas', 'pypdfium2', 'img2table'] # , 'torch', 'numpy', 'pandas']
 
 # -- Options for HTML output
 

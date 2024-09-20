@@ -1,11 +1,9 @@
 """
 Module containing methods of detecting tables from whole pdf pages.
 
-Whenever possible, classes (like :class:`TableDetector`) should be imported from the top-level module, not from this module,
-as the exact paths may change in future versions.
 
 Example:
-    >>> from gmft import TableDetector
+    >>> from gmft.auto import TableDetector
 """
 
 from abc import ABC, abstractmethod
@@ -50,7 +48,7 @@ def position_words(words: Generator[tuple[int, int, int, int, str], None, None],
 class CroppedTable:
     """
     A pdf selection, cropped to include just a table. 
-    Created by :class:`~gmft.TableDetector`.
+    Created by :class:`.BaseDetector`.
     """
     _img: PILImage
     _img_dpi: int
@@ -277,7 +275,7 @@ class CroppedTable:
     @staticmethod
     def from_image_only(img: PILImage) -> 'CroppedTable':
         """
-        Create a :class:`~gmft.table_detection.CroppedTable` object from an image only.
+        Create a :class:`.CroppedTable` object from an image only.
         
         :param img: PIL image
         :return: CroppedTable object
@@ -402,7 +400,7 @@ class RotatedCroppedTable(CroppedTable):
     @staticmethod
     def from_dict(d: dict, page: BasePage) -> Union[CroppedTable, 'RotatedCroppedTable']:
         """
-        Create a :class:`~gmft.table_detection.RotatedCroppedTable` object from dict.
+        Create a :class:`.RotatedCroppedTable` object from dict.
         """
         if 'angle' not in d:
             return CroppedTable.from_dict(d, page)

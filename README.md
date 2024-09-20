@@ -40,11 +40,11 @@ gmft supports the following export options:
 - Cropped image of table
 - Table caption
 
-Cropped images are useful for directly feeding into a vision recognizer, like: 
+Cropped images can be passed into a vision recognizer, like: 
 - GPT-4 vision
 - Mathpix/Adobe/Google/Amazon/Azure/etc.
 
-Cropped images are also excellent for verifying correctness of output.
+Cropped images are useful for verifying correctness of output.
 
 ## Lightweight
 
@@ -69,33 +69,33 @@ Many pdf extractors require detectron2, poppler, paddleocr, tesseract etc., whic
 
 gmft can be installed in one line: `pip install gmft`. But it may help to have [transformers](https://pypi.org/project/transformers/) and pytorch preinstalled.
 
-gmft mostly relies on [pypdfium2](https://github.com/pypdfium2-team/pypdfium2) and [transformers](https://github.com/huggingface/transformers). On the first run, gmft downloads Microsoft's TATR from huggingface, which requires ~270mB total and is saved to `~/.cache/huggingface/hub/models--microsoft--table-{transformer-detection, structure-recognition}` and `~/.cache/huggingface/hub/models--timm--resnet18.a1_in1k`.
+gmft relies on [pypdfium2](https://github.com/pypdfium2-team/pypdfium2) and [transformers](https://github.com/huggingface/transformers). On the first run, gmft downloads Microsoft's TATR from huggingface, which requires ~270mB total and is saved to `~/.cache/huggingface/hub/models--microsoft--table-{transformer-detection, structure-recognition}` and `~/.cache/huggingface/hub/models--timm--resnet18.a1_in1k`.
 
 
 ## Reliable
 
 gmft uses Microsoft's Table Transformer (TATR), which is trained on a diverse dataset PubTables-1M. Many alternative methods were considered, and TATR was ultimately chosen for several reasons, among them high reliability. 
 
-The authors are confident that the extraction quality is unmatched. When the model fails, it is usually an OCR issue, merged cell, or false positive. Even in these cases, the text is still highly useable. **Alignment** of a value to its row/column header tends to be **very accurate** because of the underlying procedural algorithm.
+Compared to existing options, the performance is *especially good* on tables with **implicit structure**, like those in scientific papers. When the model fails, it is usually an OCR issue, merged cell, or false positive. Even in these cases, the text is still highly useable. **Alignment** of a value to its row/column header tends to be **very accurate** because of the underlying procedural algorithm.
 
 We invite you to explore the [comparison notebooks](https://drive.google.com/drive/u/0/folders/114bWRj5H4aE-BA5UKH9S5ol8LC6vhqfR) to survey use cases and compare results.
 
-## Modular
-
-By subclassing the BasePDFDocument and BasePage classes, gmft's design supports other PDF extraction methods (like PyMuPDF, PyPDF, pdfplumber etc.). 
-
-By subclassing TableDetector and TableFormatter, different architectures and alternative table detection/structure extraction methods are possible. Fine-tuned models may be specified by path to huggingface hub. 
 
 ## Configurable
 
 See the [config guide](https://gmft.readthedocs.io/en/latest/config.html) for discussion on gmft settings.
+
+The library aims to be configurable through subclassing. By subclassing the BasePDFDocument and BasePage classes, gmft's design supports interchanging PDF providers like PyMuPDF and PyPDFium2.
+
+By subclassing BaseDetector and BaseFormatter, the library is extensible to different table detection and structuring methods. By default, TATRDetector, TATRFormatter, and Img2TableDetector are supported.
 
 # Quickstart
 
 See the [docs](https://gmft.readthedocs.io/en/latest/usage.html) and the [config guide](https://gmft.readthedocs.io/en/latest/config.html) for more information. The [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/quickstart.ipynb) and [bulk extract](https://github.com/conjuncts/gmft/blob/main/notebooks/bulk_extract.ipynb) contain more comprehensive code examples.
 
 ```python
-from gmft import CroppedTable, TableDetector, AutoTableFormatter
+# new in v0.3: gmft.auto
+from gmft.auto import CroppedTable, TableDetector, AutoTableFormatter
 from gmft.pdf_bindings import PyPDFium2Document
 
 detector = AutoTableDetector()
@@ -117,6 +117,8 @@ doc.close() # once you're done with the document
 
 ## New features
 
+In `v0.3`, integrated support of other providers like Img2Table.
+
 [Experimental] Multi-indices (multiple column headers) are now supported in `v0.2` with `TATRFormatConfig.enable_multi_header = True`.
 
 [Experimental] Spanning cells are now supported in `v0.2` with `TATRFormatConfig.semantic_spanning_cells = True`.
@@ -127,8 +129,8 @@ Rotated tables are now supported in `v0.0.4`.
 ## Limitations
 
 False detection of references, indexes, and large columnar text.
-
 Slightly askew tables.
+False negatives.
 
 # Acknowledgements
 
@@ -142,11 +144,13 @@ See [comparison](https://docs.google.com/spreadsheets/d/12IhxHZbYF71dPl32PQpF_6p
 
 Gmft focuses highly on pdf tables. For tables, another great option is [img2table](https://github.com/xavctn/img2table), which is non-deep and attains great results.
 
-[Nougat](https://github.com/facebookresearch/nougat) is excellent for both pdf table extraction and document understanding. It outputs full mathpix markdown (.mmd), which includes latex formulas, bold/italics, and fully latex-typeset tables. However, a gpu is highly recommended.
+[Nougat](https://github.com/facebookresearch/nougat) is excellent for both pdf table extraction and document understanding. It outputs full mathpix markdown (.mmd), which includes latex formulas, bold/italics, and fully latex-typeset tables. However, a gpu is highly recommended. 
+
+[marker](https://github.com/VikParuchuri/marker) similar to Nougat, but is more recent and offers better performance and accuracy.
 
 For general document understanding, I recommend checking out [open-parse](https://github.com/Filimoa/open-parse), [unstructured](https://github.com/Unstructured-IO/unstructured), [surya](https://github.com/VikParuchuri/surya), [deepdoctection](https://github.com/deepdoctection/deepdoctection), and [DocTR](https://github.com/mindee/doctr). Open-parse and unstructured do quite well on the same example pdfs in terms of extraction quality. 
 
-Open-parse allows extraction of auxiliary information like headers, paragraphs, etc., useful for RAG. In addition to the Table Transformer, open-parse also offers UniTable, a newer model which achieves SOTA results in many datasets like PubLayNet and FinTabNet. Though UniTable support in gmft is slated for the future, UniTable is much larger (~1.5 GB) and runs much slower (almost x90 longer!) on cpu. Therefore, TATR is still preferred for its speed. In addition, contrary to the table transformer, Unitable may fail first through misalignment because of misplaced html tags. This may impact use cases where alignment is critical.
+Open-parse allows extraction of auxiliary information like headers, paragraphs, etc., useful for RAG. In addition to the Table Transformer, open-parse also offers UniTable, a newer model which achieves SOTA results in datasets like PubLayNet and FinTabNet. Though UniTable support in gmft is slated for the future, UniTable is much larger (~1.5 GB) and runs much slower (almost x90 longer) on cpu, so TATR is still the default for its speed. In addition, contrary to TATR, Unitable may fail first through misalignment and misplaced html tags. 
 
 
 ## License

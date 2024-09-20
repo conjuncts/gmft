@@ -4,39 +4,30 @@ FAQ
 Why is my table not detected?
 ------------------------------
 
-Most likely, the reason is a false negative in the machine learning model. Unfortunately, there's not much to be done except for to look for a better model.
+Most likely, the reason is a false negative in the machine learning model. Unfortunately, there's not much to be done except to search for a better model.
 
 If you know exactly where the table is, you can skip the detection step by directly passing in the bbox.
-You can do this by passing a bbox (tuple of `xmin, ymin, xmax, ymax`) into the :class:`~gmft.table_detection.CroppedTable` constructor.
+You can do this by passing a bbox (tuple of `xmin, ymin, xmax, ymax`) into the :class:`~gmft.detectors.common.CroppedTable` constructor.
 
 .. code-block:: python
 
-    from gmft.table_detection import CroppedTable
+    from gmft.detectors.common import CroppedTable
     table = CroppedTable(page, bbox=(x0, y0, x1, y0), confidence_score=1.0, label=0)
 
-After that, the CroppedTable can be passed into formatters as usual.
+Afterwards, the CroppedTable can be passed into formatters as usual.
 
 How to parse my table with merged cells?
 -----------------------------------------
 
 Right now, only these types of merged cells are supported:
+
 * top headers that are merged (with hierarchical semantic information)
 * left headers that are merged (with hierarchical semantic information)
 
 See the :ref:`semantic_spanning_cells` section for more information.
 
-Therefore, tables with cells that are merged in the middle of the table are not supported.
+Likewise, tables with merged cells in the center are not supported.
 
-
-I always know the location of my table. How do I specify a known location?
----------------------------------------------------------------------------
-
-If you know that a table is always located within a certain bbox on some page, the easiest way is to pass the bbox directly to the :class:`~gmft.table_detection.CroppedTable` constructor.
-
-.. code-block:: python
-
-    from gmft.table_detection import CroppedTable
-    table = CroppedTable(page, bbox=(x0, y0, x1, y0))
 
 I need to tweak something (location/rotation) about a table. How do I do this?
 ---------------------------------------------------------------------------------
@@ -47,6 +38,7 @@ When modifying a table's location, bbox, or rotation, make sure to do so *before
 If you need to nudge a table, you can modify the bbox parameter.
 
 .. code-block:: python
+    
     for table in tables:
         table.bbox[1] -= 15 # moves y0 up by 15 pdf units
     fts = [formatter.extract(table) for table in tables]
@@ -80,7 +72,7 @@ To accomplish this, try setting `large_table_assumption` to true.
 
 .. code-block:: python
 
-    from gmft.table_function import TATRFormatConfig, TATRTableFormatter
+    from gmft.formatters.tatr import TATRFormatConfig, TATRTableFormatter
     
     config = TATRFormatConfig()
     config.large_table_assumption = True
@@ -109,7 +101,8 @@ This feature is a work in progress. For an interim solution, see github issue `#
 Cannot close object, library is destroyed. 
 ------------------------------------------
 
-.. code-block:: python
+.. code-block:: text
+    
     -> Cannot close object, library is destroyed. This may cause a memory leak!
     
 This warning may be an indication that you forgot to explicitly call PyPdfium2Document.close(), which is **required**.

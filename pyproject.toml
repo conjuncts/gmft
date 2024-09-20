@@ -1,6 +1,6 @@
 [project]
 name = "gmft"
-version = "0.2.2"
+version = "0.3.0"
 description = "Lightweight, performant, deep table extraction"
 authors = [
   {name = "conjunct"},
@@ -8,7 +8,7 @@ authors = [
 ]
 license = {text = "MIT License"}
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.10"
 
 classifiers = [
   "Development Status :: 4 - Beta",

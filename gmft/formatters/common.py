@@ -11,7 +11,7 @@ class FormattedTable(RotatedCroppedTable):
     This is a table that is "formatted", which is to say it is functionalized with header and data information through structural analysis.
     Therefore, it can be converted into df, csv, etc.
     
-    Warning: This class is not meant to be instantiated directly. Use a :class:`~gmft.TableFormatter` to convert a :class:`~gmft.CroppedTable` to a :class:`~gmft.FormattedTable`.
+    Warning: This class is not meant to be instantiated directly. Use a :class:`.TableFormatter` to convert a :class:`.CroppedTable` to a :class:`.FormattedTable`.
     """
     
     
@@ -89,7 +89,7 @@ class FormattedTable(RotatedCroppedTable):
 
 class BaseFormatter(ABC):
     """
-    Abstract class for converting a :class:`~gmft.CroppedTable` to a :class:`~gmft.FormattedTable`.
+    Abstract class for converting a :class:`.CroppedTable` to a :class:`.FormattedTable`.
     Allows export to csv, df, etc.
     """
     
@@ -97,7 +97,7 @@ class BaseFormatter(ABC):
     def extract(self, table: CroppedTable) -> FormattedTable:
         """
         Extract the data from the table.
-        Produces a :class:`~gmft.FormattedTable` instance, from which data can be exported in csv, html, etc.
+        Produces a :class:`.FormattedTable` instance, from which data can be exported in csv, html, etc.
         """
         raise NotImplementedError
     

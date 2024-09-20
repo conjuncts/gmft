@@ -2,7 +2,4 @@
 gmft.table\_detection module
 ----------------------------
 
-.. automodule:: gmft.table_detection
-   :members:
-   :undoc-members:
-   :show-inheritance:
+This module formerly contained the table detection logic. While you may still import from this module, the logic has since been moved to the :py:mod:`gmft.detectors.common` and :py:mod:`gmft.detectors.tatr`.

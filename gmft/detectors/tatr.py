@@ -7,7 +7,9 @@ from gmft.pdf_bindings.common import BasePage
 
 class TableDetectorConfig:
     """
-    Configuration for the :class:`~gmft.TableDetector` class.
+    Configuration for the :class:`.TATRDetector` class.
+    
+    Specific to the TableTransformerForObjectDetection model.
     """
     image_processor_path: str = "microsoft/table-transformer-detection"
     detector_path: str = "microsoft/table-transformer-detection"
@@ -36,7 +38,7 @@ class TableDetectorConfig:
 
 class TATRDetectorConfig(TableDetectorConfig):
     """
-    Configuration for the :class:`~gmft.TATRTableDetector` class.
+    Configuration for the :class:`.TATRDetector` class.
     """
     pass
 
@@ -116,7 +118,7 @@ class TATRDetector(TableDetector):
     """
     Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
-    Using :meth:`extract` produces a :class:`~gmft.FormattedTable`, which can be exported to csv, df, etc.
+    Using :meth:`extract` produces a :class:`.FormattedTable`, which can be exported to csv, df, etc.
     """
     pass
 

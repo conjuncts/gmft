@@ -6,13 +6,13 @@ The AutoTableDetector and AutoTableFormatter have separate configurations. This 
 Basics
 -------
 
-The :class:`AutoFormatConfig` object can be passed into either the :class:`AutoTableFormatter` constructor or the :meth:`TATRTableFormatter.df` method.
+The :class:`~gmft.auto.AutoFormatConfig` object can be passed into either the :class:`~gmft.auto.AutoTableFormatter` constructor or the :meth:`~gmft.formatters.tatr.TATRFormatter.df` method.
 
 For example:
 
 .. code-block:: python
 
-    from gmft import AutoFormatConfig, AutoTableFormatter
+    from gmft.auto import AutoFormatConfig, AutoTableFormatter
 
     # ... code here
     

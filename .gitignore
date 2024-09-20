@@ -12,7 +12,6 @@ test/holdout
 test/outputs/nmr
 test/samples
 plans
-gmft/pdf_bindings/bindings_mu.py
 docs/build
 notebooks
 support_arena/*

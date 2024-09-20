@@ -1,11 +1,12 @@
 """
 Module containing methods of formatting tables: structural analysis, data extraction, and converting them into pandas dataframes.
 
-Whenever possible, classes (like :class:`AutoTableFormatter`) should be imported from the top-level module, not from this module,
-as the exact paths may change in future versions.
+This module formerly contained the table format logic. While you may still import from this module, the logic has since been moved to :py:mod:`gmft.formatters.common` and :py:mod:`gmft.formatters.tatr`.
+
+Whenever possible, classes (like :class:`AutoTableFormatter`) should be imported from gmft.auto, not from this module.
 
 Example:
-    >>> from gmft import AutoTableFormatter
+    >>> from gmft.auto import AutoTableFormatter
 """
 
 from gmft.formatters.common import FormattedTable, TableFormatter, _normalize_bbox

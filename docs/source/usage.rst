@@ -25,7 +25,7 @@ For example,
 
 .. code-block:: python
 
-    from gmft import CroppedTable, AutoTableDetector, AutoTableFormatter
+    from gmft.auto import CroppedTable, AutoTableDetector, AutoTableFormatter
     from gmft.pdf_bindings import PyPDFium2Document
 
     detector = AutoTableDetector()
@@ -44,11 +44,11 @@ For example,
 Overview
 --------
 
-Documents are represented by a :class:`gmft.pdf_bindings.BasePDFDocument` object. The default implementation is :class:`gmft.pdf_bindings.PyPDFium2Document`, which uses the `PyPDFium2 <https://github.com/pypdfium2-team/pypdfium2>`_ library. 
-Within a document, the :class:`gmft.pdf_bindings.BasePage` is implemented by default with :class:`gmft.pdf_bindings.PyPDFium2Page`. 
+Documents are represented by a :class:`~gmft.pdf_bindings.BasePDFDocument` object. The default implementation is :class:`~gmft.pdf_bindings.PyPDFium2Document`, which uses the `PyPDFium2 <https://github.com/pypdfium2-team/pypdfium2>`_ library. 
+Within a document, the :class:`~gmft.pdf_bindings.BasePage` is implemented by default with :class:`~gmft.pdf_bindings.PyPDFium2Page`. 
     
-The :class:`gmft.AutoTableDetector` is the recommended table detection tool, which currently uses Microsoft's `Table Transformer <https://github.com/microsoft/table-transformer>`_. They produce :class:`gmft.table_detection.CroppedTable` objects, from which :meth:`gmft.table_detection.CroppedTable.image` permits image export. 
+The :class:`~gmft.auto.AutoTableDetector` is the recommended table detection tool, which currently uses Microsoft's `Table Transformer <https://github.com/microsoft/table-transformer>`_. They produce :class:`gmft.table_detection.CroppedTable` objects, from which :meth:`gmft.table_detection.CroppedTable.image` permits image export. 
 
-The :class:`gmft.AutoTableFormatter` is the recommended table formatting tool, from which :meth:`gmft.table_function.FormattedTable.df` permits dataframe export. All TableFormatters produce :class:`gmft.table_function.FormattedTable` objects, which contain the original CroppedTable and the formatted dataframe.
+The :class:`~gmft.auto.AutoTableFormatter` is the recommended table formatting tool, from which :meth:`~gmft.formatters.common.FormattedTable.df` permits dataframe export. All TableFormatters produce :class:`gmft.table_function.FormattedTable` objects, which contain the original CroppedTable and the formatted dataframe.
 
 

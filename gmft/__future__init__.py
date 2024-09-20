@@ -31,8 +31,11 @@ AutoTableDetector as AutoTableDetectorOrig
 
 def _deprecation_warning(name):
     import warnings
-    warnings.warn(f"DeprecationWarning: Importing {name} (and other classes) from the top level module is deprecated. Please import from gmft.auto instead.", DeprecationWarning, stacklevel=2)
-    print(f"DeprecationWarning: Importing {name} (and other classes) from the top level module is deprecated. Please import from gmft.auto instead.")
+    msg = f"DeprecationWarning: While once encouraged, \
+        importing {name} and other classes from the top level module is now deprecated. \
+        Please import from gmft.auto instead."
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+    print(msg)
 
 class Rect(RectOrig):
     """

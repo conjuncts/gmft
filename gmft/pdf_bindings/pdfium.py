@@ -214,11 +214,11 @@ class PyPDFium2Utils:
     @staticmethod
     def reload(ct: 'CroppedTable', doc=None) -> tuple['CroppedTable', 'PyPDFium2Document']:
         """
-        Reloads the :class:`~gmft.CroppedTable` from disk.
-        This is useful for a :class:`~gmft.CroppedTable` whose document has been closed.
+        Reloads the :class:`.CroppedTable` from disk.
+        This is useful for a :class:`.CroppedTable` whose document has been closed.
         
-        :param ct: The :class:`~gmft.CroppedTable` to reload.
-        :param doc: The :class:`~gmft.PyPDFium2Document` to reload from. If None, the document is loaded from disk.
+        :param ct: The :class:`.CroppedTable` to reload.
+        :param doc: The :class:`.PyPDFium2Document` to reload from. If None, the document is loaded from disk.
         """
         page_number = ct.page.page_number
         
