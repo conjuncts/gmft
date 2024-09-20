@@ -1,4 +1,6 @@
 
+import copy
+from dataclasses import dataclass, fields
 from typing import Generator
 import img2table.document
 import numpy as np
@@ -8,6 +10,7 @@ from gmft.common import Rect
 from gmft.detectors.common import BaseDetector, CroppedTable
 from gmft.formatters.common import FormattedTable
 from gmft.pdf_bindings.common import BasePDFDocument, BasePage, _infer_line_breaks
+from gmft.utils import auto_init
 
 
 try:
@@ -347,10 +350,21 @@ class Img2TableTable(FormattedTable):
         """
         raise NotImplementedError("This is not implemented, instead create Tables using Img2TableDetector.extract")
 
+@auto_init
 class Img2TableDetectorConfig:
-    pass
+    implicit_rows: bool = False
+    implicit_columns: bool = False
+    borderless_tables: bool = False
+    min_confidence: int = 50
 
 class Img2TableDetector(BaseDetector[Img2TableDetectorConfig]):
+    def __init__(self, config: Img2TableDetectorConfig=None):
+        if config is None:
+            config = Img2TableDetectorConfig()
+        elif isinstance(config, dict):
+            config = Img2TableDetectorConfig(**config)
+        self.config = config
+        
     def extract(self, page: BasePage, config_overrides: Img2TableDetectorConfig=None) -> list[Img2TableTable]:
         """
         Extract tables from a page.
@@ -364,11 +378,17 @@ class Img2TableDetector(BaseDetector[Img2TableDetectorConfig]):
         else:
             i2tpage = Img2TablePage(page)
         
+        config = self.config
+        if config_overrides is not None:
+            config = copy.deepcopy(self.config)
+            config.__dict__.update(config_overrides.__dict__)
+        
         extracted_tables = i2tpage.extract_tables(ocr=None,
-            implicit_rows=False,
-            implicit_columns=False,
-            borderless_tables=False,
-            min_confidence=50)
+                                                  **config.__dict__)
+            # implicit_rows=False,
+            # implicit_columns=False,
+            # borderless_tables=False,
+            # min_confidence=50)
         
         page0tables = extracted_tables.get(0, [])
         

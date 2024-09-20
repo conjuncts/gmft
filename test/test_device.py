@@ -3,7 +3,7 @@ import torch
 
 from gmft.pdf_bindings import PyPDFium2Document
 from gmft.table_detection import TableDetector, TableDetectorConfig
-from gmft.table_function import TATRFormatConfig, TATRTableFormatter
+from gmft.table_function import TATRFormatterConfig, TATRFormatter
 
 
 def test_cuda(doc_tiny):
@@ -12,7 +12,7 @@ def test_cuda(doc_tiny):
     
     page = doc_tiny[0]
     detector = TableDetector(TableDetectorConfig(torch_device="cuda"))
-    formatter = TATRTableFormatter(TATRFormatConfig(torch_device="cuda"))
+    formatter = TATRFormatter(TATRFormatterConfig(torch_device="cuda"))
     table = detector.extract(page)[0]
     ft = formatter.extract(table)
     

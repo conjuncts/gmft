@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 
 from gmft.pdf_bindings.common import BasePage
-from gmft.table_detection import CroppedTable, RotatedCroppedTable
+from gmft.detectors.common import CroppedTable, RotatedCroppedTable
 
 class FormattedTable(RotatedCroppedTable):
     """

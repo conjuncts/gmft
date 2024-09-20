@@ -1,2 +1,0 @@
-- subscript/superscript detection
-- multi-indices

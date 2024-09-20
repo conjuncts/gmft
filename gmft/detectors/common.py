@@ -15,7 +15,6 @@ import PIL.Image
 from PIL.Image import Image as PILImage
 
 import numpy as np
-import torch
 from gmft.common import Rect
 from gmft.pdf_bindings.common import BasePage, ImageOnlyPage
 from gmft.table_captioning import _find_captions

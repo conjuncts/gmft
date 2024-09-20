@@ -7,15 +7,12 @@ from gmft.pdf_bindings.common import BasePage
 import torch
 
 
-import transformers
-from transformers import AutoImageProcessor, TableTransformerForObjectDetection
-
 from gmft.table_function_algorithm import extract_to_df
 from gmft.table_visualization import plot_results_unwr
 
 
 
-class TATRFormatConfig:
+class TATRFormatterConfig:
     """
     Configuration for :class:`~gmft.TATRTableFormatter`.
     """
@@ -203,7 +200,7 @@ class TATRFormattedTable(FormattedTable):
     label2id = {v: k for k, v in id2label.items()}
     
     
-    config: TATRFormatConfig
+    config: TATRFormatterConfig
     outliers: dict[str, bool]
     
     effective_rows: list[tuple]
@@ -227,17 +224,17 @@ class TATRFormattedTable(FormattedTable):
     
     def __init__(self, cropped_table: CroppedTable, fctn_results: dict, 
                 #  fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int], 
-                 config: TATRFormatConfig=None):
+                 config: TATRFormatterConfig=None):
         super(TATRFormattedTable, self).__init__(cropped_table)
         self.fctn_results = fctn_results
         # self.fctn_scale_factor = fctn_scale_factor
         # self.fctn_padding = tuple(fctn_padding)
         
         if config is None:
-            config = TATRFormatConfig()
+            config = TATRFormatterConfig()
         self.config = config
         self.outliers = None
-    def df(self, recalculate=False, config_overrides: TATRFormatConfig=None):
+    def df(self, recalculate=False, config_overrides: TATRFormatterConfig=None):
         """
         Return the table as a pandas dataframe. 
         :param recalculate: by default, the dataframe is cached
@@ -337,7 +334,7 @@ class TATRFormattedTable(FormattedTable):
         if 'fctn_results' not in d:
             raise ValueError("fctn_results not found in dict -- dict may be a CroppedTable but not a TATRFormattedTable.")
         
-        config = TATRFormatConfig()
+        config = TATRFormatterConfig()
         for k, v in d['config'].items():
             if v is not None and config.__dict__.get(k) != v:
                 setattr(config, k, v)
@@ -359,16 +356,19 @@ class TATRFormattedTable(FormattedTable):
         table.outliers = d.get('outliers', None)
         return table
 
-class TATRTableFormatter(TableFormatter):
+class TATRFormatter(TableFormatter):
     """
     Uses a TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
     Using :meth:`extract`, a :class:`~gmft.FormattedTable` is produced, which can be exported to csv, df, etc.
     """
     
-    def __init__(self, config: TATRFormatConfig=None):
+    def __init__(self, config: TATRFormatterConfig=None):
+        import transformers
+        from transformers import AutoImageProcessor, TableTransformerForObjectDetection
+        
         if config is None:
-            config = TATRFormatConfig()
+            config = TATRFormatterConfig()
         if not config.warn_uninitialized_weights:
             previous_verbosity = transformers.logging.get_verbosity()
             transformers.logging.set_verbosity(transformers.logging.ERROR)
@@ -431,6 +431,8 @@ class TATRTableFormatter(TableFormatter):
         return formatted_table
             
 
-
+# legacy aliases from the nonstandard days
+TATRTableFormatter = TATRFormatter
+TATRFormatConfig = TATRFormatterConfig
     
         

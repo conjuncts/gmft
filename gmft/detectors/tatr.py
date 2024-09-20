@@ -2,10 +2,6 @@ import copy
 import torch
 from gmft.detectors.common import BaseDetector, CroppedTable, RotatedCroppedTable
 
-
-import transformers
-from transformers import AutoImageProcessor, TableTransformerForObjectDetection
-
 from gmft.pdf_bindings.common import BasePage
 
 
@@ -38,32 +34,37 @@ class TableDetectorConfig:
         if torch_device is not None:
             self.torch_device = torch_device
 
-class TATRTableDetectorConfig(TableDetectorConfig):
+class TATRDetectorConfig(TableDetectorConfig):
     """
     Configuration for the :class:`~gmft.TATRTableDetector` class.
     """
     pass
 
-class TableDetector(BaseDetector[TATRTableDetectorConfig]):
+
+class TableDetector(BaseDetector[TATRDetectorConfig]):
     """
     Detects tables in a pdf page. Default implementation uses TableTransformerForObjectDetection.
     """
-    def __init__(self, config: TableDetectorConfig=None, default_implementation=True):
+    def __init__(self, config: TATRDetectorConfig=None, default_implementation=True):
         """
         Initialize the TableDetector.
         
-        :param config: TableDetectorConfig
+        :param config: TATRDetectorConfig
         :param default_implementation: Should be True, unless you are writing a custom subclass for TableDetector.
         """
+        
+        import transformers
+        from transformers import AutoImageProcessor, TableTransformerForObjectDetection
+
         
         # future-proofing: allow subclasses for TableDetector to have different architectures
         if not default_implementation:
             return
         
         if config is None:
-            config = TableDetectorConfig()
+            config = TATRDetectorConfig()
         elif isinstance(config, dict):
-            config = TableDetectorConfig(**config)
+            config = TATRDetectorConfig(**config)
         if not config.warn_uninitialized_weights:
             previous_verbosity = transformers.logging.get_verbosity()
             transformers.logging.set_verbosity(transformers.logging.ERROR)
@@ -76,7 +77,7 @@ class TableDetector(BaseDetector[TATRTableDetectorConfig]):
             transformers.logging.set_verbosity(previous_verbosity)
         self.config = config
     
-    def extract(self, page: BasePage, config_overrides: TableDetectorConfig=None) -> list[CroppedTable]:
+    def extract(self, page: BasePage, config_overrides: TATRDetectorConfig=None) -> list[CroppedTable]:
         """
         Detect tables in a page.
         
@@ -111,7 +112,7 @@ class TableDetector(BaseDetector[TATRTableDetectorConfig]):
                 tables.append(CroppedTable(page, bbox, confidence_score, label))
         return tables
     
-class TATRTableDetector(TableDetector):
+class TATRDetector(TableDetector):
     """
     Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
     
@@ -119,3 +120,6 @@ class TATRTableDetector(TableDetector):
     """
     pass
 
+# legacy aliases from the nonstandard days
+TATRTableDetector = TATRDetector
+TATRTableDetectorConfig = TATRDetectorConfig

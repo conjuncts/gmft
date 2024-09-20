@@ -7,15 +7,18 @@ from gmft.table_function import TATRFormattedTable
 matplotlib.use('Agg')
 
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
-from gmft.table_detection import TableDetector, TableDetectorConfig
-from gmft import AutoTableDetector, AutoTableFormatter
+from gmft.detectors.tatr import TATRDetector, TATRDetectorConfig
+from gmft.auto import AutoTableDetector, AutoTableFormatter
 
 # from gmft_pymupdf import PyMuPDFDocument
+
+# test legacy imports
+from gmft.detectors.tatr import TATRTableDetectorConfig
 
 
 @pytest.fixture(scope="session")
 def detector():
-    yield TableDetector()
+    yield TATRDetector()
 
 @pytest.fixture(scope="session")
 def formatter():
@@ -67,7 +70,7 @@ def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTa
     doc = docs_bulk[n-1]
     # for i, doc in enumerate(docs_bulk):
     
-    config = TableDetectorConfig()
+    config = TATRTableDetectorConfig() # purposefully use old alias
     config.detector_base_threshold = 0.9
     tables = []
     if REDETECT_TABLES:
