@@ -8,8 +8,6 @@ The reason is importing through the top level module means that the whole librar
 even a small part of it, which leads to bloat. 
 
 In lieu, `gmft.auto` is now encouraged.
-
-See https://stackoverflow.com/q/64979364/6844235
 """
 
 

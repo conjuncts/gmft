@@ -11,13 +11,13 @@ Instead, `gmft.auto` is now encouraged. For example, `from gmft.auto import Auto
 # See https://stackoverflow.com/q/64979364/6844235
 
 import sys
-# from gmft.auto import *
 
 from gmft.auto import Rect, BasePDFDocument, BasePage, CroppedTable, RotatedCroppedTable, \
-    TableDetectorConfig, TableDetector, FormattedTable, TATRFormatterConfig, TATRFormattedTable, \
+    TableDetectorConfig, TableDetector, FormattedTable, TATRFormatConfig, TATRFormattedTable, \
     TATRTableDetector, TATRTableFormatter, TATRFormatConfig, \
     AutoTableFormatter, AutoFormatConfig, AutoTableDetector
 
+# from gmft.__future__init__ import *
 # not imported:
 # TATRDetector
 # TATRFormatter

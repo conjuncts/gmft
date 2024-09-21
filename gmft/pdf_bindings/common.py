@@ -131,7 +131,13 @@ def _infer_line_breaks(generator_in: Generator[tuple[float,float,float,float,str
     if not all_words:
         return
     
-    avg_line_height = np.mean([y1 - y0 for x0, y0, x1, y1, text in all_words]) * 0.8
+    word_heights = [y1 - y0 for x0, y0, x1, y1, text in all_words]
+    if not len(word_heights):
+        avg_line_height = 10
+    else:
+        avg_line_height = np.mean(word_heights) * 0.8
+        # let's keep it sensible
+        avg_line_height = max(avg_line_height, 0.1)
     
     # pass 2: infer line breaks
     line_ctr = 0

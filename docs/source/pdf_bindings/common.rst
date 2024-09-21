@@ -1,4 +1,4 @@
-PDF common
+gmft.pdf_bindings.common
 --------------------------------
 
 With a common interface, gmft supports interchangeable documents. The key requirements are as follows:

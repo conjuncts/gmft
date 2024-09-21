@@ -10,7 +10,6 @@ Example:
 """
 
 from gmft.formatters.common import FormattedTable, TableFormatter, _normalize_bbox
-from gmft.formatters.tatr import TATRFormatterConfig, TATRFormattedTable, TATRFormatter
+from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable, TATRFormatter
 
-TATRFormatConfig = TATRFormatterConfig
 TATRTableFormatter = TATRFormatter

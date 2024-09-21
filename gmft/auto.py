@@ -7,13 +7,13 @@ For convenience, please import using `gmft.auto` instead of `gmft`.
 from gmft.common import Rect
 from gmft.pdf_bindings import BasePDFDocument, BasePage
 from gmft.detectors.common import CroppedTable, RotatedCroppedTable
-from gmft.detectors.tatr import TATRDetector, TableDetectorConfig, TableDetector
+from gmft.detectors.tatr import TATRDetector, TATRDetectorConfig, TableDetectorConfig, TableDetector
 from gmft.formatters.common import FormattedTable
-from gmft.formatters.tatr import TATRFormatterConfig, TATRFormattedTable, TATRFormatter
+from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable, TATRFormatter
 
 TATRTableDetector = TATRDetector
 TATRTableFormatter = TATRFormatter
-TATRFormatConfig = TATRFormatterConfig
+# TATRFormatConfig = TATRFormatConfig
 
 
 class AutoTableFormatter(TATRFormatter):
@@ -25,9 +25,9 @@ class AutoTableFormatter(TATRFormatter):
     """
     pass
 
-class AutoFormatConfig(TATRFormatterConfig):
+class AutoFormatConfig(TATRFormatConfig):
     """
-    Configuration for the recommended :class:`~gmft.formatters.common.BaseFormatter`. Currently points to :class:`~gmft.formatters.tatr.TATRFormatterConfig`.
+    Configuration for the recommended :class:`~gmft.formatters.common.BaseFormatter`. Currently points to :class:`~gmft.formatters.tatr.TATRFormatConfig`.
     """
     pass
 

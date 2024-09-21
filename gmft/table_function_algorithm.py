@@ -8,7 +8,7 @@ import pandas as pd
 from gmft.common import Rect
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gmft.table_function import TATRFormatterConfig, TATRFormattedTable
+    from gmft.table_function import TATRFormatConfig, TATRFormattedTable
 
 
 def _iob(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, float, float]):
@@ -161,7 +161,7 @@ def _is_within_header(bbox, sorted_headers, _iob=_iob_for_rows, header_threshold
     return any(_iob(bbox, header['bbox']) > header_threshold for header in sorted_headers)
     
 
-def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFormatterConfig, sorted_rows, sorted_headers, row_height, known_means=None):
+def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFormatConfig, sorted_rows, sorted_headers, row_height, known_means=None):
     if not sorted_rows:
         return []
     # construct bbox for each row
@@ -522,7 +522,7 @@ def _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosem
         
 
 def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, float, str], None, None], 
-                          config: TATRFormatterConfig, 
+                          config: TATRFormatConfig, 
                           sorted_rows: list[dict], sorted_columns: list[dict], 
                           outliers: dict[str, bool], 
                         #   large_table_guess: bool, 
@@ -613,7 +613,7 @@ def _fill_using_partitions(text_positions: Generator[tuple[float, float, float, 
     return table_array
 
 
-def extract_to_df(table: TATRFormattedTable, config: TATRFormatterConfig=None):
+def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     """
     Return the table as a pandas dataframe.
     The code is adapted from the TATR authors' inference.py, with a few tweaks.

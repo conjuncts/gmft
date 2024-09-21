@@ -1,11 +1,15 @@
-## v0.2.3-pre
+## v0.3.0
 
 Bugfix:
 - divide by 0 when taking median of empty list in row height estimate
 
 Changes:
-- refactor of code into organizational modules
-- Tentative _rich_text module and FormattedPage for direct RAG embedding usage
+- Added `Img2TableDetector`.
+- refactor of code into organizational modules, `detectors` and `formatters`
+- Importing from `gmft` is no longer encouraged. Please import from `gmft.auto` instead.
+- Tentative rich_text module and FormattedPage for direct RAG embedding usage
+- Configs are now dataclasses. However, a possibly breaking change is that **passing `config_overrides` will now completely replace the config**, rather than updating it.
+
 
 ## v0.2.2
 

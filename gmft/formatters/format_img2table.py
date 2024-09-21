@@ -5,7 +5,7 @@ import numpy as np
 
 from gmft.pdf_bindings.common import BasePDFDocument, BasePage
 from gmft.table_detection import CroppedTable
-from gmft.detectors.detect_img2table import _PdfOCR_For_I2TDoc
+from gmft.detectors.img2table import _PdfOCR_For_I2TDoc
 from gmft.table_function import FormattedTable, TableFormatter
 
 
@@ -92,6 +92,9 @@ class Img2TableFormattedTable(FormattedTable):
 
 class Img2TableFormatter(TableFormatter):
     """
+    DO NOT USE: this is experimental and is completely untested.
+    
+    
     There are 2 strategies to use img2table's formatting with another provider's detection.
     
     1. Run the img2table detector, and run the other provider's detector, and only

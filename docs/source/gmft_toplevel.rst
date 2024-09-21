@@ -19,9 +19,9 @@ more accurate performance but requires the more restrictive AGPL license.
 .. toctree::
    :maxdepth: 2
    
+   pdf_bindings/index
    pdf_bindings/common
    pdf_bindings/pdfium
-   pdf_bindings/index
 
 
 Detectors
@@ -34,6 +34,7 @@ In gmft, detectors locate the positions and bounds (bbox) of tables on a page.
    
    detectors/common
    detectors/tatr
+   detectors/img2table
    
 Formatters
 ----------
@@ -52,8 +53,6 @@ Modules
 
 .. toctree::
    :maxdepth: 2
-   
-   pdf_bindings/index
    
    gmft.auto
    gmft.common

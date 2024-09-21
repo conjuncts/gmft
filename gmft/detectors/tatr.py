@@ -1,15 +1,18 @@
 import copy
+from dataclasses import dataclass
 import torch
+from gmft._dataclasses import with_config
 from gmft.detectors.common import BaseDetector, CroppedTable, RotatedCroppedTable
 
 from gmft.pdf_bindings.common import BasePage
 
 
-class TableDetectorConfig:
+@dataclass
+class TATRDetectorConfig:
     """
     Configuration for the :class:`.TATRDetector` class.
     
-    Specific to the TableTransformerForObjectDetection model.
+    Specific to the TableTransformerForObjectDetection model. (Do not subclass this.)
     """
     image_processor_path: str = "microsoft/table-transformer-detection"
     detector_path: str = "microsoft/table-transformer-detection"
@@ -36,15 +39,14 @@ class TableDetectorConfig:
         if torch_device is not None:
             self.torch_device = torch_device
 
-class TATRDetectorConfig(TableDetectorConfig):
-    """
-    Configuration for the :class:`.TATRDetector` class.
-    """
-    pass
 
 
-class TableDetector(BaseDetector[TATRDetectorConfig]):
+class TATRDetector(BaseDetector[TATRDetectorConfig]):
     """
+    Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
+    
+    Using :meth:`extract` produces a :class:`.FormattedTable`, which can be exported to csv, df, etc.
+
     Detects tables in a pdf page. Default implementation uses TableTransformerForObjectDetection.
     """
     def __init__(self, config: TATRDetectorConfig=None, default_implementation=True):
@@ -87,11 +89,7 @@ class TableDetector(BaseDetector[TATRDetectorConfig]):
         :param config_overrides: override the config for this call only
         :return: list of CroppedTable objects
         """
-        if config_overrides is not None:
-            config = copy.deepcopy(self.config)
-            config.__dict__.update(config_overrides.__dict__)
-        else:
-            config = self.config
+        config = with_config(self.config, config_overrides)
         
         img = page.get_image(72) # use standard dpi = 72, which means we don't need any scaling
         encoding = self.image_processor(img, return_tensors="pt").to(self.config.torch_device)
@@ -114,14 +112,10 @@ class TableDetector(BaseDetector[TATRDetectorConfig]):
                 tables.append(CroppedTable(page, bbox, confidence_score, label))
         return tables
     
-class TATRDetector(TableDetector):
-    """
-    Uses TableTransformerForObjectDetection for small/medium tables, and a custom algorithm for large tables.
-    
-    Using :meth:`extract` produces a :class:`.FormattedTable`, which can be exported to csv, df, etc.
-    """
-    pass
 
 # legacy aliases from the nonstandard days
+TableDetector = TATRDetector
+TableDetectorConfig = TATRDetectorConfig
+
 TATRTableDetector = TATRDetector
 TATRTableDetectorConfig = TATRDetectorConfig
