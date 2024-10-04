@@ -122,6 +122,8 @@ class ImageOnlyPage(BasePage):
 def _infer_line_breaks(generator_in: Generator[tuple[float,float,float,float,str],None,None]):
     """
     warning: experimental
+    
+    won't work for rotated text
     """
     # pass 1: set the line height to the average line height
     all_words = list(generator_in)
@@ -144,7 +146,7 @@ def _infer_line_breaks(generator_in: Generator[tuple[float,float,float,float,str
     prev_anchor = all_words[0][1]
     word_ctr = 0
     for i, (x0, y0, x1, y1, text) in enumerate(all_words):
-        if y0 - prev_anchor > avg_line_height:
+        if abs(y0 - prev_anchor) > avg_line_height:
             line_ctr += 1
             prev_anchor = y0
             word_ctr = 0

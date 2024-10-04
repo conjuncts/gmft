@@ -12,7 +12,7 @@ copyright = '2024, conjunct'
 author = 'conjunct'
 
 release = '0.3'
-version = '0.3.0'
+version = '0.3.1'
 
 # -- General configuration
 

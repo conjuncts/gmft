@@ -26,6 +26,7 @@ Table of Contents
    usage
    config
    faq
+   advanced
    gmft_toplevel
 
    
