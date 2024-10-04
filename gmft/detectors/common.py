@@ -56,7 +56,7 @@ class CroppedTable:
     _img_margin: tuple[int, int, int, int]
     _word_height: float
     _captions: list[str]
-    def __init__(self, page: BasePage, bbox: tuple[int, int, int, int] | Rect, confidence_score: float=1.0, label=0):
+    def __init__(self, page: BasePage, bbox: Union[tuple[int, int, int, int], Rect], confidence_score: float=1.0, label=0):
         """
         Construct a CroppedTable object.
         
@@ -82,7 +82,7 @@ class CroppedTable:
         self._word_height = None
         self._captions = None
     
-    def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None, margin: str | tuple[int, int, int, int]=None) -> PILImage:
+    def image(self, dpi: int = None, padding: Union[str, tuple[int, int, int, int], None]=None, margin: Union[str, tuple[int, int, int, int]]=None) -> PILImage:
         """
         Return the image of the cropped table.
         
@@ -347,8 +347,8 @@ class RotatedCroppedTable(CroppedTable):
             raise ValueError("Only 0, 90, 180, 270 are supported.")
         self.angle = angle
         
-    def image(self, dpi: int = None, padding: str | tuple[int, int, int, int]=None, 
-              margin: str | tuple[int, int, int, int]=None, **kwargs) -> PILImage:
+    def image(self, dpi: int = None, padding: Union[str, tuple[int, int, int, int]]=None, 
+              margin: Union[str, tuple[int, int, int, int]]=None, **kwargs) -> PILImage:
         """
         Return the image of the cropped table.
         

@@ -104,8 +104,30 @@ def _find_leftmost_gt(sorted_list, value, key_func):
     
     In other words, the first row where the row might intersect y_min, even a little bit
     """
-    i = bisect.bisect_left(sorted_list, value, key=key_func)
-    return i
+    # from bisect.bisect_left; copy the code to support key_func in python < 3.10
+    a = sorted_list
+    x = value
+    lo = 0
+    hi = len(a) # None
+    
+    # Note, the comparison uses "<" to match the
+    # __lt__() logic in list.sort() and in heapq.
+    if key_func is None:
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if a[mid] < x:
+                lo = mid + 1
+            else:
+                hi = mid
+    else:
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if key_func(a[mid]) < x:
+                lo = mid + 1
+            else:
+                hi = mid
+    return lo
+    # return bisect.bisect_left(sorted_list, value, key=key_func)
 
 
 
