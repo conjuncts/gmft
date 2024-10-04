@@ -4,7 +4,7 @@ dist
 .vscode
 .pytest_cache
 .idea
-.venv
+.venv*
 test/outputs/actual
 test/outputs/actual*
 test/refs/attn/*

@@ -67,7 +67,7 @@ Benchmark using Colab's **cpu** indicates an approximate rate of ~1.381 s/page; 
 
 Many pdf extractors require detectron2, poppler, paddleocr, tesseract etc., which may require external installation. Detectron2 is particularly difficult to install on windows. OCR models may require tesseract or paddleocr.
 
-gmft can be installed in one line: `pip install gmft`. But it may help to have [transformers](https://pypi.org/project/transformers/) and pytorch preinstalled.
+To install gmft, install [transformers](https://pypi.org/project/transformers/) and [pytorch](https://pytorch.org/get-started/locally/) with the necessary GPU/CPU options. Then run `pip install gmft`. 
 
 gmft relies on [pypdfium2](https://github.com/pypdfium2-team/pypdfium2) and [transformers](https://github.com/huggingface/transformers). On the first run, gmft downloads Microsoft's TATR from huggingface, which requires ~270mB total and is saved to `~/.cache/huggingface/hub/models--microsoft--table-{transformer-detection, structure-recognition}` and `~/.cache/huggingface/hub/models--timm--resnet18.a1_in1k`.
 
