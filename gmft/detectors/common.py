@@ -190,7 +190,7 @@ class CroppedTable:
         
         # actually no - use the median
         if word_heights:
-            self._word_height = 0.95 * np.median(word_heights)
+            self._word_height = 0.95 * float(np.median(word_heights)) # convert np.float64 to float for consistency
             assert self._word_height > 0
         else: 
             self._word_height = np.nan # empty

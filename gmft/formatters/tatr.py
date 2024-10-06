@@ -113,11 +113,11 @@ class TATRFormatConfig:
 
     # ---- rejection and warnings ----
 
-    total_overlap_reject_threshold: float = 0.2
-    """reject if total overlap is > 20% of table area"""
+    total_overlap_reject_threshold: float = 0.9
+    """reject if total overlap is > 90% of table area"""
     
-    total_overlap_warn_threshold: float = 0.05
-    """warn if total overlap is > 5% of table area"""
+    total_overlap_warn_threshold: float = 0.1
+    """warn if total overlap is > 10% of table area"""
     
     nms_warn_threshold: int = 5
     """warn if non maxima suppression removes > 5 rows"""
@@ -249,7 +249,7 @@ class TATRFormattedTable(FormattedTable):
         return self._df
     
     
-    def visualize(self, filter=None, dpi=None, padding=None, margin=(10,10,10,10), effective=False, **kwargs):
+    def visualize(self, filter=None, dpi=None, padding=None, margin=(10,10,10,10), effective=False, return_img=True, **kwargs):
         """
         Visualize the table.
         
@@ -258,16 +258,18 @@ class TATRFormattedTable(FormattedTable):
         :param padding: padding around the table. If None, then the padding of the cached image is used.
         :param margin: margin around the table. If None, then the margin of the cached image is used.
         :param effective: if True, visualize the effective rows and columns, which may differ from the table transformer's output.
+        :param return_img: if True, return the image. If False, the matplotlib figure is plotted.
         """
         if dpi is None: # dpi = needed_dpi
             dpi = self._img_dpi
         if dpi is None:
             dpi = 72
-        if self._df is None:
-            self._df = self.df()
+
         scale_by = (dpi / 72)
         
         if effective:
+            if self._df is None:
+                self._df = self.df()
             vis = self.effective_rows + self.effective_columns + self.effective_headers + self.effective_projecting + self.effective_spanning
             boxes = [x['bbox'] for x in vis]
             boxes = [(x * scale_by for x in bbox) for bbox in boxes]
@@ -294,7 +296,7 @@ class TATRFormattedTable(FormattedTable):
         # if self._img is not None:
         true_margin = [x * (dpi / 72) for x in self._img_margin]
         return plot_results_unwr(img, _to_visualize['scores'], _to_visualize['labels'], _to_visualize['boxes'], TATRFormattedTable.id2label, 
-                                 filter=filter, padding=padding, margin=true_margin, **kwargs)
+                                 filter=filter, padding=padding, margin=true_margin, return_img=return_img, **kwargs)
             
     def to_dict(self):
         """
@@ -377,7 +379,7 @@ class TATRFormatter(TableFormatter):
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
     
-    def extract(self, table: CroppedTable, dpi=144, padding='auto', margin=None, config_overrides=None) -> FormattedTable:
+    def extract(self, table: CroppedTable, dpi=144, padding='auto', margin=None, config_overrides=None) -> TATRFormattedTable:
         """
         Extract the data from the table.
         """

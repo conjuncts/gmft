@@ -6,7 +6,7 @@ from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.presets import ingest_pdf
 from gmft.detectors.tatr import TATRDetectorConfig
 from gmft.formatters.tatr import TATRFormattedTable
-from .conftest import REDETECT_TABLES
+# from .conftest import REDETECT_TABLES
 
 
 # non-determinism of transformers means this might not always pass
@@ -60,6 +60,7 @@ def try_jth_table(tables, pdf_no, j, config=None, REDETECT_TABLES=False):
         assert expected == actual, f"Mismatch in csv files for pdf {pdf_no} and table {j}"
     # except ValueError as e:
         # assert not os.path.exists(f"test/outputs/bulk/pdf{pdf_no}_t{j}.csv"), f"Failed to create df in pdf {pdf_no} and table {j}"
+    return ft
 
 class TestPdf1:
 
@@ -83,8 +84,11 @@ class TestPdf1:
     def test_bulk_pdf1_t8(self, pdf1_tables):
         try_jth_table(pdf1_tables, 1, 8)
     def test_bulk_pdf1_t9(self, pdf1_tables):
-        with pytest.raises(ValueError, match="The identified boxes have significant overlap"):
-            try_jth_table(pdf1_tables, 1, 9)
+        # with pytest.raises(ValueError, match="The identified boxes have significant overlap"):
+        #     try_jth_table(pdf1_tables, 1, 9)
+        ft = try_jth_table(pdf1_tables, 1, 9)
+        assert ft.outliers.get("high overlap")
+        assert 0.45 < ft.outliers.get("high overlap") < 0.5
     
 
 
@@ -165,7 +169,7 @@ class TestPdf8:
 if __name__ == "__main__":
     # generate the files
     formatter = AutoTableFormatter()
-    for i in range(9, 10):
+    for i in [1]:
         tables, doc = ingest_pdf(f"test/samples/{i}.pdf")
         try:
             fts = [formatter.extract(table) for table in tables]
@@ -173,8 +177,11 @@ if __name__ == "__main__":
             print(f"Error in pdf {i}")
             
         for j, ft in enumerate(fts):
+            if j not in [9]:
+                continue
             with open(f"test/outputs/bulk/pdf{i}_t{j}.info", "w") as f:
-                json.dump(ft.to_dict(), f, indent=4)
+                # json.dump(ft.to_dict(), f, indent=4)
+                pass
             try: 
                 ft.df().to_csv(f"test/outputs/bulk/pdf{i}_t{j}.csv", index=False)
             except Exception as e:

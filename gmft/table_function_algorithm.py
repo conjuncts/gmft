@@ -143,9 +143,19 @@ def _widen_and_even_out_rows(sorted_rows, sorted_headers):
         header['bbox'][2] = rightmost
 
 
-def _fill_in_gaps(sorted_rows, gap_height, leave_gap=0.4):
+def _fill_in_gaps(sorted_rows, gap_height, leave_gap=0.4, top_of_table=None):
+    """
+    top_y: intend to create an extra row above the first row, if there is a gap.
+    """
     # fill in gaps in the rows
     margin = leave_gap * gap_height
+    
+    if top_of_table is not None and len(sorted_rows):
+        if sorted_rows[0]['bbox'][1] - top_of_table > gap_height:
+            # fill in the gap
+            print("Filling in gap at top of table")
+            sorted_rows.insert(0, {'confidence': 1, 'label': 'table row', 'bbox': 
+                                   [sorted_rows[0]['bbox'][0], top_of_table, sorted_rows[0]['bbox'][2], sorted_rows[0]['bbox'][1] - margin]})
     
     i = 1
     while i < len(sorted_rows):
@@ -264,7 +274,7 @@ def _split_sorted_horizontals(sorted_horizontals):
 
     
 
-def _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting):
+def _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting, outliers=None):
     """
     Splits the sorted_horizontals into rows, headers, and projecting rows. 
     Then, identifies a list of indices of headers and projecting rows.
@@ -274,12 +284,15 @@ def _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projec
     header_indices = []
     projecting_indices = []
     
-    if sorted_rows and sorted_headers:
-        first_row = sorted_rows[0]
-        first_header = sorted_headers[0]
-        if first_row['bbox'][1] - 1 > first_header['bbox'][3]:
-            # if the first row is below the first header, add the header as a row
-            print("The header is not included as a row. Consider adding it back as a row.")
+    # if sorted_rows and sorted_headers:
+    #     first_row = sorted_rows[0]
+    #     first_header = sorted_headers[0]
+    #     if first_row['bbox'][1] - 1 > first_header['bbox'][3]:
+    #         # try to detect when the header is not included in the rows
+    #         if _iob(first_header['bbox'], first_row['bbox']) < 0.5: # the header is not in a row
+    #             if outliers is not None:
+    #                 outliers['header_is_not_row'] = True
+                # print("The header is not included as a row. Consider adding it back as a row.")
     
     for i, row in enumerate(sorted_rows):
         # TODO binary-ify
@@ -693,7 +706,12 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     _widen_and_even_out_rows(sorted_rows, sorted_headers)
     
     word_height = table.predicted_word_height(smallest_supported_text_height=config._smallest_supported_text_height)
-    _fill_in_gaps(sorted_rows, word_height)
+    
+    # fill in a header gap, if it exists (ie. if the header is not included in the rows)
+    top_of_table = None
+    if sorted_headers:
+        top_of_table = sorted_headers[0]['bbox'][1]
+    _fill_in_gaps(sorted_rows, word_height, top_of_table=top_of_table)
     
     # 4a. calculate total row overlap. If higher than a threshold, invoke the large table assumption
     # also count headers
@@ -715,7 +733,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         large_table_guess = config.force_large_table_assumption
     
     if large_table_guess:
-        if config.verbosity >= 1:
+        if config.verbosity >= 2:
             print("Invoking large table row guess! set TATRFormatConfig.force_large_table_assumption to False to disable this.")
         
         sorted_rows = _guess_row_bboxes_for_large_tables(table, config, sorted_rows, sorted_headers, row_height=word_height)
@@ -741,7 +759,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
             i = int((yavg - top) / (bottom - top) * len(sorted_rows))
             if 0 <= i < len(bins):
                 bins[i].append(yavg)
-        known_means = [np.mean(x) for x in bins if len(x)]
+        known_means = [float(np.mean(x)) for x in bins if len(x)]
         
         if not known_means:
             # no text was detected
@@ -760,7 +778,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         
         differences = [known_means[i+1] - known_means[i] for i in range(len(known_means) - 1)]
         if len(differences):
-            known_height = np.median(differences)
+            known_height = float(np.median(differences))
         else:
             # if there is only one row, then we're stuck. set to table height.
             known_height = bottom - top
@@ -834,7 +852,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     num_columns = len(sorted_columns)
     
     # find indices of key rows
-    header_indices, projecting_indices = _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting)
+    header_indices, projecting_indices = _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projecting, outliers=outliers)
 
     # semantic spanning fill
     if config.semantic_spanning_cells:
