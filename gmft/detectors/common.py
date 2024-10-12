@@ -3,7 +3,7 @@ Module containing methods of detecting tables from whole pdf pages.
 
 
 Example:
-    >>> from gmft.auto import TableDetector
+    >>> from gmft.auto import AutoTableDetector
 """
 
 from abc import ABC, abstractmethod

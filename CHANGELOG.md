@@ -4,6 +4,7 @@ Changes:
 - Raise default threshold of heuristic for rejecting tables on high overlap. Makes ValueErrors more rare.
     - (total_overlap_reject_threshold) ValueError thrown on overlap > 90%, up from 20%
     - (total_overlap_warn_threshold) overlap warned on overlap > 10%, up from 5%
+- Python 3.9 compatability.
 
 ## v0.3.1
 

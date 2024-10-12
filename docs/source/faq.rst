@@ -80,23 +80,17 @@ To accomplish this, try setting `large_table_assumption` to true.
     formatter = TATRTableFormatter(config=config)
     ft = formatter.extract(table)
 
+
+
 What format is best for LLMs?
 ------------------------------
 
-The author finds that for simple table reading (ie. identify the cell under a header), performance for GPT-4o-mini is as follows:
-
-.. code-block:: markdown
-    
-    markdown ~ latex ~ json > html >> csv_plus* >> csv ~ tsv
-
-gpt-4o is similar to gpt-4o-mini, but with better baselines.
-
-\*csv_plus is csv, but with an extra space after each comma. The improvement in performance might be attributable to better tokenization.
+See the section, :ref:`rag`.
 
 How to get tables formatted inline with text?
 ----------------------------------------------
 
-This feature is a work in progress. For an interim solution, see github issue `#12 <https://github.com/conjuncts/gmft/issues/12>`_.
+See the section, :ref:`rag`.
 
 Cannot close object, library is destroyed. 
 ------------------------------------------
@@ -105,4 +99,4 @@ Cannot close object, library is destroyed.
     
     -> Cannot close object, library is destroyed. This may cause a memory leak!
     
-This warning may be an indication that you forgot to explicitly call PyPdfium2Document.close(), which is **required**.
+This warning may be an indication that you forgot to explicitly call PyPDFium2Document.close(), which is **required**.

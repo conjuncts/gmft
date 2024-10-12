@@ -32,9 +32,9 @@ class TATRFormatConfig:
     
     verbosity: int = 1
     """
-    0: errors only
-    1: print warnings
-    2: print warnings and info
+    0: errors only\n
+    1: print warnings\n
+    2: print warnings and info\n
     3: print warnings, info, and debug
     """
     
@@ -65,7 +65,7 @@ class TATRFormatConfig:
     # ---- options ----
     
     remove_null_rows: bool = True 
-    """remove rows with no text"""
+    """Remove rows with no text."""
     
     enable_multi_header: bool = False
     """Enable multi-indices in the dataframe.
@@ -82,8 +82,8 @@ class TATRFormatConfig:
     represent a group of rows, that same value is reduplicated for each row.
     Possible values: 'algorithm', 'deep', None.
     
-    'algorithm': assumes that the higher-level header is always the first row followed by several empty rows.
-    'deep': merges headers according to the spanning cells detected by the Table Transformer.
+    'algorithm': assumes that the higher-level header is always the first row followed by several empty rows.\n
+    'deep': merges headers according to the spanning cells detected by the Table Transformer.\n
     None: headers are not duplicated.
     """
     
@@ -95,38 +95,45 @@ class TATRFormatConfig:
     """
     
     large_table_threshold: int = 10
-    """with large tables, table transformer struggles with placing too many overlapping rows
-    luckily, with more rows, we have more info on the usual size of text, which we can use to make
-    a guess on the height such that no rows are merged or overlapping
+    """With large tables, table transformer struggles with placing too many overlapping rows. 
+    Luckily, with more rows, we have more info on the usual size of text, which we can use to make 
+    a guess on the height such that no rows are merged or overlapping.
     
-    large table assumption is only applied when (# of rows > large_table_threshold) AND (total overlap > large_table_row_overlap_threshold)
-    set 9999 to disable, set 0 to force large table assumption to run every time"""
+    Large table assumption is only applied when (# of rows > large_table_threshold) AND (total overlap > large_table_row_overlap_threshold). 
+    Set 9999 to disable; set 0 to force large table assumption to run every time."""
+    
     large_table_row_overlap_threshold: float = 0.2
+    """With large tables, table transformer struggles with placing too many overlapping rows. 
+    Luckily, with more rows, we have more info on the usual size of text, which we can use to make 
+    a guess on the height such that no rows are merged or overlapping.
+    
+    Large table assumption is only applied when (# of rows > large_table_threshold) AND (total overlap > large_table_row_overlap_threshold). 
+    Set 9999 to disable; set 0 to force large table assumption to run every time."""
     
     large_table_maximum_rows: int = 1000
     """If the table predicts a large number of rows, refuse to proceed. Therefore prevent memory issues for super small text."""
     
     force_large_table_assumption: Union[bool, None]=None
-    """True: force large table assumption to be applied to all tables
-    False: force large table assumption to not be applied to any tables
+    """True: force large table assumption to be applied to all tables.\n
+    False: force large table assumption to not be applied to any tables.\n
     None: heuristically apply large table assumption according to threshold and overlap"""
 
     # ---- rejection and warnings ----
 
     total_overlap_reject_threshold: float = 0.9
-    """reject if total overlap is > 90% of table area"""
+    """Reject if total overlap is > 90% of table area."""
     
     total_overlap_warn_threshold: float = 0.1
-    """warn if total overlap is > 10% of table area"""
+    """Warn if total overlap is > 10% of table area."""
     
     nms_warn_threshold: int = 5
-    """warn if non maxima suppression removes > 5 rows"""
+    """Warn if non maxima suppression removes > 5 rows."""
     
     iob_reject_threshold: float = 0.05
-    """reject if iob between textbox and cell is < 5%"""
+    """Reject if iob between textbox and cell is < 5%."""
 
     iob_warn_threshold: float = 0.5
-    """warn if iob between textbox and cell is < 50%"""
+    """Warn if iob between textbox and cell is < 50%."""
     
     # ---- technical ----
     
