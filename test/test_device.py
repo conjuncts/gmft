@@ -1,7 +1,6 @@
 import pytest
 import torch
 
-from gmft.pdf_bindings import PyPDFium2Document
 from gmft.table_detection import TableDetector, TableDetectorConfig
 from gmft.table_function import TATRFormatConfig, TATRFormatter
 

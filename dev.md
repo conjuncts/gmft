@@ -2,6 +2,7 @@ Dev install:
 ```bash
 git clone ...
 pip install -e .
+pip install pytest
 ```
 
 

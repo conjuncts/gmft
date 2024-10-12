@@ -6,13 +6,14 @@ Usage
 Installation
 ------------
 
-gmft can be installed with pip: 
+First, install `pytorch <https://pytorch.org/get-started/locally/>`_ and transformers with
+the desired GPU/CPU setup. 
+
+Then, gmft can be installed with pip: 
 
 .. code-block:: console
 
    (.venv) $ pip install gmft
-
-However, it may be helpful to install `pytorch <https://pytorch.org/get-started/locally/>`_ and transformers first, especially if you want to use GPU. 
 
 Quickstart
 ----------------
@@ -41,6 +42,7 @@ For example,
     tables, doc = ingest_pdf("path/to/pdf.pdf")
     doc.close() # once you're done with the document
 
+
 Overview
 --------
 
@@ -51,4 +53,37 @@ The :class:`.AutoTableDetector` is the recommended table detection tool, which c
 
 The :class:`.AutoTableFormatter` is the recommended table formatting tool, from which :meth:`.FormattedTable.df` permits dataframe export. All TableFormatters produce :class:`.FormattedTable` objects, which contain the original CroppedTable and the formatted dataframe.
 
+.. _mupdf:
 
+PyMuPDF
+--------
+
+PyMuPDF is the pdf parser of choice, and I recommend `PyMuPDF <https://github.com/pymupdf/PyMuPDF>`_ due to its better performance, accuracy, 
+and very powerful line break detection feature. 
+
+However, PyMuPDF requires compliance with the AGPL-3.0 license, so it is not included in gmft by default. 
+To use PyMuPDF, refer to the `gmft_pymupdf <https://github.com/conjuncts/gmft_pymupdf>`_ repository. 
+Once installed, PyMuPDFDocument can be used in place of PyPDFium2Document.
+
+**Line detection**. Some functionality (like the img2table detector and :ref:`rich table formatting <rag>`) depends on quality line detection. 
+While line detection has been ported to PyPDFium2 via :meth:`.BasePage._get_positions_and_text_and_breaks`, 
+it is only an imperfect approximation, so extraction won't be as accurate as if PyMuPDF is used.
+
+.. code-block:: bash
+    
+    pip install git+https://github.com/conjuncts/gmft_pymupdf.git
+
+.. code-block:: python
+
+    from gmft_pymupdf import PyMuPDFDocument
+
+    doc = PyMuPDFDocument("path/to/pdf")
+    tables = detector.extract(doc)
+    
+    # gmft remains unchanged
+    from gmft import AutoTableDetector
+    detector = AutoTableDetector()
+
+    tables = []
+    for page in doc:
+        tables += detector.extract(page)
