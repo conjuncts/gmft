@@ -52,3 +52,20 @@ def non_defaults_only(config: object) -> dict:
         if default_value != current_value:
             result[f.name] = current_value
     return result
+
+import warnings
+
+def deprecated_property(name):
+    """
+    Custom decorator for marking class properties as deprecated.
+    Automatically raises a DeprecationWarning when the property is accessed or set.
+    """
+    def getter(self):
+        warnings.warn(f"{name} has been removed.", DeprecationWarning, stacklevel=2)
+        raise DeprecationWarning(f"{name} has been removed.")
+    
+    def setter(self, value):
+        warnings.warn(f"{name} has been removed.", DeprecationWarning, stacklevel=2)
+        raise DeprecationWarning(f"{name} has been removed.")
+    
+    return property(getter, setter)
