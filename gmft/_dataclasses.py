@@ -55,17 +55,20 @@ def non_defaults_only(config: object) -> dict:
 
 import warnings
 
-def deprecated_property(name):
+def removed_property(name, message=None):
     """
-    Custom decorator for marking class properties as deprecated.
+    Custom decorator for marking class properties as removed.
     Automatically raises a DeprecationWarning when the property is accessed or set.
     """
+    if message is None:
+        message = "{name} has been removed."
+    msg = message.format(name=name)
     def getter(self):
-        warnings.warn(f"{name} has been removed.", DeprecationWarning, stacklevel=2)
-        raise DeprecationWarning(f"{name} has been removed.")
+        warnings.warn(msg, DeprecationWarning, stacklevel=2)
+        raise DeprecationWarning(msg)
     
     def setter(self, value):
-        warnings.warn(f"{name} has been removed.", DeprecationWarning, stacklevel=2)
-        raise DeprecationWarning(f"{name} has been removed.")
+        warnings.warn(msg, DeprecationWarning, stacklevel=2)
+        raise DeprecationWarning(msg)
     
     return property(getter, setter)

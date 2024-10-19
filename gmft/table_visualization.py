@@ -77,6 +77,56 @@ def plot_results_unwr(pil_img, confidence, labels, boxes, id2label, filter=None,
         plt.close(fig)
         return img
     plt.show()
+    
+
+# colors for visualization
+COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
+          [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
+COLORS = [(int(r * 255), int(g * 255), int(b * 255)) for r, g, b in COLORS]
+
+# id2label
+from PIL import Image, ImageDraw
+
+def plot_shaded_boxes(pil_img, labels: list[int], boxes: list[tuple[float, float, float, float]], 
+                      id2color: dict = None, filter=None, alpha=0.2):
+    """
+    Helper method to visualize the results of the table detection/format model using PIL.
+
+    :param pil_img: PIL image
+    :param labels: list of integers, class labels
+    :param boxes: list of tuples, bounding boxes in the format [xmin, ymin, xmax, ymax]
+    :param id2color: dictionary, mapping class labels (int) to desired color
+    :param filter: list of integers, class labels to selectively display
+    :param alpha: float, transparency for the box fill (0 to 1)
+    """
+    
+    # Create a drawing context
+    draw = ImageDraw.Draw(pil_img, 'RGBA')
+    
+    # Loop over the labels and corresponding boxes
+    for label, (xmin, ymin, xmax, ymax) in zip(labels, boxes):
+        if filter is not None and label not in filter:
+            continue
+        
+        # Determine the color based on id2color or a fallback (if no mapping provided)
+        if id2color is None:
+            # Fallback to a set of default colors (e.g., repeating colors based on label index)
+            c = (*tuple(COLORS[label % len(COLORS)]), int(255 * alpha))  # Red as a default with transparency
+        else:
+            # Use the color from id2color (could be a string like 'red' or a tuple)
+            c = id2color.get(label, (255, 0, 0, int(255 * alpha)))  # Default red if key missing
+            if isinstance(c, str):
+                # Convert string color names to RGB with transparency if needed
+                from PIL import ImageColor
+                c = ImageColor.getrgb(c) + (int(255 * alpha),)
+        
+        # Draw the shaded rectangle (box) with the given color
+        draw.rectangle([xmin, ymin, xmax, ymax], fill=c, width=3) # , outline=c[:3] + (255,)
+    
+    # Return the modified image
+    return pil_img
+
+    
 
 
 def plot_results_orig(pil_img, results, id2label, filter=None): # prob, boxes):

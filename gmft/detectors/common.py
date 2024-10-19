@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Generator, Generic, TypeVar, Union
 import PIL.Image
 from PIL.Image import Image as PILImage
+from PIL import ImageOps # necessary to call PIL.ImageOps later
 
 import numpy as np
 from gmft.common import Rect
@@ -228,7 +229,8 @@ class CroppedTable:
             confidences += [0.9] * len(text_positions)
             labels += [-1] * len(text_positions)
             bboxes += text_positions
-        return plot_results_unwr(img, confidence=confidences, labels=labels, boxes=bboxes, id2label=None, **kwargs)
+        return plot_results_unwr(img, confidence=confidences, labels=labels, boxes=bboxes, id2label=None, 
+                                 return_img=True, **kwargs)
     
     def to_dict(self):
         obj = {
@@ -243,7 +245,7 @@ class CroppedTable:
         return obj
     
     @staticmethod
-    def from_dict(d: dict, page: BasePage):
+    def from_dict(d: dict, page: BasePage) -> Union['CroppedTable', 'RotatedCroppedTable']:
         """
         Deserialize a CroppedTable object from dict.
         
