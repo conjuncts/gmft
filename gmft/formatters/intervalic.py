@@ -51,8 +51,8 @@ class IntervalicFormattedTable(FormattedTable):
         img = self.image()
         # labels = self.fctn_results['labels']
         # bboxes = self.fctn_results['boxes']
-        tbl_width = self.table.bbox[2] - self.table.bbox[0]
-        tbl_height = self.table.bbox[3] - self.table.bbox[1]
+        tbl_width = self.bbox[2] - self.bbox[0]
+        tbl_height = self.bbox[3] - self.bbox[1]
         
         labels = []
         bboxes = []
@@ -64,7 +64,7 @@ class IntervalicFormattedTable(FormattedTable):
             labels.append(2)
         return plot_shaded_boxes(img, labels=labels, boxes=bboxes, **kwargs)
     
-    def recalculate(self):
+    def recompute(self):
         """
         Recalculate the table, based on irvl_results and config.
         """
@@ -152,8 +152,8 @@ class IntervalicFormatter(BaseFormatter):
         y_sep_bounds = list(y_histogram.iter_intervals_below(y_sep_threshold))
         # return x_sep_bounds, y_sep_bounds
 
-        x_sep_max = max([x1 - x0 for x0, x1 in x_sep_bounds])
-        y_sep_max = max([y1 - y0 for y0, y1 in y_sep_bounds])
+        x_sep_max = max([x1 - x0 for x0, x1 in x_sep_bounds], default=None)
+        y_sep_max = max([y1 - y0 for y0, y1 in y_sep_bounds], default=None)
         
         # filter out the small separators, or with custom logic
         x_sep_bounds = [(x0, x1) for x0, x1 in x_sep_bounds if self.decide_separator((x0, x1), x_sep_max, is_row=False)]
@@ -167,8 +167,8 @@ class IntervalicFormatter(BaseFormatter):
         }
         
         # compute for the first time
-        tbl_width = self.table.bbox[2] - self.table.bbox[0]
-        tbl_height = self.table.bbox[3] - self.table.bbox[1]
+        tbl_width = table.bbox[2] - table.bbox[0]
+        tbl_height = table.bbox[3] - table.bbox[1]
         xavgs = [(x0 + x1) / 2 for x0, x1 in x_sep_bounds]
         yavgs = [(y0 + y1) / 2 for y0, y1 in y_sep_bounds]
         fix_bbox = (0, 0, tbl_width, tbl_height)

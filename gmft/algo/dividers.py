@@ -94,10 +94,44 @@ def fill_using_true_partitions(text_positions: Generator[tuple[float, float, flo
 
 def _ioa(a: tuple[float, float], b: tuple[float, float]) -> float:
     """
-    Calculate the intersection of intervals, divided by the first interval a.
+    Calculate the intersection of (closed) intervals, divided by the first interval a.
+    
+    If a is a single point [x, x], then return 1 if x is in the interior of b, 0 otherwise.
     """
     a0, a1 = a
     b0, b1 = b
     if a0 > b1 or a1 < b0:
         return 0
+    if a0 == a1:
+        return 1 if b0 < a0 < b1 else 0
+    
     return (min(a1, b1) - max(a0, b0)) / (a1 - a0)
+
+def get_good_between_dividers(dividers: list[tuple[float, float]], min_val: float, max_val: float, add_inverted=True):
+    """
+    Get the good content between dividers.
+    
+    :param dividers: list of dividers, each a tuple of form (start, end).
+    :param rows: only 
+    """
+    result = []
+
+    prev_end = min_val
+    for i, (start, end) in enumerate(dividers):
+        if start > prev_end:
+            result.append(prev_end, start)
+        else:
+            if add_inverted:
+                # begrudgingly add the inverted interval (psuedo-row, which is likely very thin) to keep things balanced
+                result.append(start, prev_end)
+            else:
+                pass
+        prev_end = end
+    
+    # the last interval
+    if prev_end < max_val:
+        result.append (prev_end, max_val)
+    else:
+        if add_inverted:
+            result.append (max_val, prev_end)
+    return result
