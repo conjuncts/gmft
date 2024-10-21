@@ -59,11 +59,23 @@ See the :ref:`mupdf` section for more information.
 Example taken from the `corresponding internal test <https://github.com/conjuncts/gmft/blob/main/test/test_rich_page.py>`_.
 
 
-Other formats
---------------
+Which format is best?
+----------------------
 
 For the simple task of matching a cell to its header, performance is (best to worst): 
 
     markdown ~ latex ~ json > html >> csv_plus* >> csv ~ tsv
 
 (Only OpenAI models were tested. csv_plus is csv, but with an extra space after each comma. The improvement in performance might be attributable to better tokenization.)
+
+.. image:: images/rag_by_format.png
+    :alt: rag_by_format
+    :align: center
+
+.. image:: images/rag_by_index.png
+    :alt: rag_by_index
+    :align: center
+
+.. image:: images/rag_by_index_2.png
+    :alt: rag_by_index_2
+    :align: center

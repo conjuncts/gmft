@@ -47,6 +47,7 @@ This task is known in the literature as *table structure recognition* and *funct
    
    formatters/common
    formatters/tatr
+   formatters/intervalic
    
 Modules
 ----------

@@ -180,5 +180,9 @@ class IntervalicFormatter(BaseFormatter):
         # simple np array
         nparr = fill_using_true_partitions(words, yavgs, xavgs, fix_bbox)
         df = pd.DataFrame(nparr[1:], columns=nparr[0])
-        return IntervalicFormattedTable(table, df, irvl_results, config=self.config)
+        table = IntervalicFormattedTable(table, df, irvl_results, config=self.config)
+        if _populate_histograms:
+            table.x_histogram = x_histogram
+            table.y_histogram = y_histogram
+        return table
         

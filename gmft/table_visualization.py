@@ -178,3 +178,72 @@ def display_html_and_image(html_content, pil_image):
 
     # Display the HTML and image
     display(HTML(html))
+
+def plot_interval_histogram(histogram, figsize=(12, 6), invert_x=False, dotted_line_at=1):
+    """
+    Plot an interval histogram showing frequency changes and optionally the original intervals.
+    
+    Args:
+        histogram: IntervalHistogram instance to plot
+        show_intervals: If True, show the original intervals below the histogram
+        figsize: Tuple of (width, height) for the figure
+        
+    Returns:
+        matplotlib figure object
+    """
+    if not histogram.sorted_points:
+        raise ValueError("Histogram is empty")
+    
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # plot a series of rects:
+    # for 2 consecutive change points [(p, pfreq), (q, qfreq))
+    # plot the rectangle (xmin=p, ymin=0, xmax=q, ymax=pfreq)
+
+    # max_freq = 0
+    for i in range(len(histogram.sorted_points) - 1):
+        p, pfreq = histogram.sorted_points[i]
+        q, _ = histogram.sorted_points[i + 1]
+        
+        # if rotate_graph:
+        #     ax.add_patch(plt.Rectangle((0, p), pfreq, q - p, fill=True, color='blue', alpha=0.5, linewidth=0))
+        # else:
+        ax.add_patch(plt.Rectangle((p, 0), q - p, pfreq, fill=True, color='blue', alpha=0.5, linewidth=0))
+        # max_freq = max(max_freq, pfreq)
+    
+
+    if histogram.sorted_points:
+        min_x = histogram.sorted_points[0][0]
+        max_x = histogram.sorted_points[-1][0]
+        ax.set_xlim(min_x, max_x)
+    if dotted_line_at:
+        ax.axhline(y=dotted_line_at, color='black', linestyle='--', linewidth=1)
+    if invert_x:
+        ax.invert_xaxis()
+
+    # Set labels and title
+    # if rotate_graph:
+    #     ax.set_ylabel('Position')
+    #     ax.set_xlabel('Frequency')
+    # else:
+    ax.set_xlabel('Position')
+    ax.set_ylabel('Frequency')
+    ax.set_title('Interval Histogram')
+    
+    # Adjust y-axis to show intervals if needed
+    # if show_intervals:
+        # ymin, ymax = ax.get_ylim()
+    # if rotate_graph:
+    #     ax.set_xlim(0, histogram.height + 0.5)
+    #     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    # else:
+    ax.set_ylim(0, histogram.height + 0.5)
+    # set y ticks to integers
+    ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    
+    
+    # Add grid
+    ax.grid(True, alpha=0.3)
+    
+    return fig
