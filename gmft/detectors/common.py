@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Generator, Generic, TypeVar, Union
 import PIL.Image
 from PIL.Image import Image as PILImage
+from PIL import ImageOps # necessary to call PIL.ImageOps later
 
 import numpy as np
 from gmft.common import Rect
@@ -228,7 +229,8 @@ class CroppedTable:
             confidences += [0.9] * len(text_positions)
             labels += [-1] * len(text_positions)
             bboxes += text_positions
-        return plot_results_unwr(img, confidence=confidences, labels=labels, boxes=bboxes, id2label=None, **kwargs)
+        return plot_results_unwr(img, confidence=confidences, labels=labels, boxes=bboxes, id2label=None, 
+                                 return_img=True, **kwargs)
     
     def to_dict(self):
         obj = {
@@ -243,7 +245,7 @@ class CroppedTable:
         return obj
     
     @staticmethod
-    def from_dict(d: dict, page: BasePage):
+    def from_dict(d: dict, page: BasePage) -> Union['CroppedTable', 'RotatedCroppedTable']:
         """
         Deserialize a CroppedTable object from dict.
         
@@ -291,6 +293,14 @@ class CroppedTable:
     @property
     def bbox(self):
         return self.rect.bbox
+    
+    @property
+    def width(self):
+        return self.rect.width
+
+    @property
+    def height(self):
+        return self.rect.height
 
 
     
@@ -414,3 +424,15 @@ class RotatedCroppedTable(CroppedTable):
     #     """
     #     img = self.page.get_image()
     #     plot_results_unwr(img, [self.confidence_score], [self.label], [self.bbox], self.angle, **kwargs)
+
+    @property
+    def width(self):
+        if self.angle == 90 or self.angle == 270:
+            return self.rect.height
+        return self.rect.width
+
+    @property
+    def height(self):
+        if self.angle == 90 or self.angle == 270:
+            return self.rect.width
+        return self.rect.height

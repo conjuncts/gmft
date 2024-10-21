@@ -168,7 +168,7 @@ def _fill_in_gaps(sorted_rows, gap_height, leave_gap=0.4, top_of_table=None):
         i += 1
     
 
-def _non_maxima_suppression(sorted_rows, overlap_threshold=0.1):
+def _non_maxima_suppression(sorted_rows: list[dict], overlap_threshold=0.1):
     """
     From the TATR authors' inference.py:
     If a lower-confidence object overlaps more than 5% of its area
@@ -190,8 +190,17 @@ def _non_maxima_suppression(sorted_rows, overlap_threshold=0.1):
     return num_removed
     
 def _is_within_header(bbox, sorted_headers, _iob=_iob_for_rows, header_threshold=0.5): # assume len(sorted_headers) <= 2
+    """
+    check if bbox is in any of the bboxes specified in sorted_headers
+    sorted_headers: list of dictionaries, each with keys 'bbox', 'confidence', 'label'
+    """
     return any(_iob(bbox, header['bbox']) > header_threshold for header in sorted_headers)
     
+def _is_within_any_bbox(needle: tuple[float, float, float, float], haystack: list[tuple[float, float, float, float]], _iob=_iob_for_rows, threshold=0.5): # assume len(sorted_headers) <= 2
+    """
+    check if needle bbox is in any of haystack bboxes
+    """
+    return any(_iob(needle, bbox) > threshold for bbox in haystack)
 
 def _guess_row_bboxes_for_large_tables(table: TATRFormattedTable, config: TATRFormatConfig, sorted_rows, sorted_headers, row_height, known_means=None):
     if not sorted_rows:
@@ -386,7 +395,9 @@ def _find_best_column_for_text(sorted_columns, textbox):
     return column_num, column_max_iob
 
 
-def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_columns, header_indices):
+def _split_spanning_cells(spanning_cells: list[dict], sorted_headers_bboxes: list[tuple[float, float, float, float]], 
+                          sorted_rows: list[tuple[float, float, float, float]], sorted_columns: list[tuple[float, float, float, float]], 
+                          header_indices: list[int]) -> tuple[list[dict], list[dict], list[dict]]:
     """
     Split spanning cells into 2 categories: 
     a) those within column headers (and therefore likely represent info on hierarchical column headers). These reside on top
@@ -394,12 +405,20 @@ def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_co
     
     More specifically, 
     require hierarchical column headers to span only 1 row, and hierarchical row headers to span only 1 column.
+    
+    :param spanning_cells: list of dictionaries, each with keys 'bbox', 'confidence', 'label'
+    :param sorted_headers: list[tuple[float, float, float, float]] of bboxes (xmin, ymin, xmax, ymax)
+    :param sorted_rows: list[tuple[float, float, float, float]] of bboxes (xmin, ymin, xmax, ymax)
+    :param sorted_columns: list[tuple[float, float, float, float]] of bboxes (xmin, ymin, xmax, ymax)
+    :param header_indices: list[int] of indices of rows that are headers
+    :return spanning cells; hierarchical top headers, monosemantic top headers, hierarchical left headers
     """
     sorted_hier_top_headers = []
     sorted_monosemantic_top_headers = []
     sorted_hier_left_headers = []
     for x in spanning_cells:
-        if _is_within_header(x['bbox'], sorted_headers): # , _iob=_iob):
+        # if _is_within_header(x['bbox'], sorted_headers): # , _iob=_iob):
+        if _is_within_any_bbox(x['bbox'], sorted_headers_bboxes, _iob=_iob):
             # good - it is located in the header
             # if calculate_semantic_column_headers:
             all_valid_rows = _find_all_rows_for_box(sorted_rows, x['bbox'], threshold=0.2)
@@ -452,9 +471,8 @@ def _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_co
     
     return sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers
 
-def _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
-                            header_indices,
-                            config):
+def _semantic_spanning_fill(table_array, sorted_hier_top_headers: list[dict], sorted_monosemantic_top_headers: list[dict], 
+                            sorted_hier_left_headers: list[dict], header_indices: list[int], config):
     """
     Fill the table array according to semantic information from detected spanning cells.
     (Assumes that NMS has already been applied, and there are no conflicts)
@@ -856,10 +874,11 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
 
     # semantic spanning fill
     if config.semantic_spanning_cells:
-        sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers = _split_spanning_cells(spanning_cells, sorted_headers, sorted_rows, sorted_columns, header_indices)
-        _non_maxima_suppression(sorted_hier_top_headers, overlap_threshold=0.1)
-        _non_maxima_suppression(sorted_monosemantic_top_headers, overlap_threshold=0.1)
-        _non_maxima_suppression(sorted_hier_left_headers, overlap_threshold=0.1)
+        sorted_headers_bboxes = [x['bbox'] for x in sorted_headers]
+        sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers = _split_spanning_cells(spanning_cells, sorted_headers_bboxes, sorted_rows, sorted_columns, header_indices)
+        _non_maxima_suppression(sorted_hier_top_headers, overlap_threshold=config._nms_overlap_threshold)
+        _non_maxima_suppression(sorted_monosemantic_top_headers, overlap_threshold=config._nms_overlap_threshold)
+        _non_maxima_suppression(sorted_hier_left_headers, overlap_threshold=config._nms_overlap_threshold)
         hier_left_idxs = _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
                 header_indices=header_indices,
                 config=config)

@@ -29,9 +29,9 @@ AutoTableDetector as AutoTableDetectorOrig
 
 def _deprecation_warning(name):
     import warnings
-    msg = f"DeprecationWarning: While once encouraged, \
-        importing {name} and other classes from the top level module is now deprecated. \
-        Please import from gmft.auto instead."
+    msg = f"(Deprecation) While once encouraged, \
+importing {name} and other classes from the top level module is now deprecated. \
+Please import from gmft.auto instead."
     warnings.warn(msg, DeprecationWarning, stacklevel=2)
     print(msg)
 
@@ -40,108 +40,108 @@ class Rect(RectOrig):
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("Rect")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class BasePDFDocument(BasePDFDocumentOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("BasePDFDocument")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class BasePage(BasePageOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("BasePage")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class CroppedTable(CroppedTableOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("CroppedTable")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class RotatedCroppedTable(RotatedCroppedTableOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("RotatedCroppedTable")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class TATRTableDetector(TATRTableDetectorOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("TATRTableDetector")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class TableDetectorConfig(TableDetectorConfigOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("TableDetectorConfig")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class TableDetector(TableDetectorOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("TableDetector")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class FormattedTable(FormattedTableOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("FormattedTable")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class TATRFormatConfig(TATRFormatConfigOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("TATRFormatConfig")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class TATRFormattedTable(TATRFormattedTableOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("TATRFormattedTable")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class TATRTableFormatter(TATRTableFormatterOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("TATRTableFormatter")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
         
 
 class AutoTableFormatter(AutoTableFormatterOrig):
@@ -149,27 +149,27 @@ class AutoTableFormatter(AutoTableFormatterOrig):
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("AutoTableFormatter")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class AutoFormatConfig(AutoFormatConfigOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("AutoFormatConfig")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 class AutoTableDetector(AutoTableDetectorOrig):
     """
     Deprecated. Please import from gmft.auto instead.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         _deprecation_warning("AutoTableDetector")
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 # class LazyLoader:
 #     """A class to handle lazy loading of modules."""

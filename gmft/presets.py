@@ -1,6 +1,6 @@
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.table_detection import CroppedTable
-from gmft import AutoTableDetector
+from gmft.auto import AutoTableDetector
 
 
 default_detector = None

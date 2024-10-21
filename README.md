@@ -33,7 +33,7 @@ The extraction quality is superb: check out the [bulk extract](https://github.co
 
 ## Many Formats
 
-gmft supports the following export options:
+GMFT supports the following export options:
 - Pandas dataframe (!)
 - By extension: markdown, latex, html, csv, json, etc. 
 - List of text + positions
@@ -69,12 +69,12 @@ Many pdf extractors require detectron2, poppler, paddleocr, tesseract etc., whic
 
 To install gmft, install [transformers](https://pypi.org/project/transformers/) and [pytorch](https://pytorch.org/get-started/locally/) with the necessary GPU/CPU options. Then run `pip install gmft`. 
 
-gmft relies on [pypdfium2](https://github.com/pypdfium2-team/pypdfium2) and [transformers](https://github.com/huggingface/transformers). On the first run, gmft downloads Microsoft's TATR from huggingface, which requires ~270mB total and is saved to `~/.cache/huggingface/hub/models--microsoft--table-{transformer-detection, structure-recognition}` and `~/.cache/huggingface/hub/models--timm--resnet18.a1_in1k`.
+GMFT relies on [pypdfium2](https://github.com/pypdfium2-team/pypdfium2) and [transformers](https://github.com/huggingface/transformers). On the first run, gmft downloads Microsoft's TATR from huggingface, which requires ~270mB total and is saved to `~/.cache/huggingface/hub/models--microsoft--table-{transformer-detection, structure-recognition}` and `~/.cache/huggingface/hub/models--timm--resnet18.a1_in1k`.
 
 
 ## Reliable
 
-gmft uses Microsoft's Table Transformer (TATR), which is trained on a diverse dataset PubTables-1M. Many alternative methods were considered, and TATR was ultimately chosen for several reasons, among them high reliability. 
+GMFT uses Microsoft's Table Transformer (TATR), which is trained on a diverse dataset PubTables-1M. Many alternative methods were considered, and TATR was ultimately chosen for several reasons, among them high reliability. 
 
 Compared to existing options, the performance is *especially good* on tables with **implicit structure**, like those in scientific papers. When the model fails, it is usually an OCR issue, merged cell, or false positive. Even in these cases, the text is still highly useable. **Alignment** of a value to its row/column header tends to be **very accurate** because of the underlying procedural algorithm.
 
@@ -155,7 +155,7 @@ Open-parse allows extraction of auxiliary information like headers, paragraphs, 
 
 ## License
 
-gmft is released under MIT. 
+GMFT is released under MIT. 
 
 PyMuPDF support is available in a [separate repository](https://github.com/conjuncts/gmft_pymupdf) in observance of pymupdf's AGPL 3.0 license.
 
