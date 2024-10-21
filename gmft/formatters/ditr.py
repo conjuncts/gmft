@@ -250,8 +250,8 @@ class DITRFormattedTable(IntervalicFormattedTable):
         img = self.image()
         # labels = self.fctn_results['labels']
         # bboxes = self.fctn_results['boxes']
-        tbl_width = self.bbox[2] - self.bbox[0]
-        tbl_height = self.bbox[3] - self.bbox[1]
+        tbl_width = self.width # adjust for rotations too
+        tbl_height = self.height
         
         labels = []
         bboxes = []
@@ -551,7 +551,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
 
 
     # table_bounds = table.bbox # empirical_table_bbox(row_divider_boxes, col_divider_boxes)
-    fixed_table_bounds = (0, 0, table.bbox[2] - table.bbox[0], table.bbox[3] - table.bbox[1])
+    fixed_table_bounds = (0, 0, table.width, table.height) # adjust for rotations too
     
 
     table_array = fill_using_true_partitions(table.text_positions(remove_table_offset=True), 
@@ -559,7 +559,10 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
                                         table_bounds=fixed_table_bounds)
         
     # delete empty rows
-    # TODO
+    if config.remove_null_rows:
+        empty_rows = [n for n in range(len(row_dividers)+1) if all(x is None for x in table_array[n, :])]
+    else:
+        empty_rows = []
 
     
     num_rows = len(row_dividers) + 1
@@ -578,6 +581,10 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
 
     # find indices of key rows
     header_indices, projecting_indices = _determine_headers_and_projecting(good_row_intervals, top_headers, projected)
+
+    if empty_rows:
+        header_indices = [i for i in header_indices if i not in empty_rows]
+        projecting_indices = [i for i in projecting_indices if i not in empty_rows]
 
     # semantic spanning fill
     if config.semantic_spanning_cells:
@@ -622,6 +629,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
 
 
 
+
     # note: header rows will be taken out
     table._df = pd.DataFrame(data=table_array, columns=column_headers)
     
@@ -635,6 +643,9 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
     
     # b. drop the former header rows always
     table._df.drop(index=header_indices, inplace=True)
+
+    # c. drop the empty rows
+    table._df.drop(index=empty_rows, inplace=True)
     table._df.reset_index(drop=True, inplace=True)
     
     table.outliers = outliers

@@ -119,19 +119,19 @@ def get_good_between_dividers(dividers: list[tuple[float, float]], min_val: floa
     prev_end = min_val
     for i, (start, end) in enumerate(dividers):
         if start > prev_end:
-            result.append(prev_end, start)
+            result.append((prev_end, start))
         else:
             if add_inverted:
                 # begrudgingly add the inverted interval (psuedo-row, which is likely very thin) to keep things balanced
-                result.append(start, prev_end)
+                result.append((start, prev_end))
             else:
                 pass
         prev_end = end
     
     # the last interval
     if prev_end < max_val:
-        result.append (prev_end, max_val)
+        result.append((prev_end, max_val))
     else:
         if add_inverted:
-            result.append (max_val, prev_end)
+            result.append((max_val, prev_end))
     return result

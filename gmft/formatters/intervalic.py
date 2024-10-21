@@ -14,6 +14,9 @@ class IntervalicConfig:
     sep_line_percent_of_height: int = 0.2 # classify something as a separator line if it's 20% of the max height found in the interval histogram
     sep_line_threshold: int = 1 # 
 
+    row_sep_threshold: int = 0
+    col_sep_threshold: int = 0
+
 
 class IntervalicFormattedTable(FormattedTable):
     """
@@ -51,8 +54,8 @@ class IntervalicFormattedTable(FormattedTable):
         img = self.image()
         # labels = self.fctn_results['labels']
         # bboxes = self.fctn_results['boxes']
-        tbl_width = self.bbox[2] - self.bbox[0]
-        tbl_height = self.bbox[3] - self.bbox[1]
+        tbl_width = self.width
+        tbl_height = self.height
         
         labels = []
         bboxes = []
@@ -95,6 +98,7 @@ class IntervalicFormatter(BaseFormatter):
     def decide_histogram_threshold(self, histogram: IntervalHistogram, is_row: bool) -> float:
         """
         Decide a threshold for which to consider a gap to be a separator.
+        This method can be overridden to provide custom logic.
         
         :param histogram: the histogram to analyze
         :param is_row: whether the histogram is for rows or columns
@@ -103,14 +107,14 @@ class IntervalicFormatter(BaseFormatter):
         if is_row:
             # rows are pretty robustly separated, because there tends not to be
             # text that spans 
-            return 0 
+            return self.config.row_sep_threshold # 0
         else:
             # columns are a bit trickier, because
             max_height = histogram.height
             if max_height <= 2:
-                return 0
+                return self.config.col_sep_threshold # 0
             else:
-                return 0
+                return self.config.col_sep_threshold # 0
                 # return 1
         
     def decide_separator(self, interval: tuple[float, float], max_width: float, is_row: bool) -> bool:

@@ -20,7 +20,7 @@ def test_cuda(doc_tiny):
     # 'config': {'torch_device': device(type='cpu')}
     import json
     js = json.dumps(y)
-    from gmft import TATRFormattedTable
+    from gmft.formatters.tatr import TATRFormattedTable
     ft_redux = TATRFormattedTable.from_dict(json.loads(js), page)
     
 
@@ -35,7 +35,7 @@ def test_cuda(doc_tiny):
 #     y = ft.to_dict() # make sure serialization works # 'config': {'torch_device': device(type='cpu')}
 #     import json
 #     js = json.dumps(y)
-#     from gmft import TATRFormattedTable
+#     from gmft.formatters.tatr import TATRFormattedTable
 #     ft_redux = TATRFormattedTable.from_dict(json.loads(js), page)
 #     assert False
 

@@ -5,6 +5,7 @@
 import pytest
 import gmft
 from gmft.pdf_bindings import PyPDFium2Document
+from gmft.common import Rect
 
     
 
@@ -35,11 +36,11 @@ def test_pypdfium2_image(doc_tiny):
     assert img.width == 850
     assert img.height == 1100
     
-    img = page.get_image(dpi=72, rect=gmft.Rect((0, 0, 100, 100)))
+    img = page.get_image(dpi=72, rect=Rect((0, 0, 100, 100)))
     assert img.width == 100
     assert img.height == 100
     
-    img = page.get_image(dpi=72, rect=gmft.Rect((50, 50, 100, 150)))
+    img = page.get_image(dpi=72, rect=Rect((50, 50, 100, 150)))
     assert img.width == 50
     assert img.height == 100
         

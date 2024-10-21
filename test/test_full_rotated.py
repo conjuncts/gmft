@@ -1,6 +1,6 @@
 import json
 import pytest
-from gmft import AutoFormatConfig
+from gmft.auto import AutoFormatConfig
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.table_detection import RotatedCroppedTable
 from gmft.table_function import TATRFormattedTable

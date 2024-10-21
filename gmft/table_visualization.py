@@ -138,3 +138,43 @@ def plot_results_orig(pil_img, results, id2label, filter=None): # prob, boxes):
     #                  [10.001, 0.001, 0.998, 0.998]]),
     # }
     plot_results_unwr(pil_img, results["scores"].tolist(), results["labels"].tolist(), results["boxes"].tolist(), id2label, filter=filter)
+
+def display_html_and_image(html_content, pil_image):
+    """
+    This is strictly for Jupyter notebooks. It displays the HTML content and the PIL image side by side.
+    """
+    from IPython.display import display, HTML
+    from PIL import Image
+    import io
+    import base64
+    
+    # Convert the PIL image to a base64 string to embed it directly in the HTML
+    img_buffer = io.BytesIO()
+    pil_image.save(img_buffer, format='PNG')  # You can change the format if needed
+    img_data = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+    img_base64 = f"data:image/png;base64,{img_data}"
+
+    # HTML content to display the image and HTML side by side
+    html = f"""
+    <style>
+    table, th, td {{
+        border: 1px solid black;
+        border-collapse: collapse;
+    }}
+    th, td {{
+        padding: 1px;
+        text-align: left;
+    }}
+    </style>
+    <div style="display: flex; align-items: center;">
+        <div style="flex: 1; padding-right: 10px;">
+            {html_content}
+        </div>
+        <div style="flex: 1;">
+            <img src="{img_base64}" alt="PIL Image" style="max-width: 100%;"/>
+        </div>
+    </div>
+    """
+
+    # Display the HTML and image
+    display(HTML(html))

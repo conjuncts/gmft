@@ -293,6 +293,14 @@ class CroppedTable:
     @property
     def bbox(self):
         return self.rect.bbox
+    
+    @property
+    def width(self):
+        return self.rect.width
+
+    @property
+    def height(self):
+        return self.rect.height
 
 
     
@@ -416,3 +424,15 @@ class RotatedCroppedTable(CroppedTable):
     #     """
     #     img = self.page.get_image()
     #     plot_results_unwr(img, [self.confidence_score], [self.label], [self.bbox], self.angle, **kwargs)
+
+    @property
+    def width(self):
+        if self.angle == 90 or self.angle == 270:
+            return self.rect.height
+        return self.rect.width
+
+    @property
+    def height(self):
+        if self.angle == 90 or self.angle == 270:
+            return self.rect.width
+        return self.rect.height

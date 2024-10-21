@@ -67,7 +67,8 @@ class FormattedTable(RotatedCroppedTable):
         """
         Visualize the table.
         """
-        raise NotImplementedError
+        # raise NotImplementedError
+        return self.image()
     
     @abstractmethod
     def to_dict(self):

@@ -1,6 +1,6 @@
 import json
 from gmft.table_detection import TableDetector
-from gmft import AutoTableFormatter
+from gmft.auto import AutoTableFormatter
 
 
 

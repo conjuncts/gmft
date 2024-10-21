@@ -81,7 +81,7 @@ it is only an imperfect approximation, so extraction won't be as accurate as if 
     tables = detector.extract(doc)
     
     # gmft remains unchanged
-    from gmft import AutoTableDetector
+    from gmft.auto import AutoTableDetector
     detector = AutoTableDetector()
 
     tables = []

@@ -1,7 +1,7 @@
 import json
 import os
 
-from gmft import AutoFormatConfig
+from gmft.auto import AutoFormatConfig
 from gmft.table_function import TATRFormattedTable
 from .conftest import REDETECT_TABLES
 
