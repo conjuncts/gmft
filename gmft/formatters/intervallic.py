@@ -3,14 +3,14 @@ import json
 
 import pandas as pd
 from gmft.algo.dividers import fill_using_true_partitions
-from gmft.algo.intervalic import IntervalHistogram
+from gmft.algo.intervallic import IntervalHistogram
 from gmft.detectors.common import CroppedTable
 from gmft.formatters.common import BaseFormatter, FormattedTable
 from gmft.table_visualization import plot_results_unwr, plot_shaded_boxes
 
 
 @dataclass
-class IntervalicConfig:
+class IntervallicConfig:
     sep_line_percent_of_height: int = 0.2 # classify something as a separator line if it's 20% of the max height found in the interval histogram
     sep_line_threshold: int = 1 # 
 
@@ -18,9 +18,9 @@ class IntervalicConfig:
     col_sep_threshold: int = 0
 
 
-class IntervalicFormattedTable(FormattedTable):
+class IntervallicFormattedTable(FormattedTable):
     """
-    A table formatted using the intervalic method.
+    A table formatted using the intervallic method.
     """
     
     id2label = {
@@ -33,7 +33,7 @@ class IntervalicFormattedTable(FormattedTable):
     irvl_results['row_dividers'] = list of row dividers, of form (y0, y1) (assumed to stretch the width of the table)\
     irvl_results['col_dividers'] = list of column dividers, of form (x0, x1) (assumed to stretch the height of the table)
     """
-    def __init__(self, table: CroppedTable, df: pd.DataFrame, irvl_results, config: IntervalicConfig, 
+    def __init__(self, table: CroppedTable, df: pd.DataFrame, irvl_results, config: IntervallicConfig, 
                  x_histogram: IntervalHistogram=None, y_histogram: IntervalHistogram=None):
         super().__init__(table, df)
         self.irvl_results = irvl_results
@@ -89,10 +89,10 @@ class IntervalicFormattedTable(FormattedTable):
         self._df = df
         return df
 
-class IntervalicFormatter(BaseFormatter):
-    def __init__(self, config: IntervalicConfig=None):
+class IntervallicFormatter(BaseFormatter):
+    def __init__(self, config: IntervallicConfig=None):
         if config is None:
-            config = IntervalicConfig()
+            config = IntervallicConfig()
         self.config = config
     
     def decide_histogram_threshold(self, histogram: IntervalHistogram, is_row: bool) -> float:
@@ -180,7 +180,7 @@ class IntervalicFormatter(BaseFormatter):
         # simple np array
         nparr = fill_using_true_partitions(words, yavgs, xavgs, fix_bbox)
         df = pd.DataFrame(nparr[1:], columns=nparr[0])
-        table = IntervalicFormattedTable(table, df, irvl_results, config=self.config)
+        table = IntervallicFormattedTable(table, df, irvl_results, config=self.config)
         if _populate_histograms:
             table.x_histogram = x_histogram
             table.y_histogram = y_histogram

@@ -1,6 +1,6 @@
 
 
-from gmft.algo.intervalic import IntervalHistogram
+from gmft.algo.intervallic import IntervalHistogram
 
 
 def test_histogram_1():    

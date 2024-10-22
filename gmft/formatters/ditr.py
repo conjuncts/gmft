@@ -11,7 +11,7 @@ from gmft._dataclasses import removed_property, non_defaults_only, with_config
 from gmft.algo.dividers import fill_using_true_partitions, _find_all_intervals_for_interval, _ioa, get_good_between_dividers
 from gmft.detectors.common import CroppedTable, RotatedCroppedTable
 from gmft.formatters.common import FormattedTable, TableFormatter, _normalize_bbox
-from gmft.formatters.intervalic import IntervalicConfig, IntervalicFormattedTable
+from gmft.formatters.intervallic import IntervallicConfig, IntervallicFormattedTable
 from gmft.pdf_bindings.common import BasePage
 
 
@@ -22,7 +22,7 @@ import torch
 from transformers import DetrForObjectDetection
 
 @dataclass
-class DITRFormatConfig(IntervalicConfig):
+class DITRFormatConfig(IntervallicConfig):
     """
     Configuration for :class:`.DITRTableFormatter`.
     """
@@ -177,7 +177,7 @@ class DITRFormatConfig(IntervalicConfig):
         pass
 
 
-class DITRFormattedTable(IntervalicFormattedTable):
+class DITRFormattedTable(IntervallicFormattedTable):
     """
     FormattedTable, as seen by a Table Transformer for dividers (dubbed DITR).
     See :class:`.DITRTableFormatter`.
