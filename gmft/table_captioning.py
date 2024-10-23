@@ -567,7 +567,7 @@ def _find_caption_with_mu(ct: CroppedTable, **kwargs):
     top_captions = '\n'.join([c for c in top_captions if c]) # clear out empty captions
     bottom_captions = '\n'.join([c for c in bottom_captions if c])
     
-    whitespace_re = re.compile('\s*[\u202f\u2002\u2009\u00A0]\s*') #  \u2002 \u2009
+    whitespace_re = re.compile(r'\s*[\u202f\u2002\u2009\u00A0]\s*') #  \u2002 \u2009
     top_captions = re.sub(whitespace_re, ' ', top_captions).replace('\n', '')
     bottom_captions = re.sub(whitespace_re, ' ', bottom_captions).replace('\n', '')
     return top_captions, bottom_captions # ('\n'.join(top_captions), '\n'.join(bottom_captions))
