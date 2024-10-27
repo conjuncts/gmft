@@ -30,8 +30,8 @@ class DITRFormatConfig(IntervallicConfig):
     # ---- model settings ----
     
     warn_uninitialized_weights: bool = False
-    image_processor_path: str = "facebook/detr-resnet-50"
-    formatter_path: str = "conjuncts/table-transformer-dividers-structure-recognition"
+    image_processor_path: str = "microsoft/table-transformer-structure-recognition-v1.1-all"
+    formatter_path: str = "conjuncts/ditr-e15"
     # no_timm: bool = True # use a model which uses AutoBackbone. 
     torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
     
@@ -147,6 +147,7 @@ class DITRFormatConfig(IntervallicConfig):
     # ---- technical ----
     
     _nms_overlap_threshold: float = 0.1
+    _nms_overlap_threshold_larger: float = 0.5
     
     @removed_property("Large table approach ({name}) is not used for the DITR model.")
     def _large_table_merge_distance(self):
@@ -189,7 +190,7 @@ class DITRFormattedTable(IntervallicFormattedTable):
         2: 'row divider', # table row',
         3: 'top header', # table column header',
         4: 'projected', # 'table projected row header',
-        5: 'spanning', # 'table spanning cell',
+        0: 'spanning', # 'table spanning cell',
         6: 'no object',
     }
     label2id = {v: k for k, v in id2label.items()}
@@ -349,7 +350,7 @@ class DITRFormatter(TableFormatter):
             transformers.logging.set_verbosity(transformers.logging.ERROR)
         self.image_processor = AutoImageProcessor.from_pretrained(config.image_processor_path)
         # revision = "no_timm" if config.no_timm else None , revision=revision
-        self.structor = DetrForObjectDetection.from_pretrained(config.formatter_path).to(config.torch_device)
+        self.structor = TableTransformerForObjectDetection.from_pretrained(config.formatter_path).to(config.torch_device)
         self.config = config
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
@@ -366,7 +367,7 @@ class DITRFormatter(TableFormatter):
         margin = table._img_margin
         
         scale_factor = dpi / 72
-        encoding = self.image_processor(image, return_tensors="pt").to(self.config.torch_device)
+        encoding = self.image_processor(image, size={"shortest_edge": 800, "longest_edge": 1333}, return_tensors="pt").to(self.config.torch_device)
         with torch.no_grad():
             outputs = self.structor(**encoding)
         
@@ -393,7 +394,7 @@ class DITRLabel:
     row_divider = 2
     top_header = 3
     projected = 4
-    spanning = 5
+    spanning = 0
     no_object = 6
 
 
@@ -494,6 +495,8 @@ def empirical_table_bbox(row_divider_boxes, col_divider_boxes):
     """
     We have access to the table bbox from the cropped table, but we can
     also estimate it from the dividers.
+
+    I guess we could also take the max width/height of every divider.
     """
     average_x0 = statistics.mean([box[0] for box in col_divider_boxes]) if col_divider_boxes else -np.inf
     average_x1 = statistics.mean([box[2] for box in col_divider_boxes]) if col_divider_boxes else np.inf
@@ -591,14 +594,14 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
 
         # TODO probably not worth it to duplicate the code
         old_rows = [(None, y0, None, y1) for y0, y1 in good_row_intervals]
-        old_columns = [(None, x0, None, x1) for x0, x1 in good_column_intervals]
+        old_columns = [(x0, None, x1, None) for x0, x1 in good_column_intervals]
 
         sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers = \
             _split_spanning_cells(spanning_cells, top_headers, old_rows, old_columns, header_indices)
         # since these are inherited from spanning cells, NMS is still necessary
-        _non_maxima_suppression(sorted_hier_top_headers, overlap_threshold=config._nms_overlap_threshold)
-        _non_maxima_suppression(sorted_monosemantic_top_headers, overlap_threshold=config._nms_overlap_threshold)
-        _non_maxima_suppression(sorted_hier_left_headers, overlap_threshold=config._nms_overlap_threshold)
+        _non_maxima_suppression(sorted_hier_top_headers, overlap_threshold=config._nms_overlap_threshold_larger)
+        _non_maxima_suppression(sorted_monosemantic_top_headers, overlap_threshold=config._nms_overlap_threshold_larger)
+        _non_maxima_suppression(sorted_hier_left_headers, overlap_threshold=config._nms_overlap_threshold_larger)
         hier_left_idxs = _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
                 header_indices=header_indices,
                 config=config)

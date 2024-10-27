@@ -311,44 +311,47 @@ def _determine_headers_and_projecting(sorted_rows, sorted_headers, sorted_projec
             projecting_indices.append(i)
     return header_indices, projecting_indices
 
-def _find_all_rows_for_box(sorted_rows, bbox, threshold=0, _iob=_iob_for_rows):
+def _find_all_rows_for_box(sorted_rows: list[tuple], bbox, threshold=0, _iob=_iob_for_rows):
     """
     Find all rows that intersect with the box.
+    :param sorted_rows: list of bboxes, so list of tuples (xmin, ymin, xmax, ymax)
     :return list of indices of rows
     """
     rows = []
     _, ymin, _, ymax = bbox
     # linsearch
     # for i, row in enumerate(sorted_rows):
-    i = _find_leftmost_gt(sorted_rows, ymin, lambda row: row['bbox'][3])
+    i = _find_leftmost_gt(sorted_rows, ymin, lambda row: row[3]) # ['bbox'][3])
     while i < len(sorted_rows):
         row = sorted_rows[i]
-        iob_score = _iob(bbox, row['bbox'])
+        iob_score = _iob(bbox, row) # ['bbox'])
 
         if iob_score > threshold:
             rows.append(i)
         # we may break early when the row is below the textbox
         # this assumes that row_min and row_max are roughly 
-        if ymax < row['bbox'][1]: # ymax < row_min
+        if ymax < row[1]: # ['bbox'][1]: # ymax < row_min
             break
         i += 1
     return rows
 
-def _find_all_columns_for_box(sorted_columns, bbox, threshold=0, _iob=_iob_for_columns):
+def _find_all_columns_for_box(sorted_columns: list[tuple], bbox, threshold=0, _iob=_iob_for_columns):
     """
     Find all columns that intersect with the box.
+
+    :param sorted_columns: list of bboxes, so list of tuples (xmin, ymin, xmax, ymax)
     """
     columns = []
     xmin, _, xmax, _ = bbox
     # linsearch
     # for i, row in enumerate(sorted_columns):
-    i = _find_leftmost_gt(sorted_columns, xmin, lambda column: column['bbox'][2])
+    i = _find_leftmost_gt(sorted_columns, xmin, lambda bbox: bbox[2]) # column: column['bbox'][2])
     while i < len(sorted_columns):
         column = sorted_columns[i]
-        iob_score = _iob(bbox, column['bbox'])
+        iob_score = _iob(bbox, column) # column['bbox'])
         if iob_score > threshold:
             columns.append(i)
-        if xmax < column['bbox'][0]: # xmax < column_min
+        if xmax < column[0]: # column['bbox'][0]: # xmax < column_min
             break
         i += 1
     return columns
@@ -428,7 +431,7 @@ def _split_spanning_cells(spanning_cells: list[dict], sorted_headers_bboxes: lis
             all_valid_cols = _find_all_columns_for_box(sorted_columns, x['bbox'], threshold=0.2, 
                     _iob=_symmetric_iob_for_columns)
 
-            # if it only spans only 1 row, then it is a hierarchical column header
+            # if it only spans only 1 row, then it is a hierarchical top header
             all_valid_rows = [x for x in all_valid_rows if x in header_indices]
             if len(all_valid_rows) == 1 and len(all_valid_cols) > 1:
                 
@@ -469,6 +472,10 @@ def _split_spanning_cells(spanning_cells: list[dict], sorted_headers_bboxes: lis
             # else:
             #     sorted_hier_left_headers.append(x)
     
+    # sort hier_left_headers by ascending y0
+    # which is advantageous becauseit makes it closer to algo fill
+    sorted_hier_left_headers.sort(key=lambda x: x['bbox'][1])
+
     return sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers
 
 def _semantic_spanning_fill(table_array, sorted_hier_top_headers: list[dict], sorted_monosemantic_top_headers: list[dict], 
@@ -486,22 +493,45 @@ def _semantic_spanning_fill(table_array, sorted_hier_top_headers: list[dict], so
     # -- multiple subdivisions, like pdf6_t0 is possible
     # 2. then, copy among all cells
     if config.semantic_hierarchical_left_fill == 'deep':
+        perform_changes = {} # dict[col_num] = {content: str, row_nums: list[int]}
         for x in sorted_hier_left_headers:
 
             col_num = x['col_idx']
-            content = None # assume that there is a unique text
-            for row_num in x['row_indices']:
+            last_found = None # assume that there is a unique text
+
+            # CHANGES in 4.0: 
+            # - make it more safe by fixing a bug where it would overwrite data
+            # - it handles overlapping cells better by
+            # only making changes at the end. This helps in the common case
+            # by sorting the list top to bottom, 
+            # which gives similar behavior to the 'algorithm'
+            # downwards (no merging)
+            first_invalid_i = len(x['row_indices'])
+            for i, row_num in enumerate(x['row_indices']):
                 cell_content = table_array[row_num, col_num]
                 if cell_content:
-                    # stuff
-                    if content is None:
-                        content = cell_content
+                    # do not overwrite stuff - only allow one cell
+                    if last_found is None:
+                        last_found = cell_content
                     else:
                         # two cells with text
+                        first_invalid_i = i
                         break
-            if content:
-                for row_num in x['row_indices']:
+            if last_found:
+                perform_changes[col_num] = {'content': last_found, 'row_nums': x['row_indices'][:first_invalid_i]}
+            # if last_found:
+            #     for row_num in x['row_indices'][:first_invalid_row]:
+            #         if cell_content is None:
+            #             table_array[row_num, col_num] = last_found
+        
+        # now perform changes
+        for col_num, x in perform_changes.items():
+            content = x['content']
+            for row_num in x['row_nums']:
+                # to be safe, only fill in nones
+                if table_array[row_num, col_num] is None:
                     table_array[row_num, col_num] = content
+            
     elif config.semantic_hierarchical_left_fill == 'algorithm':
         # get counts of all column indices, then keep those >= 2
         col_counts = {}
@@ -875,7 +905,9 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     # semantic spanning fill
     if config.semantic_spanning_cells:
         sorted_headers_bboxes = [x['bbox'] for x in sorted_headers]
-        sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers = _split_spanning_cells(spanning_cells, sorted_headers_bboxes, sorted_rows, sorted_columns, header_indices)
+        sorted_row_bboxes = [x['bbox'] for x in sorted_rows]
+        sorted_column_bboxes = [x['bbox'] for x in sorted_columns]
+        sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers = _split_spanning_cells(spanning_cells, sorted_headers_bboxes, sorted_row_bboxes, sorted_column_bboxes, header_indices)
         _non_maxima_suppression(sorted_hier_top_headers, overlap_threshold=config._nms_overlap_threshold)
         _non_maxima_suppression(sorted_monosemantic_top_headers, overlap_threshold=config._nms_overlap_threshold)
         _non_maxima_suppression(sorted_hier_left_headers, overlap_threshold=config._nms_overlap_threshold)

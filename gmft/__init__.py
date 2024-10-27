@@ -12,14 +12,14 @@ Instead, `gmft.auto` is now encouraged. For example, `from gmft.auto import Auto
 
 import sys
 
-from gmft.auto import Rect, BasePDFDocument, BasePage, CroppedTable, RotatedCroppedTable, \
-    TableDetectorConfig, TableDetector, FormattedTable, TATRFormatConfig, TATRFormattedTable, \
-    TATRTableDetector, TATRTableFormatter, TATRFormatConfig, \
-    AutoTableFormatter, AutoFormatConfig, AutoTableDetector
+# from gmft.auto import Rect, BasePDFDocument, BasePage, CroppedTable, RotatedCroppedTable, \
+#     TableDetectorConfig, TableDetector, FormattedTable, TATRFormatConfig, TATRFormattedTable, \
+#     TATRTableDetector, TATRTableFormatter, TATRFormatConfig, \
+#     AutoTableFormatter, AutoFormatConfig, AutoTableDetector
 
-# from gmft.__future__init__ import *
+# from gmft.__lazy__init__ import *
+from gmft.__future__init__ import *
 # not imported:
 # TATRDetector
 # TATRFormatter
 # TATRFormatterConfig
-

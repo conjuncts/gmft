@@ -11,15 +11,15 @@ In lieu, `gmft.auto` is now encouraged.
 """
 
 
-from gmft.auto import Rect as RectOrig, \
-BasePDFDocument as BasePDFDocumentOrig, \
-BasePage as BasePageOrig, \
-CroppedTable as CroppedTableOrig, \
-RotatedCroppedTable as RotatedCroppedTableOrig, \
+from gmft.common import Rect
+from gmft.pdf_bindings.common import BasePDFDocument, BasePage
+from gmft.detectors.common import CroppedTable, RotatedCroppedTable
+from gmft.formatters.common import FormattedTable
+
+from gmft.auto import \
 TATRDetector as TATRTableDetectorOrig, \
 TableDetectorConfig as TableDetectorConfigOrig, \
 TableDetector as TableDetectorOrig, \
-FormattedTable as FormattedTableOrig, \
 TATRFormatConfig as TATRFormatConfigOrig, \
 TATRFormattedTable as TATRFormattedTableOrig, \
 TATRFormatter as TATRTableFormatterOrig, \
@@ -27,58 +27,28 @@ AutoTableFormatter as AutoTableFormatterOrig, \
 AutoFormatConfig as AutoFormatConfigOrig, \
 AutoTableDetector as AutoTableDetectorOrig
 
+has_warned = False
 def _deprecation_warning(name):
+    global has_warned
+    if has_warned:
+        return
     import warnings
     msg = f"(Deprecation) While once encouraged, \
 importing {name} and other classes from the top level module is now deprecated. \
 Please import from gmft.auto instead."
     warnings.warn(msg, DeprecationWarning, stacklevel=2)
     print(msg)
+    has_warned = True
 
-class Rect(RectOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("Rect")
-        super().__init__(*args, **kwargs)
 
-class BasePDFDocument(BasePDFDocumentOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("BasePDFDocument")
-        super().__init__(*args, **kwargs)
-
-class BasePage(BasePageOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("BasePage")
-        super().__init__(*args, **kwargs)
-
-class CroppedTable(CroppedTableOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("CroppedTable")
-        super().__init__(*args, **kwargs)
-
-class RotatedCroppedTable(RotatedCroppedTableOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("RotatedCroppedTable")
-        super().__init__(*args, **kwargs)
+# These are fine, but discouraged. 
+# they are relatively light classes; also,
+# Needed out of fear that isinstance() calls will fail
+# Rect
+# BasePDFDocument
+# BasePage
+# CroppedTable
+# RotatedCroppedTable
 
 class TATRTableDetector(TATRTableDetectorOrig):
     """
@@ -105,15 +75,6 @@ class TableDetector(TableDetectorOrig):
     
     def __init__(self, *args, **kwargs):
         _deprecation_warning("TableDetector")
-        super().__init__(*args, **kwargs)
-
-class FormattedTable(FormattedTableOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("FormattedTable")
         super().__init__(*args, **kwargs)
 
 class TATRFormatConfig(TATRFormatConfigOrig):
@@ -171,66 +132,6 @@ class AutoTableDetector(AutoTableDetectorOrig):
         _deprecation_warning("AutoTableDetector")
         super().__init__(*args, **kwargs)
 
-# class LazyLoader:
-#     """A class to handle lazy loading of modules."""
-    
-#     def __init__(self, module_name):
-#         self.module_name = module_name
-#         self.module = None
-
-#     def _load(self):
-#         if self.module is None:
-#             import importlib
-#             self.module = importlib.import_module(self.module_name)
-#         return self.module
-
-#     def __getattr__(self, name):
-#         return getattr(self._load(), name)
-
-# # Create lazy loaders for the necessary modules
-# gmft_common = LazyLoader('gmft.common')
-# gmft_pdf_bindings = LazyLoader('gmft.pdf_bindings')
-# gmft_detectors_common = LazyLoader('gmft.detectors.common')
-# gmft_detectors_tatr = LazyLoader('gmft.detectors.tatr')
-# gmft_formatters_common = LazyLoader('gmft.formatters.common')
-# gmft_formatters_tatr = LazyLoader('gmft.formatters.tatr')
-
-# gmft_aliases = LazyLoader('gmft.auto')
-
-# def _callback():
-#     import warnings
-#     warnings.warn("Sorry, importing classes from the top level (gmft) is now discouraged and may be removed in future versions. Please import classes from gmft.auto instead. Apologies for the inconvenience", DeprecationWarning)
-# class AccessTracker:
-#     def __init__(self, get_true_value):
-#         self.callback = _callback
-#         self._value = None 
-#         self._get_value = get_true_value
-
-#     def __get__(self, instance, owner):
-#         # Call the callback when accessed
-#         if self.callback:
-#             self.callback()
-#         if self._value is None:
-#             self._value = self._get_value()
-#         return self._value
-
-#     def __set__(self, instance, value):
-#         self._value = value
-
-# # Alias classes and functions using lazy loaders
-# class LazyHouse:
-#     Rect = AccessTracker(lambda: gmft_common.Rect)
-#     BasePDFDocument = AccessTracker(lambda: gmft_pdf_bindings.BasePDFDocument)
-#     BasePage = AccessTracker(lambda: gmft_pdf_bindings.BasePage)
-#     CroppedTable = AccessTracker(lambda: gmft_detectors_common.CroppedTable)
-#     RotatedCroppedTable = AccessTracker(lambda: gmft_detectors_common.RotatedCroppedTable)
-#     TATRTableDetector = AccessTracker(lambda: gmft_detectors_tatr.TATRTableDetector)
-#     TableDetectorConfig = AccessTracker(lambda: gmft_detectors_tatr.TableDetectorConfig)
-#     TableDetector = AccessTracker(lambda: gmft_detectors_tatr.TableDetector)
-#     FormattedTable = AccessTracker(lambda: gmft_formatters_common.FormattedTable)
-#     TATRFormatConfig = AccessTracker(lambda: gmft_formatters_tatr.TATRFormatConfig)
-#     TATRFormattedTable = AccessTracker(lambda: gmft_formatters_tatr.TATRFormattedTable)
-#     TATRTableFormatter = AccessTracker(lambda: gmft_formatters_tatr.TATRTableFormatter)
 
 # Rect = LazyHouse.Rect
 # BasePDFDocument = LazyHouse.BasePDFDocument
