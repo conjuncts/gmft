@@ -1,8 +1,7 @@
 ## v0.4.0rc1
 
-Exciting upcoming changes:
 - Added `TabledFormatter`, with support of the fantastic new [Tabled](https://github.com/VikParuchuri/tabled/) library. Check out the [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/example_tabled_compat.ipynb) for a quick example.
-- Added `IntervallicFormatter`, a super-fast and fairly accurate algorithmic option for table structure recognition. Check out the [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/example_intervallic.ipynb) for a quick example.
+- Added `HistogramFormatter`, a super-fast and fairly accurate algorithmic option for table structure recognition. Check out the [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/example_histogram.ipynb) for a quick example.
 - These formatters can all be used in combination with any detector (like TATRDetector).
 
 ## v0.3.2

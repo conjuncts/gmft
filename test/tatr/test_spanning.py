@@ -1,9 +1,9 @@
 import json
 import os
 
-from gmft.auto import AutoFormatConfig
+from gmft.formatters.tatr import TATRFormatConfig
 from gmft.table_function import TATRFormattedTable
-from .conftest import REDETECT_TABLES
+from ..conftest import REDETECT_TABLES
 
 def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):
     with open(f"test/outputs/actual/span{pdf_no}_t{j}.csv", "w", encoding='utf-8') as f:
@@ -18,7 +18,7 @@ def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):
 def try_jth_table(tables, pdf_no, j, expected, config=None):
     
     if config is None:
-        config = AutoFormatConfig()
+        config = TATRFormatConfig()
         config.large_table_threshold = 20
         config.verbosity = 3
         config.semantic_spanning_cells = True
@@ -63,7 +63,7 @@ Total,29,402.993,,,
 R2= 99.51%,Adj R2,,,,
 R2= 99.51%,= 99.06%,,,,
 """
-        config = AutoFormatConfig()
+        config = TATRFormatConfig()
         config.verbosity = 3
         config.semantic_spanning_cells = True
         config.semantic_hierarchical_left_fill = 'deep'
@@ -140,7 +140,7 @@ Year,Variety,Treatment,SG per panicle,IG per panicle,SG rate (%),IG rate (%)
         try_jth_table(pdf6_tables, 6, 1, expected)
     
 
-config2 = AutoFormatConfig()
+config2 = TATRFormatConfig()
 config2.verbosity = 3
 config2.enable_multi_header = True
 config2.semantic_spanning_cells = True
@@ -186,7 +186,7 @@ Plasma Neu5Ac,"Css,ave (ng/mL)",,,,,
         expected = """nan,nan,nan,nan,nan,Core amino acid,Core amino acid,nan,nan
 Patient no,Genotype,Viral load (106 IU/ml),Sex,Age (years),70,91,rs12979860,End of treatment response a
 R1,1a,4.36,M,52.6,R,C,CC,SVR"""
-        config = AutoFormatConfig()
+        config = TATRFormatConfig()
         config.verbosity = 3
         config.enable_multi_header = True
         config.semantic_spanning_cells = True

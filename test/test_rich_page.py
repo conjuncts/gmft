@@ -1,10 +1,19 @@
 
+from gmft import TATRFormattedTable
 from gmft._rich_text.rich_page import embed_tables
+from gmft.formatters.tatr import TATRFormatConfig
 
 
 def test_rich_pdf7(docs_bulk, pdf7_tables):
     doc = docs_bulk[6] # n-1
     # look at page 12
+
+    config = TATRFormatConfig()
+    for ft in pdf7_tables:
+        ft = ft # type: TATRFormattedTable
+        ft.df(config_overrides=config) # reset config to defaults
+
+
     rich_pages = embed_tables(doc=doc, tables=pdf7_tables)
     
     # print(rich_pages[2])
