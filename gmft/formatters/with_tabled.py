@@ -14,12 +14,14 @@ from tabled.inference.detection import detect_tables
 from tabled.inference.recognition import get_cells, recognize_tables
 from tabled.schema import ExtractPageResult
 from surya.settings import settings as surya_settings
+from surya.schema import Bbox
+
 
 from gmft.detectors.common import CroppedTable
 from gmft.formatters.common import BaseFormatter, FormattedTable
 
 
-
+# note: this is based on tabled.extract.extract_tables
 
 
 def extract_tables(images, highres_images, text_lines, det_models, rec_models, skip_detection=False, detect_boxes=False) -> List[ExtractPageResult]:
@@ -97,7 +99,9 @@ def _extract_tables_patched(images, highres_images, table_bboxes, text_lines,
         results.append(ExtractPageResult(
             table_imgs=table_imgs[page_start:page_end],
             cells=cells[page_start:page_end],
-            rows_cols=table_rec[page_start:page_end]
+            rows_cols=table_rec[page_start:page_end],
+            bboxes=[Bbox(bbox=b) for b in table_bboxes[page_start:page_end]],
+            image_bboxes=[Bbox(bbox=[0, 0, size[0], size[1]]) for size in highres_image_sizes[page_start:page_end]]
         ))
         counter += count
 
@@ -219,13 +223,5 @@ class TabledFormatter(BaseFormatter):
 # main()
 
 
-if __name__ == '__main__':
-    stf = TabledFormatter()
-    # gmft_dict = json.load(open('test/outputs/pubt/pubt_p4.info'))
-    from gmft_pymupdf import PyMuPDFDocument
-    doc = PyMuPDFDocument('support_arena/spantest.pdf')
-    with open('test/outputs/pubt/pubt_p4.info') as f:
-        ct = CroppedTable.from_dict(json.load(f), doc[0])
-        ct.page.page_number = 0
-        ft = stf.extract(ct)
-        print(ft.df())
+# if __name__ == '__main__':
+#     pass

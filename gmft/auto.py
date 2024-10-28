@@ -6,6 +6,7 @@ For convenience, please import using `gmft.auto` instead of `gmft`.
 
 from gmft.common import Rect
 from gmft.pdf_bindings.common import BasePDFDocument, BasePage
+from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.detectors.common import CroppedTable, RotatedCroppedTable
 from gmft.detectors.tatr import TATRDetector, TATRDetectorConfig, TableDetectorConfig, TableDetector
 from gmft.formatters.common import FormattedTable

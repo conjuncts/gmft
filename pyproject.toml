@@ -30,6 +30,9 @@ dependencies = [
 pymupdf = [
   "pymupdf"
 ]
+tabled = [
+  "tabled-pdf >= 0.1.4"
+]
 
 [project.urls]
 Homepage = "https://github.com/conjuncts/gmft"
