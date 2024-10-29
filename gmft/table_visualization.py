@@ -88,7 +88,8 @@ COLORS = [(int(r * 255), int(g * 255), int(b * 255)) for r, g, b in COLORS]
 from PIL import Image, ImageDraw
 
 def plot_shaded_boxes(pil_img, labels: list[int], boxes: list[tuple[float, float, float, float]], 
-                      id2color: dict = None, filter=None, alpha=0.2):
+                      id2color: dict = None, filter=None, alpha=0.2, 
+                      id2border: dict = None):
     """
     Helper method to visualize the results of the table detection/format model using PIL.
 
@@ -120,8 +121,13 @@ def plot_shaded_boxes(pil_img, labels: list[int], boxes: list[tuple[float, float
                 from PIL import ImageColor
                 c = ImageColor.getrgb(c) + (int(255 * alpha),)
         
+        if id2border is None:
+            id2border = {5: (0, 0, 255, 80)}
+        border = id2border.get(label, (255, 255, 255, 0))
+        
+        
         # Draw the shaded rectangle (box) with the given color
-        draw.rectangle([xmin, ymin, xmax, ymax], fill=c, width=3) # , outline=c[:3] + (255,)
+        draw.rectangle([xmin, ymin, xmax, ymax], fill=c, width=3, outline=border) # , outline=c[:3] + (255,)
     
     # Return the modified image
     return pil_img

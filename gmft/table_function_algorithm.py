@@ -493,7 +493,7 @@ def _semantic_spanning_fill(table_array, sorted_hier_top_headers: list[dict], so
     # -- multiple subdivisions, like pdf6_t0 is possible
     # 2. then, copy among all cells
     if config.semantic_hierarchical_left_fill == 'deep':
-        perform_changes = {} # dict[col_num] = {content: str, row_nums: list[int]}
+        perform_changes = [] # list of {col_num: int, content: str, row_nums: list[int]}
         for x in sorted_hier_left_headers:
 
             col_num = x['col_idx']
@@ -518,14 +518,15 @@ def _semantic_spanning_fill(table_array, sorted_hier_top_headers: list[dict], so
                         first_invalid_i = i
                         break
             if last_found:
-                perform_changes[col_num] = {'content': last_found, 'row_nums': x['row_indices'][:first_invalid_i]}
+                perform_changes.append({'col_num': col_num, 'content': last_found, 'row_nums': x['row_indices'][:first_invalid_i]})
             # if last_found:
             #     for row_num in x['row_indices'][:first_invalid_row]:
             #         if cell_content is None:
             #             table_array[row_num, col_num] = last_found
         
         # now perform changes
-        for col_num, x in perform_changes.items():
+        for x in perform_changes:
+            col_num = x['col_num']
             content = x['content']
             for row_num in x['row_nums']:
                 # to be safe, only fill in nones

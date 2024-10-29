@@ -31,7 +31,7 @@ class DITRFormatConfig(HistogramConfig):
     
     warn_uninitialized_weights: bool = False
     image_processor_path: str = "microsoft/table-transformer-structure-recognition-v1.1-all"
-    formatter_path: str = "conjuncts/ditr-e20"
+    formatter_path: str = "conjuncts/ditr-e15"
     # no_timm: bool = True # use a model which uses AutoBackbone. 
     torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
     

@@ -104,6 +104,11 @@ def tatr_csvs():
         yield json.load(f)
 
 @pytest.fixture(scope="session")
+def ditr_tables():
+    with open("test/refs/ditr_tables.json", "r") as f:
+        yield json.load(f)
+        
+@pytest.fixture(scope="session")
 def ditr_csvs():
     with open("test/refs/ditr_csvs.json", "r") as f:
         yield json.load(f)
