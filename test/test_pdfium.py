@@ -68,9 +68,4 @@ def test_pypdfium2_positions(doc_tiny):
             assert abs(ref - pos) < EPS, f"Different positions: expected {ref}, got {pos}"    
     
     # tuples = list(page.get_positions_and_text())
-    
-    # # save to test/samples/tiny_pdfium.tsv
-    # with open("test/samples/tiny.tsv", "w") as f:
-    #     for tup in tuples:
-    #         f.write("\t".join(map(str, tup)) + "\n")
         

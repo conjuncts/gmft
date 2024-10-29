@@ -65,10 +65,9 @@ _num_tables = {
 }
 
 REDETECT_TABLES=False
-def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTableFormatter, n, REDETECT_TABLES=REDETECT_TABLES):
+def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTableFormatter, tatr_tables, n, REDETECT_TABLES=REDETECT_TABLES):
     print("Making tables for pdf", n)
     doc = docs_bulk[n-1]
-    # for i, doc in enumerate(docs_bulk):
     
     config = TATRTableDetectorConfig() # purposefully use old alias
     config.detector_base_threshold = 0.9
@@ -81,40 +80,55 @@ def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTa
             try:
                 tables.append(formatter.extract(crop)) # , margin='auto', padding=None))
             except Exception as e:
-                # print(e)
                 raise e
-                # pass
-                # tables.append(None)
     else:
         for j in range(_num_tables[n]):
-            with open(f"test/outputs/bulk/pdf{n}_t{j}.info", "r") as f:
-                as_dict = json.load(f)
-                page_no = as_dict["page_no"]
-                page = doc[page_no]
-                tables.append(TATRFormattedTable.from_dict(as_dict, page))
+            as_dict = tatr_tables[f"pdf{n}_t{j}"]
+            page = doc[as_dict["page_no"]]
+            tables.append(TATRFormattedTable.from_dict(as_dict, page))
     return tables
 
 @pytest.fixture(scope="session")
-def pdf1_tables(docs_bulk, detector, formatter):
-    yield get_tables_for_pdf(docs_bulk, detector, formatter, 1)
+def cropped_tables():
+    with open("test/refs/cropped_tables.json", "r") as f:
+        yield json.load(f)
+
 @pytest.fixture(scope="session")
-def pdf2_tables(docs_bulk, detector, formatter):
-    yield get_tables_for_pdf(docs_bulk, detector, formatter, 2)
+def tatr_tables():
+    with open("test/refs/tatr_tables.json", "r") as f:
+        yield json.load(f)
+
 @pytest.fixture(scope="session")
-def pdf3_tables(docs_bulk, detector, formatter):
-    yield get_tables_for_pdf(docs_bulk, detector, formatter, 3)
+def tatr_csvs():
+    with open("test/refs/tatr_csvs.json", "r") as f:
+        yield json.load(f)
+
 @pytest.fixture(scope="session")
-def pdf4_tables(docs_bulk, detector, formatter):
-    yield get_tables_for_pdf(docs_bulk, detector, formatter, 4)
+def ditr_csvs():
+    with open("test/refs/ditr_csvs.json", "r") as f:
+        yield json.load(f)
+
 @pytest.fixture(scope="session")
-def pdf5_tables(docs_bulk, detector, formatter):
-    yield get_tables_for_pdf(docs_bulk, detector, formatter, 5)
+def pdf1_tables(docs_bulk, detector, formatter, tatr_tables):
+    yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 1)
 @pytest.fixture(scope="session")
-def pdf6_tables(docs_bulk, detector, formatter):
-    yield get_tables_for_pdf(docs_bulk, detector, formatter, 6)
+def pdf2_tables(docs_bulk, detector, formatter, tatr_tables):
+    yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 2)
 @pytest.fixture(scope="session")
-def pdf7_tables(docs_bulk, detector, formatter):
-    yield get_tables_for_pdf(docs_bulk, detector, formatter, 7)
+def pdf3_tables(docs_bulk, detector, formatter, tatr_tables):
+    yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 3)
 @pytest.fixture(scope="session")
-def pdf8_tables(docs_bulk, detector, formatter):
-    yield get_tables_for_pdf(docs_bulk, detector, formatter, 8)
+def pdf4_tables(docs_bulk, detector, formatter, tatr_tables):
+    yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 4)
+@pytest.fixture(scope="session")
+def pdf5_tables(docs_bulk, detector, formatter, tatr_tables):
+    yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 5)
+@pytest.fixture(scope="session")
+def pdf6_tables(docs_bulk, detector, formatter, tatr_tables):
+    yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 6)
+@pytest.fixture(scope="session")
+def pdf7_tables(docs_bulk, detector, formatter, tatr_tables):
+    yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 7)
+@pytest.fixture(scope="session")
+def pdf8_tables(docs_bulk, detector, formatter, tatr_tables):
+    yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 8)

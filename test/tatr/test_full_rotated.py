@@ -38,11 +38,9 @@ def test_rotated(doc_9, detector, formatter):
     
     assert table.angle == 90
 
-def test_rotated_df(doc_9):
-    with open("test/outputs/bulk/pdf9_t4.info", encoding="utf-8") as f:
-        as_dict = json.load(f)
-    page_no = as_dict["page_no"]
-    page = doc_9[page_no]
+def test_rotated_df(doc_9, tatr_tables):
+    as_dict = tatr_tables['pdf9_t4']
+    page = doc_9[as_dict["page_no"]]
     ft = TATRFormattedTable.from_dict(as_dict, page)
     
     assert ft.angle == 90

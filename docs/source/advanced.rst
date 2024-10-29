@@ -6,7 +6,7 @@ Specify locations of headers/rows
 
 With known locations of headers, rows, or cells, you can configure a :class:`.TATRFormattedTable` of your choice. 
 One option is through the :meth:`.TATRFormattedTable.from_dict()` method. 
-To see the necessary format, check out `github <https://github.com/conjuncts/gmft/blob/main/test/outputs/bulk/pdf1_t0.info>`_.
+To see the necessary format, check out `github <https://github.com/conjuncts/gmft/blob/main/test/refs/tatr_tables.info>`_.
 
 This example is taken from the `internal test for serialization <https://github.com/conjuncts/gmft/blob/main/test/test_serial.py>`_.
 

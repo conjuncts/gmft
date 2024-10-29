@@ -89,8 +89,6 @@ tiny_old_info = {
 def test_FormattedTable_from_dict_backcompat(doc_tiny):
     # create a CroppedTable object
     page = doc_tiny[0]
-    # with open("test/outputs/tiny_df.old.info") as f:
-    #     table_dict = json.load(f)
     formatted_table = TATRFormattedTable.from_dict(tiny_old_info, page)
     df = formatted_table.df()
     # get csv as string
@@ -106,8 +104,6 @@ Body Temperature,37,98.6
 def test_FormattedTable_to_dict_backcompat(doc_tiny):
     # assert that to_dict o from_dict is identity
     page = doc_tiny[0]
-    # with open("test/outputs/tiny_df.old.info") as f:
-    #     table_dict = json.load(f)
     dict2table = TATRFormattedTable.from_dict(tiny_old_info, page)
     dict2table2dict = dict2table.to_dict()
     
@@ -154,8 +150,6 @@ tiny_info = {
 def test_FormattedTable_from_dict(doc_tiny):
     # create a CroppedTable object
     page = doc_tiny[0]
-    # with open("test/outputs/tiny_df.old.info") as f:
-    #     table_dict = json.load(f)
     formatted_table = TATRFormattedTable.from_dict(tiny_old_info, page)
     df = formatted_table.df()
     # get csv as string

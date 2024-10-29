@@ -215,11 +215,10 @@ Genotype,Q,R,P,H,C,M,L,Total
     
     # Also of interest: attn_p8 (HierTop), pubt_p6 (HierTop)
 
-    def test_pubt_p6(self, doc_pubt):
+    def test_pubt_p6(self, doc_pubt, tatr_tables):
 
         # table detection    
-        with open("test/outputs/pubt/pubt_p6.info", "r") as f:
-            ft = TATRFormattedTable.from_dict(json.load(f), doc_pubt[6-1])    
+        ft = TATRFormattedTable.from_dict(tatr_tables['pubt_p6'], doc_pubt[6-1])    
 
         df = ft.df(config_overrides=config2)
         actual = df.to_csv(lineterminator='\n', index=False)

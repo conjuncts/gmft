@@ -5,15 +5,15 @@ import pytest
 from gmft.detectors.common import CroppedTable
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 
-def test_tabled_format():
+def test_tabled_format(cropped_tables):
     # passes for 0.1.4
     pytest.skip("skipping tabled")
 
     from gmft.formatters.with_tabled import TabledFormatter
     tf = TabledFormatter()
     doc = PyPDFium2Document('test/samples/tatr.pdf')
-    with open('test/outputs/pubt/pubt_p4.info') as f:
-        ct = CroppedTable.from_dict(json.load(f), doc[3])
+    ct = CroppedTable.from_dict(cropped_tables['pubt_p4'], doc[3])
+
     # ct.page.page_number = 0
     ft = tf.extract(ct)
     result = ft.df().to_csv(index=False, sep='\t', lineterminator='\n')

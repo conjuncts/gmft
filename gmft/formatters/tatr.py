@@ -229,12 +229,9 @@ class TATRFormattedTable(FormattedTable):
     _hier_left_indices: list[int]=None
     
     def __init__(self, cropped_table: CroppedTable, fctn_results: dict, 
-                #  fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int], 
                  config: TATRFormatConfig=None):
         super(TATRFormattedTable, self).__init__(cropped_table)
         self.fctn_results = fctn_results
-        # self.fctn_scale_factor = fctn_scale_factor
-        # self.fctn_padding = tuple(fctn_padding)
         
         if config is None:
             config = TATRFormatConfig()
@@ -251,10 +248,14 @@ class TATRFormattedTable(FormattedTable):
         
         config = with_config(self.config, config_overrides)
 
-        
+        return self.recompute(config=config)
+    
+    def recompute(self, config: TATRFormatConfig):
+        """
+        Recompute the internal dataframe.
+        """
         self._df = extract_to_df(self, config=config)
         return self._df
-    
     
     def visualize(self, filter=None, dpi=None, padding=None, margin=(10,10,10,10), effective=False, return_img=True, **kwargs):
         """
@@ -287,9 +288,6 @@ class TATRFormattedTable(FormattedTable):
             }
         else:
             # transform functionalized coordinates into image coordinates
-            # sf = self.fctn_scale_factor
-            # pdg = self.fctn_padding
-            # boxes = [_normalize_bbox(bbox, used_scale_factor=sf / scale_by, used_padding=pdg) for bbox in self.fctn_results["boxes"]]
             boxes = [(x * scale_by for x in bbox) for bbox in self.fctn_results["boxes"]]
 
             _to_visualize = {
@@ -321,8 +319,6 @@ class TATRFormattedTable(FormattedTable):
         if self._top_header_indices is not None:
             optional['_top_header_indices'] = self._top_header_indices
         return {**parent, **{
-            # 'fctn_scale_factor': self.fctn_scale_factor,
-            # 'fctn_padding': list(self.fctn_padding),
             'config': non_defaults_only(self.config),
             'outliers': self.outliers,
             'fctn_results': self.fctn_results,

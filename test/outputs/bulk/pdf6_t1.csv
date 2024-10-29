@@ -1,9 +1,0 @@
-Year,Variety,Treatment,Net photosynthetic rate (umol·m−2 s−1 ),Stomatal conductance (mmol·m−2 s−1 ),Intercellular CO2 concentration (μmol·mol−1 ),Trmmol rate (mmol·m−2 s−1 )
-2019,CJ03,T0,22.51a,0.65b,285.30b,6.53a
-,,T1,20.06c,0.52c,268.55c,5.32c
-,W1844,T0,21.91a,0.74a,305.32a,6.28a
-,,T1,20.72b,0.60bc,274.15b,5.68b
-2020,CJ03,T0,25.40a,0.86a,225.50ab,13.73a
-,,T1,20.92c,0.54c,210.57c,11.72c
-,W1844,T0,24.91a,0.89a,233.63a,13.78a
-,,T1,21.92b,0.75b,220.72b,12.71b

@@ -31,7 +31,7 @@ class DITRFormatConfig(HistogramConfig):
     
     warn_uninitialized_weights: bool = False
     image_processor_path: str = "microsoft/table-transformer-structure-recognition-v1.1-all"
-    formatter_path: str = "conjuncts/ditr-e15"
+    formatter_path: str = "conjuncts/ditr-e20"
     # no_timm: bool = True # use a model which uses AutoBackbone. 
     torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
     
@@ -233,16 +233,16 @@ class DITRFormattedTable(HistogramFormattedTable):
             raise DeprecationWarning("recalculate as a parameter in df() is deprecated; explicitly call recompute() instead.")
         
         if self._df is None:
-            self.recompute(config_overrides=config_overrides)
+            self.recompute(config=config_overrides)
         return self._df
     
-    def recompute(self, config_overrides: DITRFormatConfig=None):
+    def recompute(self, config: DITRFormatConfig=None):
         """
         Recompute the internal dataframe.
         """
-        config = with_config(self.config, config_overrides)
+        config = with_config(self.config, config)
         self._df = ditr_extract_to_df(self, config=config)
-        return self.df(config_overrides=config_overrides)
+        return self._df
     
     def visualize(self, **kwargs):
         """

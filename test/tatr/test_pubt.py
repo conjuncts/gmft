@@ -16,15 +16,6 @@ def test_pubt_p4(doc_pubt, detector, formatter):
     tables_p4 = detector.extract(doc_pubt[4-1])
     assert len(tables_p4) == 1
     
-    # with open("test/outputs/actual/pubt_p4.info", "w") as f:
-    #     json.dump(tables_p4[0].to_dict(), f, indent=4)
-    
-    # with open("test/outputs/actual/pubt_p7.info", "w") as f:
-    #     json.dump(tables_p7[0].to_dict(), f, indent=4)
-        
-    # with open("test/outputs/actual/pubt_p8.info", "w") as f:
-    #     json.dump(tables_p8[0].to_dict(), f, indent=4)
-    
     # structure recognition and df formatting
     ft_4 = formatter.extract(tables_p4[0])
     df_4 = ft_4.df()
@@ -43,14 +34,13 @@ def test_pubt_p4(doc_pubt, detector, formatter):
         assert actual == expected
 
 
-def test_pubt_p6(doc_pubt):
+def test_pubt_p6(doc_pubt, tatr_tables):
     """
     This tests solely df formatting.
     """
 
     # table detection    
-    with open("test/outputs/pubt/pubt_p6.info", "r") as f:
-        ft = TATRFormattedTable.from_dict(json.load(f), doc_pubt[6-1])    
+    ft = TATRFormattedTable.from_dict(tatr_tables['pubt_p6'], doc_pubt[6-1])    
 
     df = ft.df()
     actual = df.to_csv(lineterminator='\n')
