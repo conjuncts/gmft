@@ -1,8 +1,22 @@
-## v0.4.0rc1
+## v0.4.0
 
-- Added `TabledFormatter`, with support of the fantastic new [Tabled](https://github.com/VikParuchuri/tabled/) library. Check out the [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/example_tabled_compat.ipynb) for a quick example.
-- Added `HistogramFormatter`, a super-fast and fairly accurate algorithmic option for table structure recognition. Check out the [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/example_histogram.ipynb) for a quick example.
-- These formatters can all be used in combination with any detector (like TATRDetector).
+Features: 3 new table structure recognition options!
+- Added `TabledFormatter`, with support of the fantastic new [Tabled](https://github.com/VikParuchuri/tabled/) library from VikParuchuri. Check out the [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/example_tabled_compat.ipynb) for a quick example.
+- Added `HistogramFormatter`, a super-fast and decently accurate algorithmic option for table structure recognition. The algorithm uses word bboxes to detect separating lines between text. Check out the [demo notebook](https://github.com/conjuncts/gmft/blob/main/notebooks/example_histogram.ipynb) for a quick example.
+    - A visual to explain `HistogramFormatter`:
+
+![](https://github.com/conjuncts/gmft/blob/main/docs/source/images/histogram_expl.png?raw=true)
+
+- Added `DITRFormatter`. This formatter is a blend between TATRFormatter and HistogramFormatter, being trained to recognize table separating lines rather than cells. It fine tunes `microsoft/table-transformer-structure-recognition-v1.1-all` on PubTables-1M for 15 epochs. Its main draw is mixing and matching deep and algorithmic separating line detection.
+
+These formatters can all be used in combination with any detector (like TATRDetector).
+
+Bugfixes:
+- Tweaked spanning cell merging
+    - Fixed bug where it would overwrite data
+- Give warning when importing from `gmft` directly (use `gmft.auto` instead)
+- Merged PR #32, thanks!
+
 
 ## v0.3.2
 

@@ -5,7 +5,7 @@ HistogramFormatter uses the bboxes of words, interprets them as intervals, then 
 a histogram-like structure. Locations where there is almost no overlap can be detected,
 and from these separating lines the table can be deduced. 
 
-.. image:: ../images/intervallic_expl.png
+.. image:: ../images/histogram_expl.png
     :alt: histogram based
     :align: center
 
