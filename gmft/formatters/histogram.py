@@ -1,12 +1,13 @@
 import copy
 from dataclasses import dataclass
 import json
+from typing import TypedDict
 
 import pandas as pd
 from gmft.algo.dividers import fill_using_true_partitions
 from gmft.algo.histogram import IntervalHistogram
 from gmft.detectors.common import CroppedTable
-from gmft.formatters.common import BaseFormatter, FormattedTable
+from gmft.formatters.common import BaseFormatter, FormattedTable, PartitionLocations
 from gmft.table_visualization import plot_results_unwr, plot_shaded_boxes
 
 
@@ -29,15 +30,15 @@ class HistogramFormattedTable(FormattedTable):
         1: 'column divider', # table column',
         2: 'row divider', # table row',
     }
-    irvl_results: dict
-    """
-    irvl_results['row_dividers'] = list of row dividers, of form (y0, y1) (assumed to stretch the width of the table)\
-    irvl_results['col_dividers'] = list of column dividers, of form (x0, x1) (assumed to stretch the height of the table)
-    """
-    def __init__(self, table: CroppedTable, df: pd.DataFrame, irvl_results, config: HistogramConfig, 
+
+    partition_results: PartitionLocations
+
+    def __init__(self, table: CroppedTable, df: pd.DataFrame, 
+                 partition_results: PartitionLocations,
+                 config: HistogramConfig, 
                  x_histogram: IntervalHistogram=None, y_histogram: IntervalHistogram=None):
         super().__init__(table, df)
-        self.irvl_results = irvl_results
+        # self.irvl_results = irvl_results
         self.config = config
         self.x_histogram = x_histogram
         """
@@ -47,6 +48,8 @@ class HistogramFormattedTable(FormattedTable):
         """
         [Experimental] (y0, y1) intervals correspond to row dividers. By default, it is None; 
         """
+
+        self.partition_results = partition_results
     
     def visualize(self, **kwargs):
         """
@@ -60,23 +63,23 @@ class HistogramFormattedTable(FormattedTable):
         
         labels = []
         bboxes = []
-        for x0, x1 in self.irvl_results['col_dividers']:
+        for x0, x1 in self.partition_results.col_dividers: 
             bboxes.append([x0, 0, x1, tbl_height])
             labels.append(1)
-        for y0, y1 in self.irvl_results['row_dividers']:
+        for y0, y1 in self.partition_results.row_dividers: 
             bboxes.append([0, y0, tbl_width, y1])
             labels.append(2)
         return plot_shaded_boxes(img, labels=labels, boxes=bboxes, **kwargs)
     
     def recompute(self):
         """
-        Recalculate the table, based on irvl_results and config.
+        Recalculate the table, based on partition results and config.
         """
         tbl_width = self.table.bbox[2] - self.table.bbox[0]
         tbl_height = self.table.bbox[3] - self.table.bbox[1]
         
-        x_sep_bounds = self.irvl_results['col_dividers']
-        y_sep_bounds = self.irvl_results['row_dividers']
+        x_sep_bounds = self.partition_results.col_dividers
+        y_sep_bounds = self.partition_results.row_dividers
         xavgs = [(x0 + x1) / 2 for x0, x1 in x_sep_bounds]
         yavgs = [(y0 + y1) / 2 for y0, y1 in y_sep_bounds]
 
@@ -164,13 +167,6 @@ class HistogramFormatter(BaseFormatter):
         x_sep_bounds = [(x0, x1) for x0, x1 in x_sep_bounds if self.decide_separator((x0, x1), x_sep_max, is_row=False)]
         y_sep_bounds = [(y0, y1) for y0, y1 in y_sep_bounds if self.decide_separator((y0, y1), y_sep_max, is_row=True)]
         
-        irvl_results = {
-            # 'labels': [],
-            # 'boxes': [],
-            'row_dividers': y_sep_bounds, # .append([0, y0, tbl_width, y1])
-            'col_dividers': x_sep_bounds # .append([x0, 0, x1, tbl_height])
-        }
-        
         # compute for the first time
         tbl_width = table.width
         tbl_height = table.height
@@ -181,7 +177,13 @@ class HistogramFormatter(BaseFormatter):
         # simple np array
         nparr = fill_using_true_partitions(words, yavgs, xavgs, fix_bbox)
         df = pd.DataFrame(nparr[1:], columns=nparr[0])
-        table = HistogramFormattedTable(copy.copy(table), df, irvl_results, config=self.config)
+
+        partition_results = PartitionLocations(
+            table_bbox=fix_bbox,
+            row_dividers=y_sep_bounds,
+            col_dividers=x_sep_bounds
+        )
+        table = HistogramFormattedTable(copy.copy(table), df, partition_results, config=self.config)
         if _populate_histograms:
             table.x_histogram = x_histogram
             table.y_histogram = y_histogram

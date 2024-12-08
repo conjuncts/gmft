@@ -155,5 +155,28 @@ def _infer_line_breaks(generator_in: Generator[tuple[float,float,float,float,str
         yield x0, y0, x1, y1, text, 0, line_ctr, word_ctr
     
     
+
+class EphemeralPage(BasePage):
+    """
+    Page not rendered from a PDF, but rather specified from known word bboxes and an image.
+    """
+    def __init__(self, word_bboxes: list[tuple[float, float, float, float, str]], image=None, page_number=-1):
+        super().__init__(page_number)
+        self.word_bboxes = word_bboxes
+        self.image = image
     
+    def get_positions_and_text(self):
+        for bbox in self.word_bboxes:
+            yield bbox
+    
+    def get_image(self):
+        if self.image is not None:
+            return self.image
+        # else
+        # generate debug image from word_bboxes
+        raise NotImplementedError
+    
+    def get_filename(self):
+        return "ephemeral_page"
+
     

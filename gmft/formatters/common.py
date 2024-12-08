@@ -1,5 +1,6 @@
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 
 import pandas as pd
 
@@ -8,10 +9,10 @@ from gmft.detectors.common import CroppedTable, RotatedCroppedTable
 
 class FormattedTable(RotatedCroppedTable):
     """
-    This is a table that is "formatted", which is to say it is functionalized with header and data information through structural analysis.
+    This is a table that is functionalized with header and data information through structural analysis.
     Therefore, it can be converted into df, csv, etc.
     
-    Warning: This class is not meant to be instantiated directly. Use a :class:`.TableFormatter` to convert a :class:`.CroppedTable` to a :class:`.FormattedTable`.
+    This class is not meant to be instantiated directly. Use a :class:`.TableFormatter` to convert a :class:`.CroppedTable` to a :class:`.FormattedTable`.
     """
     
     
@@ -134,3 +135,32 @@ def _normalize_bbox(bbox: tuple[float, float, float, float], used_scale_factor: 
     bbox = [bbox[0] / used_scale_factor, bbox[1] / used_scale_factor, bbox[2] / used_scale_factor, bbox[3] / used_scale_factor]
     bbox = [bbox[0] - used_margin[0], bbox[1] - used_margin[1], bbox[2] - used_margin[0], bbox[3] - used_margin[1]]
     return bbox
+
+@dataclass
+class PartitionLocations:
+    """
+    Locations of the partitions of the table.
+
+    By convention, row_dividers does NOT include the top and bottom of the table.
+
+    'row_dividers' = list of row dividers, of form (y0, y1) (assumed to stretch the width of the table)\
+    'col_dividers' = list of column dividers, of form (x0, x1) (assumed to stretch the height of the table)
+    """
+
+
+    table_bbox: tuple[float, float, float, float] # (x0, y0, x1, y1)
+    """Specifies the bounding box of the table."""
+
+    row_dividers: list[tuple[float, float]] # (y0, y1)
+    """Specifies horizontal dividers of the table. These are (y0, y1) that span the table's full width"""
+    
+    col_dividers: list[tuple[float, float]] # (x0, x1)
+    """Specifies vertical dividers of the table. These are (x0, x1) that span the table's full height"""
+    top_header_indices: list[int] = field(default_factory=list)
+    """Indices of rows that are headers. These are 0-indexed."""
+    projecting_indices: list[int] = field(default_factory=list)
+    """Indices of rows where the entire row is merged."""
+    left_header_indices: list[int] = field(default_factory=list)
+    """Indices of columns that are headers. These are 0-indexed."""
+    
+

@@ -135,3 +135,23 @@ def get_good_between_dividers(dividers: list[tuple[float, float]], min_val: floa
         if add_inverted:
             result.append((max_val, prev_end))
     return result
+
+def convert_cells_to_dividers(cells: list[tuple[float, float]], reverse_negative_widths=True):
+    """
+    Given a list of intervals which specify cells - for instance, the columns (x0, x1), (x2, x3), (x4, x5), 
+    we identify the dividers (x1, x2) and (x3, x4) that separate the cells.
+
+    :param reverse_negative_widths: if True, then the dividers are reversed if the width is negative.
+    """
+
+    dividers = []
+    for i in range(1, len(cells)):
+        pair = (cells[i-1][1], cells[i][0])
+        # if the pair is reversed, then it is a zero-width divider
+        if pair[0] < pair[1]:
+            dividers.append(pair)
+        else:
+            # reverse it
+            if reverse_negative_widths:
+                dividers.append((pair[1], pair[0]))
+    return dividers

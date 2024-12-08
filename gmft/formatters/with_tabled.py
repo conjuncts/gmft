@@ -168,7 +168,7 @@ class TabledFormatter(BaseFormatter):
 
         import os
         filename = ct.page.get_filename()
-        if os.path.isfile(filename):
+        if filename is not None and os.path.isfile(filename):
             pass
         else:
             print("File does not exist: ", filename)

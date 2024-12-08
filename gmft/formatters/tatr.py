@@ -10,7 +10,7 @@ from gmft.pdf_bindings.common import BasePage
 import torch
 
 
-from gmft.table_function_algorithm import extract_to_df
+from gmft.table_function_algorithm import TATRLocations, extract_to_df
 from gmft.table_visualization import plot_results_unwr
 
 
@@ -181,7 +181,9 @@ class TATRFormatConfig:
     @deduplication_iob_threshold.setter
     def deduplication_iob_threshold(self, value):
         raise DeprecationWarning("deduplication_iob_threshold is deprecated. See nms_overlap_threshold instead.")
-    
+
+
+
 
 
 class TATRFormattedTable(FormattedTable):
@@ -227,6 +229,8 @@ class TATRFormattedTable(FormattedTable):
     _top_header_indices: list[int]=None
     _projecting_indices: list[int]=None
     _hier_left_indices: list[int]=None
+
+    _tatr_format_results: TATRLocations=None
     
     def __init__(self, cropped_table: CroppedTable, fctn_results: dict, 
                  config: TATRFormatConfig=None):

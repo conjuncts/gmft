@@ -10,7 +10,7 @@ import pandas as pd
 from gmft._dataclasses import removed_property, non_defaults_only, with_config
 from gmft.algo.dividers import fill_using_true_partitions, _find_all_intervals_for_interval, _ioa, get_good_between_dividers
 from gmft.detectors.common import CroppedTable, RotatedCroppedTable
-from gmft.formatters.common import FormattedTable, TableFormatter, _normalize_bbox
+from gmft.formatters.common import PartitionLocations, TableFormatter, _normalize_bbox
 from gmft.formatters.histogram import HistogramConfig, HistogramFormattedTable
 from gmft.pdf_bindings.common import BasePage
 
@@ -182,6 +182,8 @@ class DITRFormattedTable(HistogramFormattedTable):
     """
     FormattedTable, as seen by a Table Transformer for dividers (dubbed DITR).
     See :class:`.DITRTableFormatter`.
+
+    This class is not meant to be instantiated directly; use :meth:`.DITRTableFormatter.extract` instead.
     """
     
     id2label = {
@@ -207,16 +209,16 @@ class DITRFormattedTable(HistogramFormattedTable):
     effective_spanning: list[tuple]
     "Spanning cells as seen by the image --> df algorithm."
     
-    _top_header_indices: list[int]=None
-    _projecting_indices: list[int]=None
-    _hier_left_indices: list[int]=None
+    # _top_header_indices: list[int]=None
+    # _projecting_indices: list[int]=None
+    # _hier_left_indices: list[int]=None
+
+    # these are accessible in partition_results: PartitionLocations
     
     def __init__(self, cropped_table: CroppedTable, 
-                 irvl_results: dict,
                  fctn_results: dict, 
-                #  fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int], 
                  config: DITRFormatConfig=None):
-        super(DITRFormattedTable, self).__init__(cropped_table, None, irvl_results, config=config)
+        super(DITRFormattedTable, self).__init__(cropped_table, df=None, partition_results=None, config=config)
         self.fctn_results = fctn_results
 
         if config is None:
@@ -239,6 +241,8 @@ class DITRFormattedTable(HistogramFormattedTable):
     def recompute(self, config: DITRFormatConfig=None):
         """
         Recompute the internal dataframe.
+
+        :param config: change the behavior of how the dataframe is computed.
         """
         config = with_config(self.config, config)
         self._df = ditr_extract_to_df(self, config=config)
@@ -256,10 +260,10 @@ class DITRFormattedTable(HistogramFormattedTable):
         
         labels = []
         bboxes = []
-        for x0, x1 in self.irvl_results['col_dividers']:
+        for x0, x1 in self.partition_results.col_dividers:
             bboxes.append([x0, 0, x1, tbl_height])
             labels.append(1)
-        for y0, y1 in self.irvl_results['row_dividers']:
+        for y0, y1 in self.partition_results.row_dividers:
             bboxes.append([0, y0, tbl_width, y1])
             labels.append(2)
         for x0, y0, x1, y1 in self.effective_headers:
@@ -282,15 +286,13 @@ class DITRFormattedTable(HistogramFormattedTable):
         else:
             parent = CroppedTable.to_dict(self)
         optional = {}
-        if self._projecting_indices is not None:
-            optional['_projecting_indices'] = self._projecting_indices
-        if self._hier_left_indices is not None:
-            optional['_hier_left_indices'] = self._hier_left_indices
-        if self._top_header_indices is not None:
-            optional['_top_header_indices'] = self._top_header_indices
+        if self.partition_results._projecting_indices:
+            optional['_projecting_indices'] = self.partition_results._projecting_indices
+        if self.partition_results._left_header_indices is not None:
+            optional['_hier_left_indices'] = self.partition_results._left_header_indices
+        if self.partition_results._top_header_indices is not None:
+            optional['_top_header_indices'] = self.partition_results._top_header_indices
         return {**parent, **{
-            # 'fctn_scale_factor': self.fctn_scale_factor,
-            # 'fctn_padding': list(self.fctn_padding),
             'config': non_defaults_only(self.config),
             'outliers': self.outliers,
             'fctn_results': self.fctn_results,
@@ -311,18 +313,9 @@ class DITRFormattedTable(HistogramFormattedTable):
         config = DITRFormatConfig(**d['config'])
         
         results = d['fctn_results'] # fix shallow copy issue
-        if 'fctn_scale_factor' in d or 'scale_factor' in d or 'fctn_padding' in d or 'padding' in d:
-            # deprecated: this is for backwards compatibility
-            scale_factor = d.get('fctn_scale_factor', d.get('scale_factor', 1))
-            padding = d.get('fctn_padding', d.get('padding', (0, 0)))
-            padding = tuple(padding)
+
             
-            # normalize results here
-            for i, bbox in enumerate(results["boxes"]):
-                results["boxes"][i] = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding)
-            
-            
-        table = DITRFormattedTable(cropped_table, None, results, # scale_factor, tuple(padding), 
+        table = DITRFormattedTable(cropped_table, results, # scale_factor, tuple(padding), 
                                    config=config)
         table.recompute()
         table.outliers = d.get('outliers', None)
@@ -381,7 +374,7 @@ class DITRFormatter(TableFormatter):
         for i, bbox in enumerate(results["boxes"]):
             results["boxes"][i] = _normalize_bbox(bbox, used_scale_factor=scale_factor, used_padding=padding, used_margin=margin)
         
-        formatted_table = DITRFormattedTable(table, None, results, # scale_factor, padding, 
+        formatted_table = DITRFormattedTable(table, results, # scale_factor, padding, 
                                              config=config)
         formatted_table.recompute()
         return formatted_table
@@ -544,10 +537,10 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
 
     row_divider_intervals = [(y0, y1) for _, y0, _, y1, _ in row_divider_boxes]
     col_divider_intervals = [(x0, x1) for x0, _, x1, _, _ in col_divider_boxes]
-    table.irvl_results = {
-        'row_dividers': row_divider_intervals,
-        'col_dividers': col_divider_intervals
-    }
+    # table.irvl_results = {
+    #     'row_dividers': row_divider_intervals,
+    #     'col_dividers': col_divider_intervals
+    # }
     table.effective_headers = top_headers
     table.effective_projecting = projected
     table.effective_spanning = [span['bbox'] for span in spanning_cells]
@@ -605,15 +598,15 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
         hier_left_idxs = _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
                 header_indices=header_indices,
                 config=config)
-        table._hier_left_indices = hier_left_idxs 
+        _hier_left_indices = hier_left_idxs 
     else:
-        table._hier_left_indices = [] # for the user
+        _hier_left_indices = [] # for the user
     
     # technically these indices will be off by the number of header rows ;-;
     if config.enable_multi_header:
-        table._top_header_indices = header_indices
+        _top_header_indices = header_indices
     else:
-        table._top_header_indices = [0] if header_indices else []
+        _top_header_indices = [0] if header_indices else []
 
     
     # extract out the headers
@@ -642,8 +635,10 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
         # remove the header_indices
         # note that ditr._determine_headers_and_projecting 
         # automatically makes is_projecting and header_indices mutually exclusive
-        table._projecting_indices = [i for i, x in enumerate(is_projecting) if x]
-    
+        _projecting_indices = [i for i, x in enumerate(is_projecting) if x]
+    else:
+        _projecting_indices = []
+        
     # b. drop the former header rows always
     table._df.drop(index=header_indices, inplace=True)
 
@@ -651,6 +646,15 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
     table._df.drop(index=empty_rows, inplace=True)
     table._df.reset_index(drop=True, inplace=True)
     
+    table.partition_results = PartitionLocations(
+        table_bbox=fixed_table_bounds,
+        row_dividers=row_divider_intervals,
+        col_dividers=col_divider_intervals,
+        top_header_indices=_top_header_indices,
+        projecting_indices=_projecting_indices,
+        left_header_indices=_hier_left_indices
+    )
+
     table.outliers = outliers
     return table._df
 

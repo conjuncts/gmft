@@ -206,7 +206,6 @@ def script_reformat(cropped_tables):
     load a bunch of .info files as croppedtable
     reformat them
     """
-    from gmft.formatters.ditr import DITRFormattedTable
     from gmft.detectors.common import CroppedTable
     from gmft.formatters.ditr import DITRFormatter
     from tqdm import tqdm

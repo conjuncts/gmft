@@ -2,13 +2,39 @@
 from __future__ import annotations # 3.7
 
 import bisect
+from dataclasses import dataclass, field
 from typing import Generator
 import numpy as np
 import pandas as pd
+from gmft.algo.dividers import convert_cells_to_dividers
 from gmft.common import Rect
 from typing import TYPE_CHECKING
+
+from gmft.formatters.common import PartitionLocations
 if TYPE_CHECKING:
     from gmft.table_function import TATRFormatConfig, TATRFormattedTable
+
+
+
+@dataclass
+class TATRLocations:
+
+    table_bbox: tuple[float, float, float, float] # (x0, y0, x1, y1)
+
+    effective_rows: list[tuple[float, float, float, float]] = field(default_factory=list)
+    "Rows as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+    effective_columns: list[tuple[float, float, float, float]] = field(default_factory=list)
+    "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+    effective_headers: list[tuple[float, float, float, float]] = field(default_factory=list)
+    "Headers as seen by the image --> df algorithm."
+    effective_projecting: list[tuple[float, float, float, float]] = field(default_factory=list)
+    "Projected rows as seen by the image --> df algorithm."
+    effective_spanning: list[tuple[float, float, float, float]] = field(default_factory=list)
+    "Spanning cells as seen by the image --> df algorithm."
+    
+    _top_header_indices: list[int]=None
+    _projecting_indices: list[int]=None
+    _hier_left_indices: list[int]=None
 
 
 def _iob(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, float, float]):
@@ -823,6 +849,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
             table._hier_left_indices = []
             table._df = pd.DataFrame()
             table.outliers = outliers
+            table._tatr_format_results = TATRLocations()
             return table._df
         
         differences = [known_means[i+1] - known_means[i] for i in range(len(known_means) - 1)]
@@ -962,5 +989,43 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     # if config.remove_null_rows:
     #     keep_columns = [n for n in table._df if n != 'is_projecting_row']
     #     table._df.dropna(subset=keep_columns, how='all', inplace=True)
+
+
+    table._tatr_format_results = TATRLocations(
+        table_bbox=table.bbox,
+        effective_rows=sorted_rows,
+        effective_columns=sorted_columns,
+        effective_headers=sorted_headers,
+        effective_projecting=sorted_projecting,
+        effective_spanning=spanning_cells,
+        _top_header_indices=table._top_header_indices,
+        _projecting_indices=table._projecting_indices,
+        _hier_left_indices=table._hier_left_indices,
+    )
     table.outliers = outliers
     return table._df
+
+def obtain_partitions(results: TATRLocations) -> PartitionLocations:
+    """
+    Given the results of the TATR algorithm, extract the partition locations.
+    """
+    # need to convert effective_rows into list of partitions
+
+    # use gmft.algo.dividers.convert_cells_to_dividers
+
+    horiz_cells = [(y0, y1) for _, y0, _, y1 in results.effective_rows]
+    vert_cells = [(x0, x1) for x0, _, x1, _ in results.effective_columns]
+
+    horiz_dividers = convert_cells_to_dividers(horiz_cells)
+    vert_dividers = convert_cells_to_dividers(vert_cells)
+
+    return PartitionLocations(
+        table_bbox=results.table_bbox, 
+        row_dividers=horiz_dividers, 
+        col_dividers=vert_dividers,
+        top_header_indices=results._top_header_indices,
+        projecting_indices=results._projecting_indices,
+        left_header_indices=results._hier_left_indices
+    )
+
+
