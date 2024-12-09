@@ -10,7 +10,7 @@ from gmft.pdf_bindings.common import BasePage
 import torch
 
 
-from gmft.table_function_algorithm import TATRLocations, extract_to_df
+from gmft.algo.table_function_algorithm import TATRLocations, extract_to_df
 from gmft.table_visualization import plot_results_unwr
 
 
@@ -211,26 +211,47 @@ class TATRFormattedTable(FormattedTable):
     config: TATRFormatConfig
     outliers: dict[str, bool]
     
-    effective_rows: list[tuple]
-    "Rows as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+    # effective_rows: list[tuple]
+    # effective_columns: list[tuple]
+    @property
+    def effective_rows(self):
+        "Rows as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+        return self.tatr_locations.effective_rows
     
-    effective_columns: list[tuple]
-    "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+    @property
+    def effective_columns(self):
+        "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+        return self.tatr_locations.effective_columns
+    @property
+    def effective_headers(self):
+        "Headers as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+        return self.tatr_locations.effective_headers
     
-    effective_headers: list[tuple]
-    "Headers as seen by the image --> df algorithm."
-    
-    effective_projecting: list[tuple]
-    "Projected rows as seen by the image --> df algorithm."
-    
-    effective_spanning: list[tuple]
-    "Spanning cells as seen by the image --> df algorithm."
-    
-    _top_header_indices: list[int]=None
-    _projecting_indices: list[int]=None
-    _hier_left_indices: list[int]=None
+    @property
+    def effective_projecting(self):
+        "Projected rows as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+        return self.tatr_locations.effective_projecting
 
-    _tatr_format_results: TATRLocations=None
+    @property
+    def effective_spanning(self):
+        "Spanning cells as seen by the image --> df algorithm, which may differ from what the table transformer sees."
+        return self.tatr_locations.effective_spanning
+    
+    @property
+    def _projecting_indices(self):
+        return self.tatr_locations.projecting_indices
+    @property
+    def _hier_left_indices(self):
+        return self.tatr_locations.left_header_indices
+    @property
+    def _top_header_indices(self):
+        return self.tatr_locations.top_header_indices
+    
+    # _top_header_indices: list[int]=None
+    # _projecting_indices: list[int]=None
+    # _hier_left_indices: list[int]=None
+
+    tatr_locations: TATRLocations=None
     
     def __init__(self, cropped_table: CroppedTable, fctn_results: dict, 
                  config: TATRFormatConfig=None):
@@ -282,7 +303,9 @@ class TATRFormattedTable(FormattedTable):
         if effective:
             if self._df is None:
                 self._df = self.df()
-            vis = self.effective_rows + self.effective_columns + self.effective_headers + self.effective_projecting + self.effective_spanning
+            vis = self.tatr_locations.effective_rows + self.tatr_locations.effective_columns + \
+                self.tatr_locations.effective_headers + self.tatr_locations.effective_projecting + \
+                    self.tatr_locations.effective_spanning
             boxes = [x['bbox'] for x in vis]
             boxes = [(x * scale_by for x in bbox) for bbox in boxes]
             _to_visualize = {
@@ -316,12 +339,13 @@ class TATRFormattedTable(FormattedTable):
         else:
             parent = CroppedTable.to_dict(self)
         optional = {}
-        if self._projecting_indices is not None:
-            optional['_projecting_indices'] = self._projecting_indices
-        if self._hier_left_indices is not None:
-            optional['_hier_left_indices'] = self._hier_left_indices
-        if self._top_header_indices is not None:
-            optional['_top_header_indices'] = self._top_header_indices
+        if self.tatr_locations is not None:
+            if self.tatr_locations.projecting_indices is not None:
+                optional['_projecting_indices'] = self.tatr_locations.projecting_indices
+            if self.tatr_locations.left_header_indices is not None:
+                optional['_hier_left_indices'] = self.tatr_locations.left_header_indices
+            if self.tatr_locations.top_header_indices is not None:
+                optional['_top_header_indices'] = self.tatr_locations.top_header_indices
         return {**parent, **{
             'config': non_defaults_only(self.config),
             'outliers': self.outliers,

@@ -32,9 +32,9 @@ class TATRLocations:
     effective_spanning: list[tuple[float, float, float, float]] = field(default_factory=list)
     "Spanning cells as seen by the image --> df algorithm."
     
-    _top_header_indices: list[int]=None
-    _projecting_indices: list[int]=None
-    _hier_left_indices: list[int]=None
+    top_header_indices: list[int]=None
+    projecting_indices: list[int]=None
+    left_header_indices: list[int]=None
 
 
 def _iob(bbox1: tuple[float, float, float, float], bbox2: tuple[float, float, float, float]):
@@ -839,17 +839,10 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         if not known_means:
             # no text was detected
             outliers['no text'] = True
-            table.effective_rows = []
-            table.effective_columns = []
-            table.effective_headers = []
-            table.effective_projecting = []
-            table.effective_spanning = []
-            table._top_header_indices = []
-            table._projecting_indices = []
-            table._hier_left_indices = []
             table._df = pd.DataFrame()
             table.outliers = outliers
-            table._tatr_format_results = TATRLocations()
+            # correct bbox for rotations
+            table.tatr_locations = TATRLocations(table_bbox=table.rotated_bbox) 
             return table._df
         
         differences = [known_means[i+1] - known_means[i] for i in range(len(known_means) - 1)]
@@ -878,11 +871,11 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         
     # nms takes care of deduplication
     
-    table.effective_rows = sorted_rows
-    table.effective_columns = sorted_columns
-    table.effective_headers = sorted_headers
-    table.effective_projecting = sorted_projecting
-    table.effective_spanning = spanning_cells
+    # table.effective_rows = sorted_rows
+    # table.effective_columns = sorted_columns
+    # table.effective_headers = sorted_headers
+    # table.effective_projecting = sorted_projecting
+    # table.effective_spanning = spanning_cells
     
     # 4b. check for catastrophic overlap
     total_column_area = 0
@@ -942,15 +935,15 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         hier_left_idxs = _semantic_spanning_fill(table_array, sorted_hier_top_headers, sorted_monosemantic_top_headers, sorted_hier_left_headers,
                 header_indices=header_indices,
                 config=config)
-        table._hier_left_indices = hier_left_idxs 
+        _hier_left_indices = hier_left_idxs 
     else:
-        table._hier_left_indices = [] # for the user
+        _hier_left_indices = [] # for the user
     
     # technically these indices will be off by the number of header rows ;-;
     if config.enable_multi_header:
-        table._top_header_indices = header_indices
+        _top_header_indices = header_indices
     else:
-        table._top_header_indices = [0] if header_indices else []
+        _top_header_indices = [0] if header_indices else []
 
     
     # extract out the headers
@@ -976,8 +969,9 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
         # remove the header_indices
         # TODO this could be made O(n)
         is_projecting = [x for i, x in enumerate(is_projecting) if i not in header_indices]
-        table._projecting_indices = [i for i, x in enumerate(is_projecting) if x]
-    
+        _projecting_indices = [i for i, x in enumerate(is_projecting) if x]
+    else:
+        _projecting_indices = []
     # if projecting_indices:
         # insert at end
         # table._df.insert(num_columns, 'is_projecting_row', is_projecting)
@@ -991,21 +985,21 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     #     table._df.dropna(subset=keep_columns, how='all', inplace=True)
 
 
-    table._tatr_format_results = TATRLocations(
-        table_bbox=table.bbox,
+    table.tatr_locations = TATRLocations(
+        table_bbox=table.rotated_bbox,
         effective_rows=sorted_rows,
         effective_columns=sorted_columns,
         effective_headers=sorted_headers,
         effective_projecting=sorted_projecting,
         effective_spanning=spanning_cells,
-        _top_header_indices=table._top_header_indices,
-        _projecting_indices=table._projecting_indices,
-        _hier_left_indices=table._hier_left_indices,
+        top_header_indices=_top_header_indices,
+        projecting_indices=_projecting_indices,
+        left_header_indices=_hier_left_indices,
     )
     table.outliers = outliers
     return table._df
 
-def obtain_partitions(results: TATRLocations) -> PartitionLocations:
+def obtain_partition_locations(results: TATRLocations) -> PartitionLocations:
     """
     Given the results of the TATR algorithm, extract the partition locations.
     """
@@ -1023,9 +1017,9 @@ def obtain_partitions(results: TATRLocations) -> PartitionLocations:
         table_bbox=results.table_bbox, 
         row_dividers=horiz_dividers, 
         col_dividers=vert_dividers,
-        top_header_indices=results._top_header_indices,
-        projecting_indices=results._projecting_indices,
-        left_header_indices=results._hier_left_indices
+        top_header_indices=results.top_header_indices,
+        projecting_indices=results.projecting_indices,
+        left_header_indices=results.left_header_indices
     )
 
 

@@ -15,7 +15,7 @@ from gmft.formatters.histogram import HistogramConfig, HistogramFormattedTable
 from gmft.pdf_bindings.common import BasePage
 
 
-from gmft.table_function_algorithm import _iob, _is_within_header, _non_maxima_suppression, _semantic_spanning_fill, _split_spanning_cells, extract_to_df
+from gmft.algo.table_function_algorithm import _iob, _is_within_header, _non_maxima_suppression, _semantic_spanning_fill, _split_spanning_cells, extract_to_df
 from gmft.table_visualization import plot_results_unwr, plot_shaded_boxes
 
 import torch
@@ -547,7 +547,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
 
 
     # table_bounds = table.bbox # empirical_table_bbox(row_divider_boxes, col_divider_boxes)
-    fixed_table_bounds = (0, 0, table.width, table.height) # adjust for rotations too
+    fixed_table_bounds = table.rotated_bbox # (0, 0, table.width, table.height) # adjust for rotations too
     
 
     table_array = fill_using_true_partitions(table.text_positions(remove_table_offset=True), 

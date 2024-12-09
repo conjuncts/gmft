@@ -292,6 +292,13 @@ class CroppedTable:
     
     @property
     def bbox(self):
+        """
+        Differences between bbox, rect, rotated_bbox:
+        bbox: tuple (x0, y0, x1, y1) in the original pdf
+        rect: Rect object of bbox
+        rotated_bbox: tuple (0, 0, self.width, self.height), corrected for rotation,
+          where (0, 0) is the top-left corner of the table.
+        """
         return self.rect.bbox
     
     @property
@@ -301,6 +308,17 @@ class CroppedTable:
     @property
     def height(self):
         return self.rect.height
+    
+    @property
+    def rotated_bbox(self):
+        """
+        Differences between bbox, rect, rotated_bbox:
+        bbox: tuple (x0, y0, x1, y1) in the original pdf
+        rect: Rect object of bbox
+        rotated_bbox: tuple (0, 0, self.width, self.height), corrected for rotation,
+          where (0, 0) is the top-left corner of the table.
+        """
+        return (0, 0, self.width, self.height)
 
 
     

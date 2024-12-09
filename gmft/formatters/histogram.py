@@ -168,11 +168,9 @@ class HistogramFormatter(BaseFormatter):
         y_sep_bounds = [(y0, y1) for y0, y1 in y_sep_bounds if self.decide_separator((y0, y1), y_sep_max, is_row=True)]
         
         # compute for the first time
-        tbl_width = table.width
-        tbl_height = table.height
         xavgs = [(x0 + x1) / 2 for x0, x1 in x_sep_bounds]
         yavgs = [(y0 + y1) / 2 for y0, y1 in y_sep_bounds]
-        fix_bbox = (0, 0, tbl_width, tbl_height)
+        fix_bbox = table.rotated_bbox
         
         # simple np array
         nparr = fill_using_true_partitions(words, yavgs, xavgs, fix_bbox)

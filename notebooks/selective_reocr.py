@@ -3,7 +3,7 @@
 import os
 from gmft_pymupdf import PyMuPDFPage, PyMuPDFDocument
 from gmft.pdf_bindings.common import BasePage
-from gmft.table_function_algorithm import _iob
+from gmft.algo.table_function_algorithm import _iob
 
 import pandas as pd
 import re

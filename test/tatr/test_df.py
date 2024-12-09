@@ -97,13 +97,13 @@ class TestPdf2:
     def test_bulk_pdf2_t1(self, pdf2_tables, tatr_csvs):
         try_jth_table(pdf2_tables, tatr_csvs, 2, 1)
         # hint: subtract 2 from the line no to get the proj. index (assume 1 header)
-        assert pdf2_tables[1]._projecting_indices == [9, 12, 16]
+        assert pdf2_tables[1].tatr_locations.projecting_indices == [9, 12, 16]
     def test_bulk_pdf2_t2(self, pdf2_tables, tatr_csvs):
         try_jth_table(pdf2_tables, tatr_csvs, 2, 2)
-        assert pdf2_tables[2]._projecting_indices == [0, 5]
+        assert pdf2_tables[2].tatr_locations.projecting_indices == [0, 5]
     def test_bulk_pdf2_t3(self, pdf2_tables, tatr_csvs):
         try_jth_table(pdf2_tables, tatr_csvs, 2, 3)
-        assert pdf2_tables[3]._projecting_indices == [12]
+        assert pdf2_tables[3].tatr_locations.projecting_indices == [12]
 
 class TestPdf3:
 
@@ -113,7 +113,7 @@ class TestPdf3:
         try_jth_table(pdf3_tables, tatr_csvs, 3, 1)
     def test_bulk_pdf3_t2(self, pdf3_tables, tatr_csvs):
         try_jth_table(pdf3_tables, tatr_csvs, 3, 2)
-        assert pdf3_tables[2]._projecting_indices == [0, 8]
+        assert pdf3_tables[2].tatr_locations.projecting_indices == [0, 8]
     def test_bulk_pdf3_t3(self, pdf3_tables, tatr_csvs):
         try_jth_table(pdf3_tables, tatr_csvs, 3, 3)
 
@@ -123,16 +123,16 @@ class TestPdf4:
         try_jth_table(pdf4_tables, tatr_csvs, 4, 0)
     def test_bulk_pdf4_t1(self, pdf4_tables, tatr_csvs):
         try_jth_table(pdf4_tables, tatr_csvs, 4, 1)
-        assert pdf4_tables[1]._projecting_indices == [0, 14]
+        assert pdf4_tables[1].tatr_locations.projecting_indices == [0, 14]
 
 class TestPdf5:
 
     def test_bulk_pdf5_t0(self, pdf5_tables, tatr_csvs):
         try_jth_table(pdf5_tables, tatr_csvs, 5, 0)
-        assert pdf5_tables[0]._projecting_indices == [15, 18, 22, 29]
+        assert pdf5_tables[0].tatr_locations.projecting_indices == [15, 18, 22, 29]
     def test_bulk_pdf5_t1(self, pdf5_tables, tatr_csvs):
         try_jth_table(pdf5_tables, tatr_csvs, 5, 1)
-        assert pdf5_tables[1]._projecting_indices == [13, 16, 22, 26]
+        assert pdf5_tables[1].tatr_locations.projecting_indices == [13, 16, 22, 26]
     
 class TestPdf6:
 
