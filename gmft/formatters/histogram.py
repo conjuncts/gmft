@@ -31,7 +31,7 @@ class HistogramFormattedTable(FormattedTable):
         2: 'row divider', # table row',
     }
 
-    partition_results: PartitionLocations
+    partition_locations: PartitionLocations
 
     def __init__(self, table: CroppedTable, df: pd.DataFrame, 
                  partition_results: PartitionLocations,
@@ -49,7 +49,7 @@ class HistogramFormattedTable(FormattedTable):
         [Experimental] (y0, y1) intervals correspond to row dividers. By default, it is None; 
         """
 
-        self.partition_results = partition_results
+        self.partition_locations = partition_results
     
     def visualize(self, **kwargs):
         """
@@ -63,10 +63,10 @@ class HistogramFormattedTable(FormattedTable):
         
         labels = []
         bboxes = []
-        for x0, x1 in self.partition_results.col_dividers: 
+        for x0, x1 in self.partition_locations.col_dividers: 
             bboxes.append([x0, 0, x1, tbl_height])
             labels.append(1)
-        for y0, y1 in self.partition_results.row_dividers: 
+        for y0, y1 in self.partition_locations.row_dividers: 
             bboxes.append([0, y0, tbl_width, y1])
             labels.append(2)
         return plot_shaded_boxes(img, labels=labels, boxes=bboxes, **kwargs)
@@ -78,8 +78,8 @@ class HistogramFormattedTable(FormattedTable):
         tbl_width = self.table.bbox[2] - self.table.bbox[0]
         tbl_height = self.table.bbox[3] - self.table.bbox[1]
         
-        x_sep_bounds = self.partition_results.col_dividers
-        y_sep_bounds = self.partition_results.row_dividers
+        x_sep_bounds = self.partition_locations.col_dividers
+        y_sep_bounds = self.partition_locations.row_dividers
         xavgs = [(x0 + x1) / 2 for x0, x1 in x_sep_bounds]
         yavgs = [(y0 + y1) / 2 for y0, y1 in y_sep_bounds]
 
@@ -133,7 +133,7 @@ class HistogramFormatter(BaseFormatter):
         width = interval[1] - interval[0]
         return width > 3
     
-    def extract(self, table: CroppedTable, _populate_histograms=False) -> FormattedTable:
+    def extract(self, table: CroppedTable, _populate_histograms=False) -> HistogramFormattedTable:
         """
         Take the words
         Make 2 IntervalHistograms: one for x, one for y
@@ -142,16 +142,7 @@ class HistogramFormatter(BaseFormatter):
         done
         """
         words = list(table.text_positions(remove_table_offset=True)) # list of tuples of (text, x0, y0, x1, y1)
-        x_histogram = IntervalHistogram()
-        y_histogram = IntervalHistogram()
-        for x0, y0, x1, y1, text in words:
-            # round to 0.05
-            x0 = round(x0, 2)
-            x1 = round(x1, 2)
-            y0 = round(y0, 2)
-            y1 = round(y1, 2)
-            x_histogram.append((x0, x1)) # x bounds are col separators
-            y_histogram.append((y0, y1)) # y bounds are row separators
+        x_histogram, y_histogram = _populate_histogram_func(table, words, roundby=2)
         
         x_sep_threshold = self.decide_histogram_threshold(x_histogram, is_row=False)
         x_sep_bounds = list(x_histogram.iter_intervals_below(x_sep_threshold))
@@ -181,9 +172,26 @@ class HistogramFormatter(BaseFormatter):
             row_dividers=y_sep_bounds,
             col_dividers=x_sep_bounds
         )
-        table = HistogramFormattedTable(copy.copy(table), df, partition_results, config=self.config)
+        table = HistogramFormattedTable(table, df, partition_results, config=self.config)
         if _populate_histograms:
             table.x_histogram = x_histogram
             table.y_histogram = y_histogram
         return table
         
+def _populate_histogram_func(table: CroppedTable, 
+                             words: list[tuple[str, float, float, float, float]]=None,
+                             roundby=2) \
+        -> tuple[IntervalHistogram, IntervalHistogram]:
+    if words is None:
+        words = list(table.text_positions(remove_table_offset=True)) # list of tuples of (text, x0, y0, x1, y1)
+    x_histogram = IntervalHistogram()
+    y_histogram = IntervalHistogram()
+    for x0, y0, x1, y1, text in words:
+        # round to 0.05
+        x0 = round(x0, roundby)
+        x1 = round(x1, roundby)
+        y0 = round(y0, roundby)
+        y1 = round(y1, roundby)
+        x_histogram.append((x0, x1)) # x bounds are col separators
+        y_histogram.append((y0, y1)) # y bounds are row separators
+    return x_histogram, y_histogram

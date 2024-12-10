@@ -275,7 +275,7 @@ class TATRFormattedTable(FormattedTable):
 
         return self.recompute(config=config)
     
-    def recompute(self, config: TATRFormatConfig):
+    def recompute(self, config: TATRFormatConfig=None):
         """
         Recompute the internal dataframe.
         """

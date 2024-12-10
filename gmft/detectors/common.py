@@ -274,6 +274,20 @@ class CroppedTable:
         table._captions = d.get('captions', [])
         return table
     
+    def clone(self) -> 'CroppedTable':
+        """
+        Clone the CroppedTable object.
+        """
+        copy = CroppedTable(self.page, self.rect.bbox, self.confidence_score, self.label)
+        copy._img = self._img
+        copy._img_dpi = self._img_dpi
+        copy._img_padding = self._img_padding
+        copy._img_margin = self._img_margin
+        copy.label = self.label
+        copy._word_height = self._word_height
+        copy._captions = self._captions
+        return copy
+    
     @staticmethod
     def from_image_only(img: PILImage) -> 'CroppedTable':
         """

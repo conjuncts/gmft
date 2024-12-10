@@ -260,10 +260,10 @@ class DITRFormattedTable(HistogramFormattedTable):
         
         labels = []
         bboxes = []
-        for x0, x1 in self.partition_results.col_dividers:
+        for x0, x1 in self.partition_locations.col_dividers:
             bboxes.append([x0, 0, x1, tbl_height])
             labels.append(1)
-        for y0, y1 in self.partition_results.row_dividers:
+        for y0, y1 in self.partition_locations.row_dividers:
             bboxes.append([0, y0, tbl_width, y1])
             labels.append(2)
         for x0, y0, x1, y1 in self.effective_headers:
@@ -286,12 +286,12 @@ class DITRFormattedTable(HistogramFormattedTable):
         else:
             parent = CroppedTable.to_dict(self)
         optional = {}
-        if self.partition_results._projecting_indices:
-            optional['_projecting_indices'] = self.partition_results._projecting_indices
-        if self.partition_results._left_header_indices is not None:
-            optional['_hier_left_indices'] = self.partition_results._left_header_indices
-        if self.partition_results._top_header_indices is not None:
-            optional['_top_header_indices'] = self.partition_results._top_header_indices
+        if self.partition_locations._projecting_indices:
+            optional['_projecting_indices'] = self.partition_locations._projecting_indices
+        if self.partition_locations._left_header_indices is not None:
+            optional['_hier_left_indices'] = self.partition_locations._left_header_indices
+        if self.partition_locations._top_header_indices is not None:
+            optional['_top_header_indices'] = self.partition_locations._top_header_indices
         return {**parent, **{
             'config': non_defaults_only(self.config),
             'outliers': self.outliers,
@@ -646,7 +646,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig=None)
     table._df.drop(index=empty_rows, inplace=True)
     table._df.reset_index(drop=True, inplace=True)
     
-    table.partition_results = PartitionLocations(
+    table.partition_locations = PartitionLocations(
         table_bbox=fixed_table_bounds,
         row_dividers=row_divider_intervals,
         col_dividers=col_divider_intervals,

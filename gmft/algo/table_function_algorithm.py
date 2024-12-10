@@ -999,27 +999,5 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig=None):
     table.outliers = outliers
     return table._df
 
-def obtain_partition_locations(results: TATRLocations) -> PartitionLocations:
-    """
-    Given the results of the TATR algorithm, extract the partition locations.
-    """
-    # need to convert effective_rows into list of partitions
-
-    # use gmft.algo.dividers.convert_cells_to_dividers
-
-    horiz_cells = [(y0, y1) for _, y0, _, y1 in results.effective_rows]
-    vert_cells = [(x0, x1) for x0, _, x1, _ in results.effective_columns]
-
-    horiz_dividers = convert_cells_to_dividers(horiz_cells)
-    vert_dividers = convert_cells_to_dividers(vert_cells)
-
-    return PartitionLocations(
-        table_bbox=results.table_bbox, 
-        row_dividers=horiz_dividers, 
-        col_dividers=vert_dividers,
-        top_header_indices=results.top_header_indices,
-        projecting_indices=results.projecting_indices,
-        left_header_indices=results.left_header_indices
-    )
 
 
