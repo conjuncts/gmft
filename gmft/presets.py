@@ -1,3 +1,4 @@
+from gmft.pdf_bindings.common import BasePDFDocument
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.detectors.common import CroppedTable
 from gmft.auto import AutoTableDetector
@@ -27,7 +28,7 @@ def ingest_pdf(pdf_path) -> tuple[list[CroppedTable], PyPDFium2Document]:
         tables += default_detector.extract(page)
     return tables, doc
 
-def load_tatr_formatted_table(d: dict) -> 'TATRFormattedTable':
+def load_tatr_formatted_table(d: dict) -> tuple['TATRFormattedTable', BasePDFDocument]:
     try:
         import gmft_pymupdf
     except ImportError:
@@ -38,6 +39,6 @@ def load_tatr_formatted_table(d: dict) -> 'TATRFormattedTable':
     page = doc[d['page_no']]
 
     ft = TATRFormattedTable.from_dict(d, page)
-    ft.recompute()
+    # ft.recompute()
     return ft, doc
     
