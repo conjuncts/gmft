@@ -95,7 +95,7 @@ See the [docs](https://gmft.readthedocs.io/en/latest/usage.html) and the [config
 
 ```python
 # new in v0.3: gmft.auto
-from gmft.auto import CroppedTable, TableDetector, AutoTableFormatter
+from gmft.auto import CroppedTable, TableDetector, AutoTableFormatter, AutoTableDetector
 from gmft.pdf_bindings import PyPDFium2Document
 
 detector = AutoTableDetector()
