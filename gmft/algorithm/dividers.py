@@ -20,28 +20,6 @@ def find_column_for_target(column_dividers, xtarget):
     return bisect.bisect_left(column_dividers, xtarget)
 
 
-# def find_rows_for_interval(row_dividers, table_bounds, yinterval, threshold=0):
-#     """
-#     Find the rows that intersect with the interval by at least threshold.
-#     Assume that yinterval is larger, and therefore the ioa is divided by the row size.
-
-#     Returns list of indices, with domain [0, len(row_dividers)+1]
-#     """
-#     leftmost = bisect.bisect_left(row_dividers, yinterval[0])
-#     rightmost = bisect.bisect_right(row_dividers, yinterval[1])
-
-#     # valid rows are [leftmost, rightmost], inclusive
-#     # now filter by threshold
-#     if threshold == 0:
-#         return list(range(leftmost, rightmost+1))
-#     valid_rows = []
-#     consider = [table_bounds[1]] + row_dividers + [table_bounds[3]] # len: len(row_dividers) + 2
-#     for i in range(leftmost, rightmost+1):
-#         row_y_interval = (consider[i], consider[i+1])
-#         if _ioa(row_y_interval, yinterval) > threshold:
-#             valid_rows.append(i)
-
-
 def _find_all_intervals_for_interval(sorted_intervals, interval, threshold=0):
     """
     Find all intervals that intersect with the interval.
