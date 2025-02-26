@@ -26,7 +26,7 @@ def test_CroppedTable_positions(doc_tiny):
     
     page = doc_tiny[0]
     table = CroppedTable.from_dict({
-        'filename': "test/samples/tiny.pdf",
+        'filename': "data/pdfs/tiny.pdf",
         'page_no': 0,
         'bbox': (10, 12, 300, 150),
         'confidence_score': 0.9,
@@ -51,7 +51,7 @@ def test_CroppedTable_positions(doc_tiny):
     are_bboxes_close(reference, actual, EPS)
     
     # outside
-    with open("test/samples/tiny_pdfium.tsv") as f:
+    with open("data/test/references/tiny_pdfium.tsv") as f:
         reference = list(f.readlines())
     reference = [reference[9], *reference[14:]]
     for i, line in enumerate(reference):
@@ -67,7 +67,7 @@ def test_CroppedTable_text(doc_tiny):
         
     page = doc_tiny[0]
     table = CroppedTable.from_dict({
-        'filename': "test/samples/tiny.pdf",
+        'filename': "data/pdfs/tiny.pdf",
         'page_no': 0,
         'bbox': (10, 12, 300, 200),
         'confidence_score': 0.9,
@@ -85,7 +85,7 @@ def test_RotatedCroppedTable_positions(doc_tiny):
     
     page = doc_tiny[0]
     table = RotatedCroppedTable.from_dict({
-        'filename': "test/samples/tiny.pdf",
+        'filename': "data/pdfs/tiny.pdf",
         'page_no': 0,
         'bbox': (10, 12, 300, 150),
         'confidence_score': 0.9,
@@ -111,7 +111,7 @@ def test_RotatedCroppedTable_positions(doc_tiny):
     are_bboxes_close(reference, actual, EPS)
     
     # outside
-    with open("test/samples/tiny_pdfium.tsv", "r") as f:
+    with open("data/test/references/tiny_pdfium.tsv", "r") as f:
         reference = list(f.readlines())
     reference = [reference[9], *reference[14:]]
     for i, line in enumerate(reference):
@@ -127,7 +127,7 @@ def test_RotatedCroppedTable_text(doc_tiny):
         
     page = doc_tiny[0]
     table = RotatedCroppedTable.from_dict({
-        'filename': "test/samples/tiny.pdf",
+        'filename': "data/pdfs/tiny.pdf",
         'page_no': 0,
         'bbox': (10, 12, 300, 200),
         'confidence_score': 0.9,
@@ -144,9 +144,9 @@ Water Freezing Point 0"""
 
 
 if __name__ == "__main__":
-    page = PyPDFium2Document("test/samples/tiny.pdf")[0]
+    page = PyPDFium2Document("data/pdfs/tiny.pdf")[0]
     table = CroppedTable.from_dict({
-        'filename': "test/samples/tiny.pdf",
+        'filename': "data/pdfs/tiny.pdf",
         'page_no': 0,
         'bbox': (10, 10, 300, 150),
         'confidence_score': 0.9,

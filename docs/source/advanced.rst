@@ -13,7 +13,7 @@ This example is taken from the `internal test for serialization <https://github.
 .. code-block:: python
     
     tiny_info = {
-        "filename": "test/samples/tiny.pdf",
+        "filename": "data/pdfs/tiny.pdf",
         "page_no": 0,
         "bbox": [76.66205596923828, 162.82687377929688, 440.9659729003906, 248.67056274414062],
         "confidence_score": 0.9996763467788696,

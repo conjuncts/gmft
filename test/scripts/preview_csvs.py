@@ -2,7 +2,7 @@ if __name__ == '__main__':
     import json
     import pandas as pd
     import io
-    with open('test/refs/ditr_csvs.json') as f:
+    with open('data/test/references/ditr_csvs.json') as f:
         obj = json.load(f)
     
     builder = ''
@@ -12,6 +12,6 @@ if __name__ == '__main__':
         builder += f"## {k}\n"
         builder += df.to_markdown() + '\n\n'
 
-    with open('test/refs/ditr_tables.md', 'w', encoding='utf-8') as f:
+    with open('data/test/references/ditr_tables.md', 'w', encoding='utf-8') as f:
         f.write(builder)
         

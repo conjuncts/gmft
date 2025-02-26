@@ -15,7 +15,7 @@ from gmft.table_function import TATRFormattedTable
 
 @pytest.fixture(scope="session")
 def doc_9():
-    doc = PyPDFium2Document("test/samples/9.pdf")
+    doc = PyPDFium2Document("data/pdfs/9.pdf")
     yield doc
     # cleanup
     doc.close()
@@ -26,7 +26,7 @@ def test_CroppedTable_to_dict(doc_tiny):
     table = CroppedTable(page, (10, 10, 300, 300), 0.9, 0)
     table_dict = table.to_dict()
     assert table_dict == {
-        'filename': "test/samples/tiny.pdf",
+        'filename': "data/pdfs/tiny.pdf",
         'page_no': 0,
         'bbox': (10, 10, 300, 300),
         'confidence_score': 0.9,
@@ -37,7 +37,7 @@ def test_CroppedTable_from_dict(doc_tiny):
     # create a CroppedTable object
     page = doc_tiny[0]
     table = CroppedTable.from_dict({
-        'filename': "test/samples/tiny.pdf",
+        'filename': "data/pdfs/tiny.pdf",
         'page_no': 0,
         'bbox': (10, 10, 300, 150),
         'confidence_score': 0.9,
@@ -51,7 +51,7 @@ Table 1. Selected Numbers"""
 
 
 tiny_old_info = {
-    "filename": "test/samples/tiny.pdf",
+    "filename": "data/pdfs/tiny.pdf",
     "page_no": 0,
     "bbox": [76.66205596923828, 162.82687377929688, 440.9659729003906, 248.67056274414062],
     "confidence_score": 0.9996763467788696,
@@ -112,7 +112,7 @@ def test_FormattedTable_to_dict_backcompat(doc_tiny):
 
 
 tiny_info = {
-    "filename": "test/samples/tiny.pdf",
+    "filename": "data/pdfs/tiny.pdf",
     "page_no": 0,
     "bbox": [76.66205596923828, 162.82687377929688, 440.9659729003906, 248.67056274414062],
     "confidence_score": 0.9996763467788696,
@@ -174,7 +174,7 @@ def test_FormattedTable_to_dict(doc_tiny):
 
 
 pdf9_t4_info = {
-  "filename": "test/samples/9.pdf",
+  "filename": "data/pdfs/9.pdf",
   "page_no": 8,
   "bbox": [71.3222885131836, 54.75971984863281, 529.1936645507812, 716.1232299804688],
   "confidence_score": 0.9999405145645142,
@@ -285,7 +285,7 @@ def test_RotatedCroppedTable_from_to_dict(doc_9):
     # test a simpler subset
     dict2simple = RotatedCroppedTable.from_dict(pdf9_t4_info, page)
     assert dict2simple.to_dict() == {
-        "filename": "test/samples/9.pdf",
+        "filename": "data/pdfs/9.pdf",
         "page_no": 8,
         "bbox": [
             71.3222885131836,
@@ -300,7 +300,7 @@ def test_RotatedCroppedTable_from_to_dict(doc_9):
     
     
 toy_info = {
-  "filename": "test/samples/9.pdf",
+  "filename": "data/pdfs/9.pdf",
   "page_no": 8,
   "bbox": [71, 54.75, 529.1, 0.0],
   "confidence_score": 0.99,

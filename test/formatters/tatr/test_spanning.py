@@ -3,7 +3,6 @@ import os
 
 from gmft.formatters.tatr import TATRFormatConfig
 from gmft.table_function import TATRFormattedTable
-from ..conftest import REDETECT_TABLES
 
 def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):
     with open(f"test/outputs/actual/span{pdf_no}_t{j}.csv", "w", encoding='utf-8') as f:
@@ -12,9 +11,7 @@ def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):
         f.write(expected)
     debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
     debug_img.save(f"test/outputs/actual/span{pdf_no}_t{j}.png")
-    if REDETECT_TABLES:
-        with open(f"test/outputs/actual/span{pdf_no}_t{j}.info", "w") as f:
-            json.dump(ft.to_dict(), f, indent=2)
+
 def try_jth_table(tables, pdf_no, j, expected, config=None):
     
     if config is None:

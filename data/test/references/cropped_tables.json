@@ -1,6 +1,6 @@
 {
   "pdf1_t0": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 3,
     "bbox": [
       50.51573181152344,
@@ -12,7 +12,7 @@
     "label": 0
   },
   "pdf1_t1": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 5,
     "bbox": [
       51.13773727416992,
@@ -24,7 +24,7 @@
     "label": 0
   },
   "pdf1_t2": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 7,
     "bbox": [
       51.66302490234375,
@@ -36,7 +36,7 @@
     "label": 0
   },
   "pdf1_t3": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 9,
     "bbox": [
       178.3759765625,
@@ -48,7 +48,7 @@
     "label": 0
   },
   "pdf1_t4": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 10,
     "bbox": [
       50.53131866455078,
@@ -60,7 +60,7 @@
     "label": 0
   },
   "pdf1_t5": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 12,
     "bbox": [
       51.5643310546875,
@@ -72,7 +72,7 @@
     "label": 0
   },
   "pdf1_t6": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 12,
     "bbox": [
       50.61183547973633,
@@ -84,7 +84,7 @@
     "label": 0
   },
   "pdf1_t7": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 13,
     "bbox": [
       50.76871871948242,
@@ -96,7 +96,7 @@
     "label": 0
   },
   "pdf1_t8": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 15,
     "bbox": [
       50.812156677246094,
@@ -108,7 +108,7 @@
     "label": 0
   },
   "pdf1_t9": {
-    "filename": "test/samples/1.pdf",
+    "filename": "data/pdfs/1.pdf",
     "page_no": 18,
     "bbox": [
       53.586997985839844,
@@ -120,7 +120,7 @@
     "label": 0
   },
   "pdf2_t0": {
-    "filename": "test/samples/2.pdf",
+    "filename": "data/pdfs/2.pdf",
     "page_no": 2,
     "bbox": [
       50.99617385864258,
@@ -132,7 +132,7 @@
     "label": 0
   },
   "pdf2_t1": {
-    "filename": "test/samples/2.pdf",
+    "filename": "data/pdfs/2.pdf",
     "page_no": 5,
     "bbox": [
       178.2539825439453,
@@ -144,7 +144,7 @@
     "label": 0
   },
   "pdf2_t2": {
-    "filename": "test/samples/2.pdf",
+    "filename": "data/pdfs/2.pdf",
     "page_no": 6,
     "bbox": [
       51.31153869628906,
@@ -156,7 +156,7 @@
     "label": 0
   },
   "pdf2_t3": {
-    "filename": "test/samples/2.pdf",
+    "filename": "data/pdfs/2.pdf",
     "page_no": 7,
     "bbox": [
       306.8375244140625,
@@ -168,7 +168,7 @@
     "label": 0
   },
   "pdf3_t0": {
-    "filename": "test/samples/3.pdf",
+    "filename": "data/pdfs/3.pdf",
     "page_no": 0,
     "bbox": [
       40.44552230834961,
@@ -180,7 +180,7 @@
     "label": 0
   },
   "pdf3_t1": {
-    "filename": "test/samples/3.pdf",
+    "filename": "data/pdfs/3.pdf",
     "page_no": 3,
     "bbox": [
       41.90726089477539,
@@ -192,7 +192,7 @@
     "label": 0
   },
   "pdf3_t2": {
-    "filename": "test/samples/3.pdf",
+    "filename": "data/pdfs/3.pdf",
     "page_no": 5,
     "bbox": [
       41.40233612060547,
@@ -204,7 +204,7 @@
     "label": 0
   },
   "pdf3_t3": {
-    "filename": "test/samples/3.pdf",
+    "filename": "data/pdfs/3.pdf",
     "page_no": 7,
     "bbox": [
       42.09774398803711,
@@ -216,7 +216,7 @@
     "label": 0
   },
   "pdf4_t0": {
-    "filename": "test/samples/4.pdf",
+    "filename": "data/pdfs/4.pdf",
     "page_no": 2,
     "bbox": [
       159.5723114013672,
@@ -228,7 +228,7 @@
     "label": 0
   },
   "pdf4_t1": {
-    "filename": "test/samples/4.pdf",
+    "filename": "data/pdfs/4.pdf",
     "page_no": 7,
     "bbox": [
       159.90838623046875,
@@ -240,7 +240,7 @@
     "label": 0
   },
   "pdf5_t0": {
-    "filename": "test/samples/5.pdf",
+    "filename": "data/pdfs/5.pdf",
     "page_no": 2,
     "bbox": [
       314.1689453125,
@@ -252,7 +252,7 @@
     "label": 0
   },
   "pdf5_t1": {
-    "filename": "test/samples/5.pdf",
+    "filename": "data/pdfs/5.pdf",
     "page_no": 4,
     "bbox": [
       45.70846176147461,
@@ -264,7 +264,7 @@
     "label": 0
   },
   "pdf6_t0": {
-    "filename": "test/samples/6.pdf",
+    "filename": "data/pdfs/6.pdf",
     "page_no": 4,
     "bbox": [
       57.10140609741211,
@@ -276,7 +276,7 @@
     "label": 0
   },
   "pdf6_t1": {
-    "filename": "test/samples/6.pdf",
+    "filename": "data/pdfs/6.pdf",
     "page_no": 6,
     "bbox": [
       56.83476257324219,
@@ -288,7 +288,7 @@
     "label": 0
   },
   "pdf6_t2": {
-    "filename": "test/samples/6.pdf",
+    "filename": "data/pdfs/6.pdf",
     "page_no": 11,
     "bbox": [
       305.15045166015625,
@@ -300,7 +300,7 @@
     "label": 0
   },
   "pdf7_t0": {
-    "filename": "test/samples/7.pdf",
+    "filename": "data/pdfs/7.pdf",
     "page_no": 2,
     "bbox": [
       67.5034408569336,
@@ -312,7 +312,7 @@
     "label": 0
   },
   "pdf7_t1": {
-    "filename": "test/samples/7.pdf",
+    "filename": "data/pdfs/7.pdf",
     "page_no": 3,
     "bbox": [
       56.5052375793457,
@@ -324,7 +324,7 @@
     "label": 0
   },
   "pdf7_t2": {
-    "filename": "test/samples/7.pdf",
+    "filename": "data/pdfs/7.pdf",
     "page_no": 3,
     "bbox": [
       58.82789993286133,
@@ -336,7 +336,7 @@
     "label": 0
   },
   "pdf8_t0": {
-    "filename": "test/samples/8.pdf",
+    "filename": "data/pdfs/8.pdf",
     "page_no": 2,
     "bbox": [
       363.2715759277344,
@@ -349,7 +349,7 @@
     "angle": 90
   },
   "pdf8_t1": {
-    "filename": "test/samples/8.pdf",
+    "filename": "data/pdfs/8.pdf",
     "page_no": 6,
     "bbox": [
       43.18656539916992,
@@ -361,7 +361,7 @@
     "label": 0
   },
   "pdf9_t4": {
-    "filename": "test/samples/9.pdf",
+    "filename": "data/pdfs/9.pdf",
     "page_no": 8,
     "bbox": [
       71.3222885131836,
@@ -374,7 +374,7 @@
     "angle": 90
   },
   "pubt_p4": {
-    "filename": "test/samples/tatr.pdf",
+    "filename": "data/pdfs/tatr.pdf",
     "page_no": 3,
     "bbox": [
       89.62091827392578,
@@ -386,7 +386,7 @@
     "label": 0
   },
   "pubt_p6": {
-    "filename": "test/samples/tatr.pdf",
+    "filename": "data/pdfs/tatr.pdf",
     "page_no": 5,
     "bbox": [
       74.24417877197266,
@@ -398,7 +398,7 @@
     "label": 0
   },
   "pubt_p7": {
-    "filename": "test/samples/tatr.pdf",
+    "filename": "data/pdfs/tatr.pdf",
     "page_no": 6,
     "bbox": [
       320.0389099121094,
@@ -410,7 +410,7 @@
     "label": 0
   },
   "pubt_p8": {
-    "filename": "test/samples/tatr.pdf",
+    "filename": "data/pdfs/tatr.pdf",
     "page_no": 7,
     "bbox": [
       106.04290771484375,
@@ -422,7 +422,7 @@
     "label": 0
   },
   "attn0": {
-    "filename": "test/samples/attention.pdf",
+    "filename": "data/pdfs/attention.pdf",
     "page_no": 0,
     "bbox": [
       109.34183502197266,
@@ -434,7 +434,7 @@
     "label": 0
   },
   "attn1": {
-    "filename": "test/samples/attention.pdf",
+    "filename": "data/pdfs/attention.pdf",
     "page_no": 5,
     "bbox": [
       123.85661315917969,
@@ -446,7 +446,7 @@
     "label": 0
   },
   "attn2": {
-    "filename": "test/samples/attention.pdf",
+    "filename": "data/pdfs/attention.pdf",
     "page_no": 7,
     "bbox": [
       134.26112365722656,
@@ -458,7 +458,7 @@
     "label": 0
   },
   "attn3": {
-    "filename": "test/samples/attention.pdf",
+    "filename": "data/pdfs/attention.pdf",
     "page_no": 8,
     "bbox": [
       113.13349151611328,
@@ -470,7 +470,7 @@
     "label": 0
   },
   "attn4": {
-    "filename": "test/samples/attention.pdf",
+    "filename": "data/pdfs/attention.pdf",
     "page_no": 9,
     "bbox": [
       148.39447021484375,

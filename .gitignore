@@ -5,14 +5,11 @@ dist
 .pytest_cache
 .idea
 .venv*
-test/outputs/actual
-test/outputs/actual*
 test/outputs/histogram*
 test/refs/attn/*
 test/holdout
 test/outputs/nmr
 test/outputs/ditr*
-test/samples
 plans
 docs/build
 notebooks

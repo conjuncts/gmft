@@ -26,7 +26,7 @@ def formatter():
 
 @pytest.fixture(scope="session")
 def doc_pubt():
-    doc = PyPDFium2Document("test/samples/tatr.pdf")
+    doc = PyPDFium2Document("data/pdfs/tatr.pdf")
     yield doc
     # cleanup
     doc.close()
@@ -34,7 +34,7 @@ def doc_pubt():
 
 @pytest.fixture(scope="session")
 def doc_tiny():
-    doc = PyPDFium2Document("test/samples/tiny.pdf")
+    doc = PyPDFium2Document("data/pdfs/tiny.pdf")
     yield doc
     # cleanup
     doc.close()
@@ -43,8 +43,8 @@ def doc_tiny():
 def docs_bulk():
     docs = []
     for i in range(1, 9):
-        doc = PyPDFium2Document(f"test/samples/{i}.pdf")
-        # doc = PyMuPDFDocument(f"test/samples/{i}.pdf")
+        doc = PyPDFium2Document(f"data/pdfs/{i}.pdf")
+        # doc = PyMuPDFDocument(f"data/pdfs/{i}.pdf")
         docs.append(doc)
 
     yield docs
@@ -90,27 +90,27 @@ def get_tables_for_pdf(docs_bulk, detector: AutoTableDetector, formatter: AutoTa
 
 @pytest.fixture(scope="session")
 def cropped_tables():
-    with open("test/refs/cropped_tables.json", "r") as f:
+    with open("data/test/references/cropped_tables.json", "r") as f:
         yield json.load(f)
 
 @pytest.fixture(scope="session")
 def tatr_tables():
-    with open("test/refs/tatr_tables.json", "r") as f:
+    with open("data/test/references/tatr_tables.json", "r") as f:
         yield json.load(f)
 
 @pytest.fixture(scope="session")
 def tatr_csvs():
-    with open("test/refs/tatr_csvs.json", "r") as f:
+    with open("data/test/references/tatr_csvs.json", "r") as f:
         yield json.load(f)
 
 @pytest.fixture(scope="session")
 def ditr_tables():
-    with open("test/refs/ditr_tables.json", "r") as f:
+    with open("data/test/references/ditr_tables.json", "r") as f:
         yield json.load(f)
         
 @pytest.fixture(scope="session")
 def ditr_csvs():
-    with open("test/refs/ditr_csvs.json", "r") as f:
+    with open("data/test/references/ditr_csvs.json", "r") as f:
         yield json.load(f)
 
 @pytest.fixture(scope="session")

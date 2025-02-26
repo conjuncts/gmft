@@ -10,14 +10,14 @@ from gmft.table_function import TATRFormattedTable
 # def doc_8():
 #     # note: this document is poor because the text bboxes are intrinsically misaligned
 #     # (tested with both PyPDFium2 and PyMuPDF)
-#     doc = PyPDFium2Document("test/samples/8.pdf")
+#     doc = PyPDFium2Document("data/pdfs/8.pdf")
 #     yield doc
 #     # cleanup
 #     doc.close()
 
 @pytest.fixture(scope="session")
 def doc_9():
-    doc = PyPDFium2Document("test/samples/9.pdf")
+    doc = PyPDFium2Document("data/pdfs/9.pdf")
     yield doc
     # cleanup
     doc.close()

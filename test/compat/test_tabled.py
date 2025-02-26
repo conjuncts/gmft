@@ -11,7 +11,7 @@ def test_tabled_format(cropped_tables):
 
     from gmft.formatters.with_tabled import TabledFormatter
     tf = TabledFormatter()
-    doc = PyPDFium2Document('test/samples/tatr.pdf')
+    doc = PyPDFium2Document('data/pdfs/tatr.pdf')
     ct = CroppedTable.from_dict(cropped_tables['pubt_p4'], doc[3])
 
     # ct.page.page_number = 0

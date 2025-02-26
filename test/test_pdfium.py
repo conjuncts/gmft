@@ -10,7 +10,7 @@ from gmft.common import Rect
     
 
 def test_pypdfium2_bindings(doc_tiny):
-    PyPDFium2Document("test/samples/tiny.pdf")
+    PyPDFium2Document("data/pdfs/tiny.pdf")
     assert len(doc_tiny) == 1
     page = doc_tiny.get_page(0) 
     #type: gmft.pdf_bindings.BasePage
@@ -19,7 +19,7 @@ def test_pypdfium2_bindings(doc_tiny):
     assert img.width == 612
     assert img.height == 792
     
-    assert page.get_filename() == "test/samples/tiny.pdf"
+    assert page.get_filename() == "data/pdfs/tiny.pdf"
     assert page.page_number == 0
     
     
@@ -50,7 +50,7 @@ def test_pypdfium2_positions(doc_tiny):
     #type: gmft.pdf_bindings.BasePage
     
     # get reference positions from tiny_pdfium.txt
-    with open("test/samples/tiny_pdfium.tsv") as f:
+    with open("data/test/references/tiny_pdfium.tsv") as f:
         reference = f.readlines()
     
     actual = list(page.get_positions_and_text())

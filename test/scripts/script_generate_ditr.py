@@ -26,8 +26,8 @@ def script_open_pdfs():
 
     pdfs = {}
     for filename in ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'tatr', 'tiny']:
-        pdfs[filename] = PyPDFium2Document(f"test/samples/{filename}.pdf")
-    pdfs['attn'] = PyPDFium2Document(f"test/samples/attention.pdf")
+        pdfs[filename] = PyPDFium2Document(f"data/pdfs/{filename}.pdf")
+    pdfs['attn'] = PyPDFium2Document(f"data/pdfs/attention.pdf")
 
     return pdfs
 
@@ -90,7 +90,7 @@ def script_collect_jsons():
         difts.append((basename, dift))
         
     
-    for filename in glob.glob(f"test/refs/attn/attn*.json"):
+    for filename in glob.glob(f"data/test/references/attn/attn*.json"):
         basename = os.path.basename(filename).replace('.json', '')
         with open(filename, encoding='utf-8') as f:
             as_dict = json.load(f)
@@ -113,16 +113,16 @@ def script_collect_jsons():
 
     
     # write to files
-    with open("test/refs/tatr_tables.json", "w") as f:
+    with open("data/test/references/tatr_tables.json", "w") as f:
         json.dump(tatr_results, f, indent=2)
-    with open("test/refs/cropped_tables.json", "w") as f:
+    with open("data/test/references/cropped_tables.json", "w") as f:
         json.dump(ct_results, f, indent=2)
-    with open("test/refs/ditr_tables.json", "w") as f:
+    with open("data/test/references/ditr_tables.json", "w") as f:
         json.dump(ditr_results, f, indent=2)
-    with open("test/refs/ditr_csvs.json", "w") as f:
+    with open("data/test/references/ditr_csvs.json", "w") as f:
         json.dump(ditr_csvs, f, indent=2)
     
-    with open('test/refs/ditr_tables.md', 'w', encoding='utf-8') as f:
+    with open('data/test/references/ditr_tables.md', 'w', encoding='utf-8') as f:
         f.write(builder)
 
 
@@ -136,7 +136,7 @@ def script_collect_csvs():
             with open(filename, encoding='utf-8') as f:
                 tatr_csvs[basename] = f.read()
     
-    with open('test/refs/tatr_csvs.json', 'w') as f:
+    with open('data/test/references/tatr_csvs.json', 'w') as f:
         json.dump(tatr_csvs, f, indent=2)
 
 def script_generate_tatr():
@@ -144,7 +144,7 @@ def script_generate_tatr():
     from gmft.presets import ingest_pdf
     formatter = TATRFormatter()
     for i in [1]:
-        tables, doc = ingest_pdf(f"test/samples/{i}.pdf")
+        tables, doc = ingest_pdf(f"data/pdfs/{i}.pdf")
         try:
             fts = [formatter.extract(table) for table in tables]
         except Exception:
@@ -194,10 +194,10 @@ def script_load_tables(ditr_tables):
         builder += f"## {k}\n"
         builder += ft.df().to_markdown() + '\n\n'
 
-    with open("test/refs/ditr_csvs.json", "w") as f:
+    with open("data/test/references/ditr_csvs.json", "w") as f:
         json.dump(ditr_csvs, f, indent=2)
     
-    with open('test/refs/ditr_tables.md', 'w', encoding='utf-8') as f:
+    with open('data/test/references/ditr_tables.md', 'w', encoding='utf-8') as f:
         f.write(builder)
 
 
@@ -243,20 +243,20 @@ def script_reformat(cropped_tables):
         builder += f"## {k}\n"
         builder += ft.df().to_markdown() + '\n\n'
 
-    with open("test/refs/ditr_csvs.json", "w") as f:
+    with open("data/test/references/ditr_csvs.json", "w") as f:
         json.dump(ditr_csvs, f, indent=2)
     
-    with open("test/refs/ditr_tables.json", "w") as f:
+    with open("data/test/references/ditr_tables.json", "w") as f:
         json.dump(ditr_tables, f, indent=2)
     
-    with open('test/refs/ditr_tables.md', 'w', encoding='utf-8') as f:
+    with open('data/test/references/ditr_tables.md', 'w', encoding='utf-8') as f:
         f.write(builder)
 
 if __name__ == '__main__':
-    with open("test/refs/cropped_tables.json", "r") as f:
+    with open("data/test/references/cropped_tables.json", "r") as f:
         cropped_tables = json.load(f)
     script_reformat(cropped_tables)
 
-    # with open("test/refs/ditr_tables.json", "r") as f:
+    # with open("data/test/references/ditr_tables.json", "r") as f:
     #     ditr_tables = json.load(f)
     # script_load_tables(ditr_tables)

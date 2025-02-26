@@ -61,7 +61,7 @@ Body Temperature	37	98.6
     
 # def test_i2t_format(doc_tiny):
 #     ct = CroppedTable.from_dict({
-#         'filename': 'test/samples/tiny.pdf',
+#         'filename': 'data/pdfs/tiny.pdf',
 #         'page_number': 0,
 #         'bbox': [
 #             76.66205596923828,

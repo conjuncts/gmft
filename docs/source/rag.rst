@@ -18,7 +18,7 @@ See the :ref:`mupdf` section for more information.
     
     from gmft._rich_text.rich_page import embed_tables
 
-    doc = PyMuPDFDocument("test/samples/7.pdf") # PyMuPDF is preferred
+    doc = PyMuPDFDocument("data/pdfs/7.pdf") # PyMuPDF is preferred
     
     # PyPdfium2 is possible, but line breaks may be less accurate
     # doc = PyPDFium2Document("path/to/pdf")
