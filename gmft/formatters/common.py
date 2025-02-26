@@ -41,11 +41,6 @@ class FormattedTable(RotatedCroppedTable):
             angle=angle,
             label=cropped_table.label,
         )
-        # self.page = cropped_table.page
-        # self.rect = cropped_table.rect
-        # self.bbox = cropped_table.bbox
-        # self.confidence_score = cropped_table.confidence_score
-        # self.label = cropped_table.label
 
         self._img = (
             cropped_table._img.copy() if cropped_table._img is not None else None

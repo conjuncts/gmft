@@ -486,7 +486,6 @@ class TATRFormatter(TableFormatter):
         )[0]
 
         # create a new FormattedTable instance with the cropped table and the dataframe
-        # formatted_table = FormattedTable(table, df)
 
         # return formatted_table
         results = {k: v.tolist() for k, v in results.items()}
@@ -502,7 +501,7 @@ class TATRFormatter(TableFormatter):
 
         formatted_table = TATRFormattedTable(
             table,
-            results,  # scale_factor, padding,
+            results,
             config=config,
         )
         return formatted_table

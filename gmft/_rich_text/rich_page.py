@@ -8,9 +8,6 @@ class FormattedPage:
         self.components = components
         self.page = orig_page
 
-    # def __str__(self):
-    #     return "\n".join([component.rich_text() for component in self.components])
-
     def get_text(self) -> str:
         return "\n".join([component.rich_text() for component in self.components])
 
@@ -30,14 +27,9 @@ def embed_tables_into_page(
         return FormattedPage(page, components=[Paragraph(page._get_text_with_breaks())])
 
     pagestuff = []
-    # if i in page_to_tables:
 
     text_builder = ""
-    # page_tables = page_to_tables[i]
-    # bboxes = [table.bbox for table in page_tables]
     done = [False for _ in tables]
-    # mu_page = page.page # type: pymupdf.Page
-    # for x0, y0, x1, y1, word, blockno, lineno, wordno in mu_page.get_text('words'):
     for (
         x0,
         y0,

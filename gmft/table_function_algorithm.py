@@ -107,7 +107,6 @@ def _find_rightmost_le(sorted_list, value, key_func):
     i = bisect.bisect_right(sorted_list, value, key=key_func)
     if i:
         return i - 1
-    # raise ValueError
     return None
 
 
@@ -314,7 +313,7 @@ def _guess_row_bboxes_for_large_tables(
             prev_height = y + row_height
 
     else:
-        # this is reminiscent of the proof that the rationals are dense in the reals
+        # The process of adding rows is reminiscent of the Archimedean property
         while y < table_ymax:
             new_rows.append(
                 {
@@ -327,7 +326,6 @@ def _guess_row_bboxes_for_large_tables(
     # 2a. sort by ymax, just in case
     new_rows.sort(key=lambda x: x["bbox"][3])
     return new_rows
-    # return col_headers
 
 
 def _split_sorted_horizontals(sorted_horizontals):
@@ -360,16 +358,6 @@ def _determine_headers_and_projecting(
     # determine which rows overlap (> 0.9) with headers
     header_indices = []
     projecting_indices = []
-
-    # if sorted_rows and sorted_headers:
-    #     first_row = sorted_rows[0]
-    #     first_header = sorted_headers[0]
-    #     if first_row['bbox'][1] - 1 > first_header['bbox'][3]:
-    #         # try to detect when the header is not included in the rows
-    #         if _iob(first_header['bbox'], first_row['bbox']) < 0.5: # the header is not in a row
-    #             if outliers is not None:
-    #                 outliers['header_is_not_row'] = True
-    # print("The header is not included as a row. Consider adding it back as a row.")
 
     for i, row in enumerate(sorted_rows):
         # TODO binary-ify
@@ -620,10 +608,6 @@ def _semantic_spanning_fill(
                         "row_nums": x["row_indices"][:first_invalid_i],
                     }
                 )
-            # if last_found:
-            #     for row_num in x['row_indices'][:first_invalid_row]:
-            #         if cell_content is None:
-            #             table_array[row_num, col_num] = last_found
 
         # now perform changes
         for x in perform_changes:
@@ -684,11 +668,6 @@ def _semantic_spanning_fill(
                 content.append(cell_content)
         if len(content) > 1:
             # TODO config options for "repeat", "bottom"
-            # if config.enable_multi_header:
-            # duplicate
-            # for row_num in x['row_indices']:
-            # table_array[row_num, col_num] = ' \\n'.join(content)
-            # else:
             # if not multi-header:
             # write once, wipe the other cells
             for row_num in x["row_indices"]:
@@ -811,8 +790,6 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         bbox = c  # .tolist()
         if a >= config.cell_required_confidence[b]:
             boxes.append({"confidence": a, "label": table.id2label[b], "bbox": bbox})
-
-    # for cl, lbl_id, (xmin, ymin, xmax, ymax) in boxes:
 
     sorted_horizontals = []
     sorted_columns = []
@@ -1117,14 +1094,10 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
 
     # if projecting_indices:
     # insert at end
-    # table._df.insert(num_columns, 'is_projecting_row', is_projecting)
 
     # b. drop the former header rows always
     table._df.drop(index=header_indices, inplace=True)
     table._df.reset_index(drop=True, inplace=True)
 
-    # if config.remove_null_rows:
-    #     keep_columns = [n for n in table._df if n != 'is_projecting_row']
-    #     table._df.dropna(subset=keep_columns, how='all', inplace=True)
     table.outliers = outliers
     return table._df

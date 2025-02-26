@@ -32,14 +32,6 @@ class TATRDetectorConfig:
     def confidence_score_threshold(self, value):
         raise DeprecationWarning("Use detector_base_threshold instead.")
 
-    # def __init__(self, image_processor_path: str = None, detector_path: str = None, torch_device: str = None):
-
-    #     if image_processor_path is not None:
-    #         self.image_processor_path = image_processor_path
-    #     if detector_path is not None:
-    #         self.detector_path = detector_path
-    #     if torch_device is not None:
-    #         self.torch_device = torch_device
 
     def __post_init__(self):
         # use cuda if available

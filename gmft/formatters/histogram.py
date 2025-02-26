@@ -3,8 +3,8 @@ from dataclasses import dataclass
 import json
 
 import pandas as pd
-from gmft.algo.dividers import fill_using_true_partitions
-from gmft.algo.histogram import IntervalHistogram
+from gmft.algorithm.dividers import fill_using_true_partitions
+from gmft.algorithm.histogram import IntervalHistogram
 from gmft.detectors.common import CroppedTable
 from gmft.formatters.common import BaseFormatter, FormattedTable
 from gmft.table_visualization import plot_results_unwr, plot_shaded_boxes

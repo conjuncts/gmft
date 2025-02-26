@@ -31,7 +31,7 @@ pymupdf = [
   "pymupdf"
 ]
 tabled = [
-  "tabled-pdf >= 0.1.4"
+  "tabled-pdf == 0.1.4"
 ]
 
 [project.urls]
