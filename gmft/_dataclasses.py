@@ -12,20 +12,22 @@ import functools
 import inspect
 from typing import TypeVar, Union
 
-DataClass = TypeVar('DataClass')
+DataClass = TypeVar("DataClass")
 
 
-def with_config(config: DataClass, config_overrides: Union[DataClass, dict, None]) -> DataClass:
+def with_config(
+    config: DataClass, config_overrides: Union[DataClass, dict, None]
+) -> DataClass:
     """
     Merges an existing config with possible overrides.
 
-    New behavior in v0.3: 
+    New behavior in v0.3:
     If `config_overrides` is provided, it completely replaces everything in `config`. For instance, if a value is
     set in `config` but left unassigned in `config_overrides`, the resultant object will **revert** to
     the default value.
 
-    In versions <0.3, assigned values in `config_overrides` would have been merged into `config`. 
-    In the above example, the resultant object would have previously contained the value from `config`. 
+    In versions <0.3, assigned values in `config_overrides` would have been merged into `config`.
+    In the above example, the resultant object would have previously contained the value from `config`.
     To retain this old behavior, a dict can be passed.
     """
 
@@ -38,6 +40,7 @@ def with_config(config: DataClass, config_overrides: Union[DataClass, dict, None
     else:
         # override everything
         return config_overrides
+
 
 def non_defaults_only(config: object) -> dict:
     """
@@ -55,19 +58,20 @@ def non_defaults_only(config: object) -> dict:
             result[f.name] = current_value
     return result
 
+
 import warnings
 
-string_types = (type(b''), type(u''))
+string_types = (type(b""), type(""))
+
 
 def removed_property(reason):
     """
     Custom decorator for marking class properties as removed.
     Automatically raises a DeprecationWarning when the property is accessed or set.
-    
+
     See https://stackoverflow.com/questions/2536307/decorators-in-the-python-standard-lib-deprecated-specifically
     """
     if isinstance(reason, string_types):
-
         # The @deprecated is used with a 'reason'.
         #
         # .. code-block:: python
@@ -77,7 +81,6 @@ def removed_property(reason):
         #      pass
 
         def decorator(func1):
-
             if inspect.isclass(func1):
                 fmt1 = "Call to deprecated class {name} ({reason})."
             else:
@@ -85,13 +88,13 @@ def removed_property(reason):
 
             @functools.wraps(func1)
             def new_func1(*args, **kwargs):
-                warnings.simplefilter('always', DeprecationWarning)
+                warnings.simplefilter("always", DeprecationWarning)
                 warnings.warn(
                     fmt1.format(name=func1.__name__, reason=reason),
                     category=DeprecationWarning,
-                    stacklevel=2
+                    stacklevel=2,
                 )
-                warnings.simplefilter('default', DeprecationWarning)
+                warnings.simplefilter("default", DeprecationWarning)
                 return func1(*args, **kwargs)
 
             return new_func1
@@ -99,7 +102,6 @@ def removed_property(reason):
         return decorator
 
     elif inspect.isclass(reason) or inspect.isfunction(reason):
-
         # The @deprecated is used without any 'reason'.
         #
         # .. code-block:: python
@@ -117,13 +119,13 @@ def removed_property(reason):
 
         @functools.wraps(func2)
         def new_func2(*args, **kwargs):
-            warnings.simplefilter('always', DeprecationWarning)
+            warnings.simplefilter("always", DeprecationWarning)
             warnings.warn(
                 fmt2.format(name=func2.__name__),
                 category=DeprecationWarning,
-                stacklevel=2
+                stacklevel=2,
             )
-            warnings.simplefilter('default', DeprecationWarning)
+            warnings.simplefilter("default", DeprecationWarning)
             return func2(*args, **kwargs)
 
         return new_func2

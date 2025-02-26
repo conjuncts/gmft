@@ -5,21 +5,19 @@ from gmft.table_detection import CroppedTable, TableDetector
 from gmft.table_function import TATRFormattedTable
 
 
-
-
 def test_pubt_p4(doc_pubt, detector, formatter):
     """
     This tests everything: ie. table detection, structure recognition, and df formatting.
     """
 
-    # table detection    
-    tables_p4 = detector.extract(doc_pubt[4-1])
+    # table detection
+    tables_p4 = detector.extract(doc_pubt[4 - 1])
     assert len(tables_p4) == 1
-    
+
     # structure recognition and df formatting
     ft_4 = formatter.extract(tables_p4[0])
     df_4 = ft_4.df()
-    actual = df_4.to_csv(lineterminator='\n')
+    actual = df_4.to_csv(lineterminator="\n")
     expected = """\
 ,Dataset,Input Modality,# Tables,Cell Topology,Cell Content,Cell Location,Row & Column Location,Canonical Structure
 0,TableBank [9],Image,145K,X,,,,
@@ -29,7 +27,9 @@ def test_pubt_p4(doc_pubt, detector, formatter):
 4,PubTables-1M (ours),PDF∗,948K,X,X,X,X,X
 """
     if actual != expected:
-        ft_4.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pubt_p4.png")
+        ft_4.visualize(effective=True, show_labels=False, return_img=True).save(
+            "test/outputs/actual/pubt_p4.png"
+        )
         df_4.to_csv("test/outputs/actual/pubt_p4.csv", index=True)
         assert actual == expected
 
@@ -39,11 +39,11 @@ def test_pubt_p6(doc_pubt, tatr_tables):
     This tests solely df formatting.
     """
 
-    # table detection    
-    ft = TATRFormattedTable.from_dict(tatr_tables['pubt_p6'], doc_pubt[6-1])    
+    # table detection
+    ft = TATRFormattedTable.from_dict(tatr_tables["pubt_p6"], doc_pubt[6 - 1])
 
     df = ft.df()
-    actual = df.to_csv(lineterminator='\n')
+    actual = df.to_csv(lineterminator="\n")
     expected = """\
 ,Dataset,Total Tables \\nInvestigated†,Total Tables \\nwith a PRH∗,Total,Tables with an oversegmented \\n% (of total with a PRH),PRH \\n% (of total investigated)
 0,SciTSR,"10,431",342,54,15.79%,0.52%
@@ -52,19 +52,20 @@ def test_pubt_p6(doc_pubt, tatr_tables):
 3,PubTables-1M (ours),"761,262","153,705",0,0%,0%
 """
     if actual != expected:
-        ft.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pubt_p6.png")
+        ft.visualize(effective=True, show_labels=False, return_img=True).save(
+            "test/outputs/actual/pubt_p6.png"
+        )
         df.to_csv("test/outputs/actual/pubt_p6.csv", index=True)
         assert actual == expected
 
 
-    
 def test_pubt_p7(doc_pubt, detector, formatter):
-    tables_p7 = detector.extract(doc_pubt[7-1])
+    tables_p7 = detector.extract(doc_pubt[7 - 1])
     assert len(tables_p7) == 1
-    
+
     ft_7 = formatter.extract(tables_p7[0])
     df_7 = ft_7.df()
-    actual = df_7.to_csv(lineterminator='\n') 
+    actual = df_7.to_csv(lineterminator="\n")
     expected = """\
 ,Task,Model,AP,AP50,AP75,AR
 0,TD,Faster R-CNN,0.825,0.985,0.927,0.866
@@ -73,16 +74,19 @@ def test_pubt_p7(doc_pubt, detector, formatter):
 3,,DETR,0.912,0.971,0.948,0.942
 """
     if actual != expected:
-        ft_7.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pubt_p7.png")
+        ft_7.visualize(effective=True, show_labels=False, return_img=True).save(
+            "test/outputs/actual/pubt_p7.png"
+        )
         df_7.to_csv("test/outputs/actual/pubt_p7.csv", index=True)
         assert actual == expected
 
+
 def test_pubt_p8(doc_pubt, detector, formatter):
-    tables_p8 = detector.extract(doc_pubt[8-1])
+    tables_p8 = detector.extract(doc_pubt[8 - 1])
     assert len(tables_p8) == 1
     ft_8 = formatter.extract(tables_p8[0])
     df_8 = ft_8.df()
-    actual = df_8.to_csv(index=False, lineterminator='\n') 
+    actual = df_8.to_csv(index=False, lineterminator="\n")
     expected = """\
 Test Data,Model,Table Category,AccCont,GriTSTop,GriTSCont,GriTSLoc,AdjCont
 Non-Canonical,DETR-NC,Simple,0.8678,0.9872,0.9859,0.9821,0.9801
@@ -99,7 +103,8 @@ Canonical,DETR-NC,Simple,0.9349,0.9933,0.9920,0.9900,0.9865
 ,,All,0.8138,0.9845,0.9846,0.9781,0.9774
 """
     if actual != expected:
-        ft_8.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pubt_p8.png")
+        ft_8.visualize(effective=True, show_labels=False, return_img=True).save(
+            "test/outputs/actual/pubt_p8.png"
+        )
         df_8.to_csv("test/outputs/actual/pubt_p8.csv", index=False)
         assert actual == expected
-    

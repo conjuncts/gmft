@@ -1,5 +1,3 @@
-
-
 import bisect
 from typing import Generator
 
@@ -13,12 +11,14 @@ def find_row_for_target(row_dividers, ytarget):
     """
     return bisect.bisect_left(row_dividers, ytarget)
 
+
 def find_column_for_target(column_dividers, xtarget):
     """
     Find the column that a box belongs to, according to the column dividers.
     The column_dividers do not include endbounds.
     """
     return bisect.bisect_left(column_dividers, xtarget)
+
 
 # def find_rows_for_interval(row_dividers, table_bounds, yinterval, threshold=0):
 #     """
@@ -41,6 +41,7 @@ def find_column_for_target(column_dividers, xtarget):
 #         if _ioa(row_y_interval, yinterval) > threshold:
 #             valid_rows.append(i)
 
+
 def _find_all_intervals_for_interval(sorted_intervals, interval, threshold=0):
     """
     Find all intervals that intersect with the interval.
@@ -48,14 +49,19 @@ def _find_all_intervals_for_interval(sorted_intervals, interval, threshold=0):
     start, end = interval
     left = bisect.bisect_right([i[1] for i in sorted_intervals], start)
     right = bisect.bisect_left([i[0] for i in sorted_intervals], end)
-    
+
     result = sorted_intervals[left:right]
     if threshold == 0:
         return result
     return [x for x in result if _ioa(x, interval) > threshold]
 
-def fill_using_true_partitions(text_positions: Generator[tuple[float, float, float, float, str], None, None], 
-                          row_dividers: list[dict], column_dividers: list[dict], table_bounds: tuple[float, float, float, float]):
+
+def fill_using_true_partitions(
+    text_positions: Generator[tuple[float, float, float, float, str], None, None],
+    row_dividers: list[dict],
+    column_dividers: list[dict],
+    table_bounds: tuple[float, float, float, float],
+):
     """
     Given estimated positions of text positions,
     row dividers (does not include endbounds), column dividers (does not include endbounds),
@@ -69,13 +75,15 @@ def fill_using_true_partitions(text_positions: Generator[tuple[float, float, flo
     table_array = np.empty([num_rows, num_columns], dtype="object")
 
     for xmin, ymin, xmax, ymax, text in text_positions:
-        
         # 5. let row_num be row with max iob
         xtarget = (xmin + xmax) / 2
         ytarget = (ymin + ymax) / 2
 
         # if completely outside the bounds (no intersection), ignore
-        if not (table_bounds[0] <= xtarget <= table_bounds[2] and table_bounds[1] <= ytarget <= table_bounds[3]):
+        if not (
+            table_bounds[0] <= xtarget <= table_bounds[2]
+            and table_bounds[1] <= ytarget <= table_bounds[3]
+        ):
             continue
 
         # to find x, we need the first column divider (moving LTR) where xtarget < xdivider
@@ -84,18 +92,19 @@ def fill_using_true_partitions(text_positions: Generator[tuple[float, float, flo
         # then, it belongs to the xi-th column of the np array (no off by 1 error)
 
         row_num = find_row_for_target(row_dividers, ytarget)
-        
+
         if table_array[row_num, column_num] is not None:
-            table_array[row_num, column_num] += ' ' + text
+            table_array[row_num, column_num] += " " + text
         else:
             table_array[row_num, column_num] = text
-    
+
     return table_array
+
 
 def _ioa(a: tuple[float, float], b: tuple[float, float]) -> float:
     """
     Calculate the intersection of (closed) intervals, divided by the first interval a.
-    
+
     If a is a single point [x, x], then return 1 if x is in the interior of b, 0 otherwise.
     """
     a0, a1 = a
@@ -104,15 +113,21 @@ def _ioa(a: tuple[float, float], b: tuple[float, float]) -> float:
         return 0
     if a0 == a1:
         return 1 if b0 < a0 < b1 else 0
-    
+
     return (min(a1, b1) - max(a0, b0)) / (a1 - a0)
 
-def get_good_between_dividers(dividers: list[tuple[float, float]], min_val: float, max_val: float, add_inverted=True):
+
+def get_good_between_dividers(
+    dividers: list[tuple[float, float]],
+    min_val: float,
+    max_val: float,
+    add_inverted=True,
+):
     """
     Get the good content between dividers.
-    
+
     :param dividers: list of dividers, each a tuple of form (start, end).
-    :param rows: only 
+    :param rows: only
     """
     result = []
 
@@ -127,7 +142,7 @@ def get_good_between_dividers(dividers: list[tuple[float, float]], min_val: floa
             else:
                 pass
         prev_end = end
-    
+
     # the last interval
     if prev_end < max_val:
         result.append((prev_end, max_val))

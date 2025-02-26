@@ -1,23 +1,23 @@
-
 from gmft import TATRFormattedTable
 from gmft._rich_text.rich_page import embed_tables
 from gmft.formatters.tatr import TATRFormatConfig
 
 
 def test_rich_pdf7(docs_bulk, pdf7_tables):
-    doc = docs_bulk[6] # n-1
+    doc = docs_bulk[6]  # n-1
     # look at page 12
 
     config = TATRFormatConfig()
     for ft in pdf7_tables:
-        ft = ft # type: TATRFormattedTable
-        ft.df(config_overrides=config) # reset config to defaults
-
+        ft = ft  # type: TATRFormattedTable
+        ft.df(config_overrides=config)  # reset config to defaults
 
     rich_pages = embed_tables(doc=doc, tables=pdf7_tables)
-    
+
     # print(rich_pages[2])
-    assert rich_pages[2].get_text() == """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 3 7 et
+    assert (
+        rich_pages[2].get_text()
+        == """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 3 7 et
 http://www.biomedcentral.com/1471-2334/11/124
 of infection Table Virological and clinical characteristics with hepatitis patients virus C 1
 |    | Patient no   | Genotype   |   Viral load (106 IU/ml) | Sex   |   Age (years) | Core \\n70   | amino acid \\n91   | rs12979860   | End of treatment response a   |
@@ -74,7 +74,10 @@ of infection Table Virological and clinical characteristics with hepatitis patie
 | 49 | N19          | 1b         |                     6.7  | F     |          54.2 | Q           | M                 | CT           | non-SVR                       |
 
 a sustained virologic sustained virologic SVR, non-SVR, response; no response"""
-    assert rich_pages[3].get_text() == """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 4 7 et
+    )
+    assert (
+        rich_pages[3].get_text()
+        == """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 4 7 et
 http://www.biomedcentral.com/1471-2334/11/124
 Table and viral baseline with and without in patients Host 2 parameters treatment response
 |    |                                     | SVR n = 29           | non-SVR n = 21      | Univariate p value   |
@@ -139,8 +142,11 @@ response on
 31st of found of total March the The C in Hepatitis A 3317 2010 sequences on the and different CT SNP in patients carrying genotype
 Database (http://hcv.lanl.gov/) analysed. Values less (HCV) Project Virus were
 compared. shown As HCV Figure variants in 1 was core than shown. 1% not"""
+    )
     # control
-    assert rich_pages[0].get_text() == """Infectious Alestig al. BMC Diseases 2011, 11:124 et
+    assert (
+        rich_pages[0].get_text()
+        == """Infectious Alestig al. BMC Diseases 2011, 11:124 et
 http://www.biomedcentral.com/1471-2334/11/124
 Open S EARCH TIC R AR E L E Access
 polymorphisms and Core IL28B mutations,
@@ -187,3 +193,4 @@ of information of Full list author available the end the article is at
 of Alestig al; licensee BioMed Central Ltd. This article distributed under the the Open Creative Commons Access 2011 is © et terms an
 Attribution (http://creativecommons.org/licenses/by/2.0), which unrestricted distribution, and reproduction License permits in use,
 medium, provided the original work properly cited. is any"""
+    )

@@ -1,6 +1,4 @@
-
 # # test to_dict and from_dict
-
 
 
 # import json
@@ -16,12 +14,12 @@
 #     config = AutoFormatConfig()
 #     config.remove_null_rows = False
 #     with open(f"test/outputs/bulk/pdf7_t2.info", "r") as f:
-            
+
 #         as_dict = json.load(f)
 #         page_no = as_dict["page_no"]
 #         page = docs_bulk[6][page_no]
 #         ft = TATRFormattedTable.from_dict(as_dict, page)
-        
+
 #         df = ft.df(config_overrides=config)
 #     expected = """Genotype,Q,Amino\\nR,acid 70\\nP,H,Amino\\nC,acid\\nM,91\\nL,Total
 # ,,,,,,,,
@@ -42,21 +40,23 @@ from gmft.formatters.tatr import TATRFormatConfig
 
 def test_overrides():
     config = TATRFormatConfig(verbosity=99, enable_multi_header=True)
-    
-    overrides = TATRFormatConfig(force_large_table_assumption=True, enable_multi_header=False)
-    
+
+    overrides = TATRFormatConfig(
+        force_large_table_assumption=True, enable_multi_header=False
+    )
+
     result = with_config(config, overrides)
-    assert result.verbosity == 1 # CAUTION! since overrides completely replaces config, 
+    assert result.verbosity == 1  # CAUTION! since overrides completely replaces config,
     # it gets reset to the setting default, which is 1
     assert result.force_large_table_assumption == True
     assert result.enable_multi_header == False
-    
+
     # now, try using the dict method
-    result = with_config(config, {
-        "force_large_table_assumption": True,
-        "enable_multi_header": False
-    })
-    assert result.verbosity == 99 # dict preserves set/unset, which was the old behavior
+    result = with_config(
+        config, {"force_large_table_assumption": True, "enable_multi_header": False}
+    )
+    assert (
+        result.verbosity == 99
+    )  # dict preserves set/unset, which was the old behavior
     assert result.force_large_table_assumption == True
     assert result.enable_multi_header == False
-    

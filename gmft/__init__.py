@@ -1,9 +1,9 @@
 """
 Currently, contains aliases for key classes and functions.
 
-Unfortunately, although at one point the ability to import classes from the top level module (ie. `from gmft import AutoTableFormatter`) was encouraged, 
-it is now discouraged and may be removed in future versions. The reason being: importing through the top level module 
-loads the entire library, even when you're using only a small part of it. 
+Unfortunately, although at one point the ability to import classes from the top level module (ie. `from gmft import AutoTableFormatter`) was encouraged,
+it is now discouraged and may be removed in future versions. The reason being: importing through the top level module
+loads the entire library, even when you're using only a small part of it.
 
 Instead, `gmft.auto` is now encouraged. For example, `from gmft.auto import AutoTableFormatter`.
 """

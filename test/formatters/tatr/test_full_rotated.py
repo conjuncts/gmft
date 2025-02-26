@@ -15,6 +15,7 @@ from gmft.table_function import TATRFormattedTable
 #     # cleanup
 #     doc.close()
 
+
 @pytest.fixture(scope="session")
 def doc_9():
     doc = PyPDFium2Document("data/pdfs/9.pdf")
@@ -24,32 +25,32 @@ def doc_9():
 
 
 def test_rotated(doc_9, detector, formatter):
-    
     # Note: page 8 is WIP
     # page 9 is rotated table
     # page 10 is smaller
 
-    # table detection    
-    tables = detector.extract(doc_9[9-1])
+    # table detection
+    tables = detector.extract(doc_9[9 - 1])
     assert len(tables) == 1
-    
+
     table = tables[0]
     assert isinstance(table, RotatedCroppedTable)
-    
+
     assert table.angle == 90
 
+
 def test_rotated_df(doc_9, tatr_tables):
-    as_dict = tatr_tables['pdf9_t4']
+    as_dict = tatr_tables["pdf9_t4"]
     page = doc_9[as_dict["page_no"]]
     ft = TATRFormattedTable.from_dict(as_dict, page)
-    
+
     assert ft.angle == 90
-    
+
     config = AutoFormatConfig()
     config.large_table_if_n_rows_removed = 999
     config.verbosity = 3
     df = ft.df(config_overrides=config)
-    actual = df.to_csv(index=False, lineterminator='\n')
+    actual = df.to_csv(index=False, lineterminator="\n")
     expected = """\
 Electrode nanomodification,Modification method,ET,Surface modification,Surface functionality,Measurement method,pH and substrate concentration,Current density (μAcm−2 ),Reference
 GE+SWCNT+CDH;,Drop-casting,DET,Co-immobilisation with CNTs,Not studied,LSV; 1 mV s−1,"5.0, 100 mM lactose",45,[93]
@@ -79,19 +80,19 @@ GC+SWCNTs; CtCDH,Drop-casting,DET,p-Phenylenediamine+GA,NH2,CV; 1 mV s−1,"7.4,
 """
     if actual != expected:
         df.to_csv("test/outputs/actual/pdf9_t4.csv", index=False)
-        with open("test/outputs/actual/pdf9_t4.old.csv", "w", encoding='utf-8') as f:
+        with open("test/outputs/actual/pdf9_t4.old.csv", "w", encoding="utf-8") as f:
             f.write(expected)
-        ft.visualize(effective=True, show_labels=False, return_img=True).save("test/outputs/actual/pdf9_t4.png")
+        ft.visualize(effective=True, show_labels=False, return_img=True).save(
+            "test/outputs/actual/pdf9_t4.png"
+        )
     assert actual == expected
-    
-    
-    
-    
-    
+
     # structure recognition and df formatting
     # ft = formatter.extract(table)
     # df = ft.df()
     # df.to_csv("test/outputs/actual/pdf9_p7.csv", index=True)
+
+
 #     assert df.to_csv() == """\
 # ,Dataset,Input Modality,# Tables,Cell Topology,Cell Content,Cell Location,Row & Column Location,Canonical Structure\r
 # 0,TableBank [9],Image,145K,X,,,,\r

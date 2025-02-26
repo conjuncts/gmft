@@ -4,23 +4,26 @@ import os
 from gmft.formatters.tatr import TATRFormatConfig
 from gmft.table_function import TATRFormattedTable
 
+
 def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):
-    with open(f"test/outputs/actual/span{pdf_no}_t{j}.csv", "w", encoding='utf-8') as f:
+    with open(f"test/outputs/actual/span{pdf_no}_t{j}.csv", "w", encoding="utf-8") as f:
         f.write(actual)
-    with open(f"test/outputs/actual/span{pdf_no}_t{j}.old.csv", "w", encoding='utf-8') as f:
+    with open(
+        f"test/outputs/actual/span{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
+    ) as f:
         f.write(expected)
     debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
     debug_img.save(f"test/outputs/actual/span{pdf_no}_t{j}.png")
 
+
 def try_jth_table(tables, pdf_no, j, expected, config=None):
-    
     if config is None:
         config = TATRFormatConfig()
         config.large_table_threshold = 20
         config.verbosity = 3
         config.semantic_spanning_cells = True
-        config.semantic_hierarchical_left_fill = 'algorithm'
-        
+        config.semantic_hierarchical_left_fill = "algorithm"
+
     # note that config_overrides and config are both not a dict
 
     ft = tables[j]
@@ -32,8 +35,10 @@ def try_jth_table(tables, pdf_no, j, expected, config=None):
         dump_debug(pdf_no, j, actual, expected, ft)
     assert expected == actual, f"Mismatch in csv files for pdf {pdf_no} and table {j}"
 
+
 # class TestMultiIndex:
 # relevant: 1 1, 2 2, 3 0, 7 0, 7 2
+
 
 class TestHierLeft:
     def test_pdf1_t4(self, pdf1_tables):
@@ -63,7 +68,7 @@ R2= 99.51%,= 99.06%,,,,
         config = TATRFormatConfig()
         config.verbosity = 3
         config.semantic_spanning_cells = True
-        config.semantic_hierarchical_left_fill = 'deep'
+        config.semantic_hierarchical_left_fill = "deep"
         try_jth_table(pdf1_tables, 1, 4, expected, config=config)
 
     def test_pdf1_t7(self, pdf1_tables):
@@ -84,7 +89,7 @@ Dubinin–Radushkevich,E (kJ mol−1),11.60
 Dubinin–Radushkevich,R2,0.910
 """
         try_jth_table(pdf1_tables, 1, 7, expected)
-    
+
     def test_pdf1_t8(self, pdf1_tables):
         expected = """Kinetic model,Parameters,Parameters
 Linear driving force,k1(min−1),0.0604
@@ -102,6 +107,7 @@ Intra-particle difusion,I2(mg g−1),52.96
 Intra-particle difusion,R2 2,1.000
 """
         try_jth_table(pdf1_tables, 1, 8, expected)
+
     def test_pdf6_t0(self, pdf6_tables):
         expected = """Year,Variety,Treatment,Spikelets per panicle,1000-grain weight (g),Seed setting rate (%),Seed setting rate (%)
 2019,CJ03,T0,267.67a,21.87c,87.67c,
@@ -123,6 +129,7 @@ Year,Variety,Treatment,SG per panicle,IG per panicle,SG rate (%),IG rate (%)
 2020,,T1,22.42c,70.16c,24.21b,75.79a
 """
         try_jth_table(pdf6_tables, 6, 0, expected)
+
     def test_pdf6_t1(self, pdf6_tables):
         expected = """Year,Variety,Treatment,Net photosynthetic rate (umol·m−2 s−1 ),Stomatal conductance (mmol·m−2 s−1 ),Intercellular CO2 concentration (μmol·mol−1 ),Trmmol rate (mmol·m−2 s−1 )
 2019,CJ03,T0,22.51a,0.65b,285.30b,6.53a
@@ -135,16 +142,15 @@ Year,Variety,Treatment,SG per panicle,IG per panicle,SG rate (%),IG rate (%)
 2020,,T1,21.92b,0.75b,220.72b,12.71b
 """
         try_jth_table(pdf6_tables, 6, 1, expected)
-    
+
 
 config2 = TATRFormatConfig()
 config2.verbosity = 3
 config2.enable_multi_header = True
 config2.semantic_spanning_cells = True
 
-class TestHierTop:
 
-    
+class TestHierTop:
     def test_pdf1_t1(self, pdf1_tables):
         # Factor \nComplete name is like this because there is an overlapping hier-top and monosemantic
         # TODO NMS needs to be applied on all header-like spanning cells at once, not just
@@ -157,7 +163,7 @@ Initial dye concen￾tration (mg L−1),x3,4–8,4,6,8
 Mesh size,x4,50–150,50,100,150
 """
         try_jth_table(pdf1_tables, 1, 1, expected, config=config2)
-    
+
     def test_pdf2_t2(self, pdf2_tables):
         expected = """ManNAc dose,Q8H for 30 days,Q8H for 30 days,Q12H for 30 days,Q12H for 30 days,Q24H for 30 days,Q24H for 30 days
 nan,Median,5th–95th percentiles,Median,5th–95th percentiles,Median,5th–95th percentiles
@@ -174,11 +180,11 @@ Plasma Neu5Ac,"Css,ave (ng/mL)",,,,,
 """
 
         try_jth_table(pdf2_tables, 2, 2, expected, config=config2)
-        
+
         assert pdf2_tables[2]._projecting_indices == [0, 5]
-    
+
     # pdf4 t1 is arguably HierTop, but the ground truth is not yet clear
-    
+
     def test_pdf7_t0(self, pdf7_tables):
         expected = """nan,nan,nan,nan,nan,Core amino acid,Core amino acid,nan,nan
 Patient no,Genotype,Viral load (106 IU/ml),Sex,Age (years),70,91,rs12979860,End of treatment response a
@@ -187,15 +193,15 @@ R1,1a,4.36,M,52.6,R,C,CC,SVR"""
         config.verbosity = 3
         config.enable_multi_header = True
         config.semantic_spanning_cells = True
-        
+
         ft = pdf7_tables[0]
         df = ft.df(config_overrides=config)
         actual = df.to_csv(index=False, lineterminator="\n")
-        actual = "\n".join(actual.split("\n")[:3]) # get just first 3 lines
+        actual = "\n".join(actual.split("\n")[:3])  # get just first 3 lines
         if expected != actual:
             dump_debug(7, 0, actual, expected, ft)
         assert expected == actual, f"Mismatch in csv files for pdf 7 and table 0"
-    
+
     def test_pdf7_t2(self, pdf7_tables):
         expected = """nan,Amino acid 70,Amino acid 70,Amino acid 70,Amino acid 70,Amino acid 91,Amino acid 91,Amino acid 91,nan
 Genotype,Q,R,P,H,C,M,L,Total
@@ -208,17 +214,15 @@ Genotype,Q,R,P,H,C,M,L,Total
 6,60%,13%,13%,15%,100%,-,-,55
 """
         try_jth_table(pdf7_tables, 7, 2, expected, config=config2)
-    
-    
+
     # Also of interest: attn_p8 (HierTop), pubt_p6 (HierTop)
 
     def test_pubt_p6(self, doc_pubt, tatr_tables):
-
-        # table detection    
-        ft = TATRFormattedTable.from_dict(tatr_tables['pubt_p6'], doc_pubt[6-1])    
+        # table detection
+        ft = TATRFormattedTable.from_dict(tatr_tables["pubt_p6"], doc_pubt[6 - 1])
 
         df = ft.df(config_overrides=config2)
-        actual = df.to_csv(lineterminator='\n', index=False)
+        actual = df.to_csv(lineterminator="\n", index=False)
         expected = """\
 nan,nan,nan,Tables with an oversegmented PRH,Tables with an oversegmented PRH,Tables with an oversegmented PRH
 Dataset,Total Tables \\nInvestigated†,Total Tables \\nwith a PRH∗,Total,% (of total with a PRH),% (of total investigated)

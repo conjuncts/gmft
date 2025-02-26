@@ -4,9 +4,11 @@ from gmft.auto import AutoTableDetector
 
 
 default_detector = None
+
+
 def ingest_pdf(pdf_path) -> tuple[list[CroppedTable], PyPDFium2Document]:
     """
-    Default ingestion function for PDFs. 
+    Default ingestion function for PDFs.
     For finer-grained control, modify this function.
     """
     doc = PyPDFium2Document(pdf_path)
@@ -18,7 +20,7 @@ def ingest_pdf(pdf_path) -> tuple[list[CroppedTable], PyPDFium2Document]:
     for page in doc:
         # page_text = ""
         # for text in page.get_positions_and_text():
-            # page_text += text[4] + " "
+        # page_text += text[4] + " "
         # if any([re.search(x, page_text) for x in page_keywords_re_s]):
         tables += default_detector.extract(page)
     return tables, doc
