@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+title: gmft
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Galen
+    family-names: Wei
+    orcid: 'https://orcid.org/0009-0003-4440-4728'
+repository-code: 'https://github.com/conjuncts/gmft'
+abstract: 'Lightweight, performant, deep table extraction'
+license: MIT
