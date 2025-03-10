@@ -46,17 +46,15 @@ class PyPDFium2Page(BasePage):
         # textpage = self.page.get_textpage()
         # num_rects = textpage.count_rects()
         # for i in range(num_rects):
-        #     rect = textpage.get_rect(i)
-        #     # left, bottom, right, top
+        #     rect = textpage.get_rect(i) # left, bottom, right, top
         #     text = textpage.get_text_bounded(*rect)
-        #     # oof - x0 = left, y0 = height - top, x1 = right, y1 = height - bottom
         #     adjusted = (rect[0], self.height - rect[3], rect[2], self.height - rect[1])
         #     yield *adjusted, text
 
         # this is a bit more fine-grained
 
         # cache results, because this appears to be slow
-        # from the superior data, pilfer what we need
+        # from the superior data, take what we need
         if self._positions_and_text_and_breaks:
             for x0, x1, y0, y1, text, _, _, _ in self._positions_and_text_and_breaks:
                 yield x0, y0, x1, y1, text

@@ -12,6 +12,7 @@ from gmft.detectors.tatr import TATRDetector, TATRDetectorConfig
 from gmft.auto import AutoTableDetector, AutoTableFormatter
 
 # from gmft_pymupdf import PyMuPDFDocument
+# from gmft.pdf_bindings.pdftext import PDFTextDocument
 
 # test legacy imports
 from gmft.detectors.tatr import TATRTableDetectorConfig
@@ -49,6 +50,7 @@ def docs_bulk():
     for i in range(1, 9):
         doc = PyPDFium2Document(f"data/pdfs/{i}.pdf")
         # doc = PyMuPDFDocument(f"data/pdfs/{i}.pdf")
+        # doc = PDFTextDocument(f"data/pdfs/{i}.pdf")
         docs.append(doc)
 
     yield docs
@@ -172,3 +174,7 @@ def pdf7_tables(docs_bulk, detector, formatter, tatr_tables):
 @pytest.fixture(scope="session")
 def pdf8_tables(docs_bulk, detector, formatter, tatr_tables):
     yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 8)
+
+def pytest_sessionstart(session):
+    import os
+    os.makedirs("test/outputs/ditr", exist_ok=True)

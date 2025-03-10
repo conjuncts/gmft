@@ -49,8 +49,8 @@ class TestPdf1:
     def test_bulk_pdf1_t8(self, ditr_tables, ditr_csvs, docs_bulk):
         try_table("pdf1_t8", ditr_tables, ditr_csvs, docs_bulk[1 - 1])
 
-    def test_bulk_pdf1_t9(self, ditr_tables, ditr_csvs, docs_bulk):
-        pass
+    # def test_bulk_pdf1_t9(self, ditr_tables, ditr_csvs, docs_bulk):
+    #     pass
 
 
 class TestPdf2:

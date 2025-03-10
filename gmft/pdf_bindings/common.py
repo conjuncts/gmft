@@ -68,6 +68,9 @@ class BasePage(ABC):
             result += text
         return result.lstrip()
 
+    @property
+    def page_no(self):
+        return self.page_number
 
 class BasePDFDocument(ABC):
     @abstractmethod
