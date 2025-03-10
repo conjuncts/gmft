@@ -4,7 +4,7 @@
 import pytest
 import gmft
 from gmft.pdf_bindings import PyPDFium2Document
-from gmft.common import Rect
+from gmft.base import Rect
 
 
 def test_pypdfium2_bindings(doc_tiny):

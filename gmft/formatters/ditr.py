@@ -13,10 +13,10 @@ from gmft.algorithm.dividers import (
     _ioa,
     get_good_between_dividers,
 )
-from gmft.detectors.common import CroppedTable, RotatedCroppedTable
-from gmft.formatters.common import FormattedTable, TableFormatter, _normalize_bbox
+from gmft.detectors.base import CroppedTable, RotatedCroppedTable
+from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
 from gmft.formatters.histogram import HistogramConfig, HistogramFormattedTable
-from gmft.pdf_bindings.common import BasePage
+from gmft.pdf_bindings.base import BasePage
 
 
 from gmft.algorithm.structure import (

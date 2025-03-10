@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Tuple
 
 import numpy as np
 
-from gmft.common import Rect
+from gmft.base import Rect
 
 if TYPE_CHECKING:
-    from gmft.detectors.common import CroppedTable
+    from gmft.detectors.base import CroppedTable
 
 
 def _find_gap(

@@ -1,6 +1,6 @@
-from gmft._rich_text.common import Paragraph, RichComponent, TableComponent
-from gmft.formatters.common import FormattedTable
-from gmft.pdf_bindings.common import BasePDFDocument, BasePage
+from gmft._rich_text.base import Paragraph, RichComponent, TableComponent
+from gmft.formatters.base import FormattedTable
+from gmft.pdf_bindings.base import BasePDFDocument, BasePage
 
 
 class FormattedPage:

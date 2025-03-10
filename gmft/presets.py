@@ -1,5 +1,5 @@
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
-from gmft.detectors.common import CroppedTable
+from gmft.detectors.base import CroppedTable
 from gmft.auto import AutoTableDetector
 
 

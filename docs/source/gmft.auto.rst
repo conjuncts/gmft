@@ -15,9 +15,9 @@ Imported Members
 
 For convenience, gmft.auto also imports the following classes:
 
-- :class:`.Rect` from :mod:`gmft.common`
-- :class:`.BasePDFDocument` and :class:`.BasePage` from :mod:`gmft.pdf_bindings.common`
-- :class:`.CroppedTable` and :class:`.RotatedCroppedTable` from :mod:`gmft.detectors.common`
+- :class:`.Rect` from :mod:`gmft.base`
+- :class:`.BasePDFDocument` and :class:`.BasePage` from :mod:`gmft.pdf_bindings.base`
+- :class:`.CroppedTable` and :class:`.RotatedCroppedTable` from :mod:`gmft.detectors.base`
 - :class:`.TATRDetector` and :class:`.TATRDetectorConfig` from :mod:`gmft.detectors.tatr`
-- :class:`.FormattedTable` from :mod:`gmft.formatters.common`
+- :class:`.FormattedTable` from :mod:`gmft.formatters.base`
 - :class:`.TATRFormatConfig`, :class:`.TATRFormattedTable`, and :class:`.TATRFormatter` from :mod:`gmft.formatters.tatr`

@@ -1,4 +1,4 @@
-gmft.formatters.common module
+gmft.formatters.base module
 =============================
 
 A collection of common objects used by formatters. 
@@ -13,7 +13,7 @@ Type Hierarchy:
 
 BaseFormatter is the base class for all formatters.
 
-.. automodule:: gmft.formatters.common
+.. automodule:: gmft.formatters.base
    :members:
    :undoc-members:
    :show-inheritance:

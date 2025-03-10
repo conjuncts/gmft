@@ -18,8 +18,8 @@ from surya.settings import settings as surya_settings
 from surya.schema import Bbox
 
 
-from gmft.detectors.common import CroppedTable
-from gmft.formatters.common import BaseFormatter, FormattedTable
+from gmft.detectors.base import CroppedTable
+from gmft.formatters.base import BaseFormatter, FormattedTable
 
 
 # note: this is based on tabled.extract.extract_tables

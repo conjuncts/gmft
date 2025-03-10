@@ -1,7 +1,7 @@
-gmft.common module
+gmft.base module
 ==================
 
-.. automodule:: gmft.common
+.. automodule:: gmft.base
    :members:
    :undoc-members:
    :show-inheritance:

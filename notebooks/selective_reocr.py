@@ -2,7 +2,7 @@
 
 import os
 from gmft_pymupdf import PyMuPDFPage, PyMuPDFDocument
-from gmft.pdf_bindings.common import BasePage
+from gmft.pdf_bindings.base import BasePage
 from gmft.algorithm.structure import _iob
 
 import pandas as pd

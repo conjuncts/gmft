@@ -1,4 +1,4 @@
-gmft.pdf_bindings.common
+gmft.pdf_bindings.base
 --------------------------------
 
 With a common interface, gmft supports interchangeable documents. The key requirements are as follows:
@@ -9,7 +9,7 @@ With a common interface, gmft supports interchangeable documents. The key requir
 
 As a consequence of #2, OCR can be implemented as a layer which augments a PDF with redetected text.
 
-.. automodule:: gmft.pdf_bindings.common
+.. automodule:: gmft.pdf_bindings.base
    :members:
    :undoc-members:
    :show-inheritance:

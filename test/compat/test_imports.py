@@ -23,7 +23,6 @@ def test_aliases():
     assert obj.xmin == 1
     assert obj.ymin == 2
 
-    from gmft.table_detection import CroppedTable as CroppedTableAliased
 
     # make sure that these work
     from gmft import (
@@ -49,7 +48,7 @@ def test_aliases():
     assert ct.confidence_score == 0.9
     assert isinstance(ct, CroppedTable)
 
-    from gmft.detectors.common import CroppedTable as CroppedTableOrig
+    from gmft.detectors.base import CroppedTable as CroppedTableOrig
 
     assert isinstance(ct, CroppedTableOrig)
 
@@ -59,3 +58,12 @@ def test_aliases():
     assert config.large_table_threshold == 2
 
     assert isinstance(config, TATRFormatConfig)
+
+    # import from "common" as an alias for "base"
+    from gmft.common import Rect
+    from gmft.formatters.common import BaseFormatter
+
+    # import from table_detection and table_function
+    from gmft.table_detection import CroppedTable as CroppedTableAliased
+    from gmft.table_function import TATRFormatter
+    

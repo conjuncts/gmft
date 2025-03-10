@@ -8,10 +8,10 @@ loads the entire library, even when you're using only a small part of it.
 Instead, `gmft.auto` is now encouraged. For example, `from gmft.auto import AutoTableFormatter`.
 """
 
-from gmft.common import Rect
-from gmft.pdf_bindings.common import BasePDFDocument, BasePage
-from gmft.detectors.common import CroppedTable, RotatedCroppedTable
-from gmft.formatters.common import FormattedTable
+from gmft.base import Rect
+from gmft.pdf_bindings.base import BasePDFDocument, BasePage
+from gmft.detectors.base import CroppedTable, RotatedCroppedTable
+from gmft.formatters.base import FormattedTable
 
 from gmft.auto import (
     TATRDetector as TATRTableDetectorOrig,

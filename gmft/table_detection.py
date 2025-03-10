@@ -1,15 +1,17 @@
-# from gmft.detectors.common import (
-#     position_words,
-#     CroppedTable,
-#     BaseDetector,
-#     RotatedCroppedTable,
-# )
-# from gmft.detectors.tatr import TATRDetector, TableDetectorConfig, TableDetector
+from gmft.detectors.base import (
+    position_words,
+    CroppedTable,
+    BaseDetector,
+    RotatedCroppedTable,
+)
+from gmft.detectors.tatr import TATRDetector, TableDetectorConfig, TableDetector
+import warnings
 
 # legacy file; have been moved to corresponding locations.
 
-# TATRTableDetector = TATRDetector
+TATRTableDetector = TATRDetector
 
-raise ImportError(
-    "Importing from this module is deprecated. Please import from gmft.detectors.common or gmft.detectors.tatr instead."
+warnings.warn(
+    "Importing from gmft.table_detection is deprecated. Please import from gmft.detectors.base or gmft.detectors.tatr instead.", 
+    DeprecationWarning
 )

@@ -2,10 +2,10 @@ from typing import Generator
 import img2table.document
 import numpy as np
 
-from gmft.pdf_bindings.common import BasePDFDocument, BasePage
-from gmft.formatters.common import CroppedTable
+from gmft.pdf_bindings.base import BasePDFDocument, BasePage
+from gmft.formatters.base import CroppedTable
 from gmft.detectors.img2table import _PdfOCR_For_I2TDoc
-from gmft.formatters.common import FormattedTable, TableFormatter
+from gmft.formatters.base import FormattedTable, TableFormatter
 
 
 try:

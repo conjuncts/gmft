@@ -4,7 +4,7 @@ import bisect
 from typing import Generator
 import numpy as np
 import pandas as pd
-from gmft.common import Rect
+from gmft.base import Rect
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

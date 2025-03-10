@@ -37,7 +37,7 @@ def script_collect_jsons():
     """
     Converts between the legacy file-based storage system into the centralized jsons
     """
-    from gmft.detectors.common import CroppedTable
+    from gmft.detectors.base import CroppedTable
     from gmft.formatters.ditr import DITRFormatter
     from gmft.formatters.tatr import TATRFormattedTable, TATRFormatter
 
@@ -207,7 +207,7 @@ def script_reformat(cropped_tables):
     reformat them
     """
     from gmft.formatters.ditr import DITRFormattedTable
-    from gmft.detectors.common import CroppedTable
+    from gmft.detectors.base import CroppedTable
     from gmft.formatters.ditr import DITRFormatter
     from tqdm import tqdm
 

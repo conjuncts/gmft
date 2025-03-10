@@ -1,4 +1,4 @@
-gmft.detectors.common module
+gmft.detectors.base module
 ============================
 
 A collection of common objects used by detectors. 
@@ -14,7 +14,7 @@ Type Hierarchy:
   
 BaseDetector is the base class for all detectors.
 
-.. automodule:: gmft.detectors.common
+.. automodule:: gmft.detectors.base
    :members:
    :undoc-members:
    :show-inheritance:

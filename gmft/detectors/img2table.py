@@ -5,10 +5,10 @@ import img2table.document
 import numpy as np
 import pandas as pd
 
-from gmft.common import Rect
-from gmft.detectors.common import BaseDetector, CroppedTable
-from gmft.formatters.common import FormattedTable
-from gmft.pdf_bindings.common import BasePDFDocument, BasePage
+from gmft.base import Rect
+from gmft.detectors.base import BaseDetector, CroppedTable
+from gmft.formatters.base import FormattedTable
+from gmft.pdf_bindings.base import BasePDFDocument, BasePage
 
 
 try:

@@ -7,11 +7,11 @@ Why is my table not detected?
 Most likely, the reason is a false negative in the machine learning model. Unfortunately, there's not much to be done except to search for a better model.
 
 If you know exactly where the table is, you can skip the detection step by directly passing in the bbox.
-You can do this by passing a bbox (tuple of `xmin, ymin, xmax, ymax`) into the :class:`~gmft.detectors.common.CroppedTable` constructor.
+You can do this by passing a bbox (tuple of `xmin, ymin, xmax, ymax`) into the :class:`~gmft.detectors.base.CroppedTable` constructor.
 
 .. code-block:: python
 
-    from gmft.detectors.common import CroppedTable
+    from gmft.detectors.base import CroppedTable
     table = CroppedTable(page, bbox=(x0, y0, x1, y0), confidence_score=1.0, label=0)
 
 Afterwards, the CroppedTable can be passed into formatters as usual.

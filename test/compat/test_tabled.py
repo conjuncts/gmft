@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from gmft.detectors.common import CroppedTable
+from gmft.detectors.base import CroppedTable
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 
 

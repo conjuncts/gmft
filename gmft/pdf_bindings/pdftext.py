@@ -2,8 +2,8 @@ from __future__ import annotations  # 3.7
 
 from typing import Generator
 
-from gmft.common import Rect
-from gmft.pdf_bindings.common import BasePDFDocument, BasePage, _infer_line_breaks
+from gmft.base import Rect
+from gmft.pdf_bindings.base import BasePDFDocument, BasePage, _infer_line_breaks
 
 from PIL.Image import Image as PILImage
 import io
@@ -11,7 +11,7 @@ import io
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gmft.detectors.common import CroppedTable
+    from gmft.detectors.base import CroppedTable
 
 import pypdfium2 as pdfium
 from pdftext.extraction import dictionary_output
