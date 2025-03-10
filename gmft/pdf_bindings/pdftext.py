@@ -11,7 +11,7 @@ import io
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gmft.table_detection import CroppedTable
+    from gmft.detectors.common import CroppedTable
 
 import pypdfium2 as pdfium
 from pdftext.extraction import dictionary_output

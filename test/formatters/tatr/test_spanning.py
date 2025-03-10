@@ -1,8 +1,7 @@
 import json
 import os
 
-from gmft.formatters.tatr import TATRFormatConfig
-from gmft.table_function import TATRFormattedTable
+from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable
 
 
 def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):

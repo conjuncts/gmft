@@ -1,10 +1,10 @@
 import json
-from gmft.table_detection import TableDetector
+from gmft.detectors.tatr import TATRDetector
 from gmft.auto import AutoTableFormatter
 
 
 def test_tiny_df(doc_tiny):
-    detector = TableDetector()
+    detector = TATRDetector()
     tables = []
     for page in doc_tiny:
         tables.extend(detector.extract(page))

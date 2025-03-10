@@ -3,7 +3,7 @@ import pytest
 
 import matplotlib
 
-from gmft.table_function import TATRFormattedTable
+from gmft.formatters.tatr import TATRFormattedTable
 
 matplotlib.use("Agg")
 

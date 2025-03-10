@@ -1,8 +1,6 @@
 import json
 import pytest
-from gmft.pdf_bindings.pdfium import PyPDFium2Document
-from gmft.table_detection import CroppedTable, TableDetector
-from gmft.table_function import TATRFormattedTable
+from gmft.formatters.tatr import TATRFormattedTable
 
 
 def test_pubt_p4(doc_pubt, detector, formatter):

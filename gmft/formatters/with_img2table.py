@@ -3,9 +3,9 @@ import img2table.document
 import numpy as np
 
 from gmft.pdf_bindings.common import BasePDFDocument, BasePage
-from gmft.table_detection import CroppedTable
+from gmft.formatters.common import CroppedTable
 from gmft.detectors.img2table import _PdfOCR_For_I2TDoc
-from gmft.table_function import FormattedTable, TableFormatter
+from gmft.formatters.common import FormattedTable, TableFormatter
 
 
 try:

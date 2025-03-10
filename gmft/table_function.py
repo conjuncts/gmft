@@ -9,7 +9,11 @@ Example:
     >>> from gmft.auto import AutoTableFormatter
 """
 
-from gmft.formatters.common import FormattedTable, TableFormatter, _normalize_bbox
-from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable, TATRFormatter
+# from gmft.formatters.common import FormattedTable, TableFormatter, _normalize_bbox
+# from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable, TATRFormatter
 
-TATRTableFormatter = TATRFormatter
+# TATRTableFormatter = TATRFormatter
+
+raise ImportError(
+    "Importing from this module is deprecated. Please import from gmft.formatters.common or gmft.formatters.tatr instead."
+)

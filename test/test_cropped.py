@@ -4,7 +4,7 @@
 import pytest
 import gmft
 from gmft.pdf_bindings import PyPDFium2Document
-from gmft.table_detection import CroppedTable, RotatedCroppedTable
+from gmft.detectors.common import CroppedTable, RotatedCroppedTable
 
 
 def are_bboxes_close(reference, actual, EPS=0.01):

@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from gmft.table_detection import TableDetector, TableDetectorConfig
-from gmft.table_function import TATRFormatConfig, TATRFormatter
+from gmft.detectors.tatr import TATRDetector, TATRDetectorConfig
+from gmft.formatters.tatr import TATRFormatConfig, TATRFormatter
 
 
 def test_cuda(doc_tiny):
@@ -10,7 +10,7 @@ def test_cuda(doc_tiny):
         pytest.skip("cannot test device settings without cuda")
 
     page = doc_tiny[0]
-    detector = TableDetector(TableDetectorConfig(torch_device="cuda"))
+    detector = TATRDetector(TATRDetectorConfig(torch_device="cuda"))
     formatter = TATRFormatter(TATRFormatConfig(torch_device="cuda"))
     table = detector.extract(page)[0]
     ft = formatter.extract(table)

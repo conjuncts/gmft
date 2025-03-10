@@ -9,7 +9,7 @@ import numpy as np
 from gmft.common import Rect
 
 if TYPE_CHECKING:
-    from gmft.table_function import CroppedTable
+    from gmft.detectors.common import CroppedTable
 
 
 def _find_gap(

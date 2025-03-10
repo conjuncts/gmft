@@ -19,7 +19,7 @@ from gmft.formatters.histogram import HistogramConfig, HistogramFormattedTable
 from gmft.pdf_bindings.common import BasePage
 
 
-from gmft.table_function_algorithm import (
+from gmft.algorithm.structure import (
     _iob,
     _is_within_header,
     _non_maxima_suppression,

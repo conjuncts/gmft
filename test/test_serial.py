@@ -7,8 +7,8 @@ import pytest
 from gmft.pdf_bindings import BasePage
 from gmft.auto import CroppedTable
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
-from gmft.table_detection import RotatedCroppedTable
-from gmft.table_function import TATRFormattedTable
+from gmft.detectors.common import RotatedCroppedTable
+from gmft.formatters.tatr import TATRFormattedTable
 
 
 @pytest.fixture(scope="session")

@@ -1,4 +1,5 @@
-# Original author is Niels Rogge, source: https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
+# Original author is Niels Rogge, source: 
+# https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
 
 
 import matplotlib.pyplot as plt

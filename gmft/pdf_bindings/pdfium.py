@@ -13,7 +13,7 @@ from PIL.Image import Image as PILImage
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gmft.table_detection import CroppedTable
+    from gmft.formatters.common import CroppedTable
 
 
 class PyPDFium2Page(BasePage):

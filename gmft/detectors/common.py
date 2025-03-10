@@ -16,7 +16,7 @@ from PIL import ImageOps  # necessary to call PIL.ImageOps later
 import numpy as np
 from gmft.common import Rect
 from gmft.pdf_bindings.common import BasePage, ImageOnlyPage
-from gmft.table_captioning import _find_captions
+from gmft.algorithm.captions import _find_captions
 from gmft.table_visualization import plot_results_unwr
 
 

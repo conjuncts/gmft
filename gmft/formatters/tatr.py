@@ -9,7 +9,7 @@ from gmft.pdf_bindings.common import BasePage
 import torch
 
 
-from gmft.table_function_algorithm import extract_to_df
+from gmft.algorithm.structure import extract_to_df
 from gmft.table_visualization import plot_results_unwr
 
 
