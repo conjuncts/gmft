@@ -40,7 +40,7 @@ Formatters
 ----------
 
 In gmft, formatters take a located table (CroppedTable) and produces machine-readable output (ie. pandas DataFrame). 
-This task is known in the literature as *table structure recognition* and *functional analysis*.
+This task is known in the literature as *table structure recognition* and *table function*.
 
 .. toctree::
    :maxdepth: 2

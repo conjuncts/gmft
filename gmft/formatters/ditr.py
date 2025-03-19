@@ -684,7 +684,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
     # Phase II: Rowspan and Colspan.
 
     # note that row intervals are not used to place text,
-    # but rather for functional analysis to determine which rows
+    # but rather for table structure recognition to determine which rows
     # are headers, projecting, spanning, etc.
 
     # need to add inverted to make sense of header_indices

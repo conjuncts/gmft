@@ -1,4 +1,4 @@
-# test to_dict and from_dict
+#  test to_dict and from_dict
 
 
 from gmft._dataclasses import with_config

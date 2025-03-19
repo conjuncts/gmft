@@ -7,11 +7,10 @@ from gmft.formatters.base import CroppedTable
 from gmft.detectors.img2table import _PdfOCR_For_I2TDoc
 from gmft.formatters.base import FormattedTable, TableFormatter
 
-
 try:
     import img2table
 except ImportError:
-    raise ImportError("You need to install img2table to use this detector")
+    raise ImportError("You need to install img2table to use this formatter")
 
 from img2table.document.base import Document
 from img2table.document.pdf import PDF
@@ -19,6 +18,8 @@ from img2table.ocr.base import OCRInstance
 from img2table.ocr.pdf import PdfOCR
 from img2table.tables.objects.table import Table
 from img2table.tables.objects.extraction import ExtractedTable
+
+
 
 
 class _Img2TableCroppedPDF(img2table.document.PDF):

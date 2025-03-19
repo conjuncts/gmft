@@ -61,8 +61,6 @@ class HistogramFormattedTable(FormattedTable):
         Visualize the cropped table.
         """
         img = self.image()
-        # labels = self.fctn_results['labels']
-        # bboxes = self.fctn_results['boxes']
         tbl_width = self.width
         tbl_height = self.height
 
@@ -171,7 +169,6 @@ class HistogramFormatter(BaseFormatter):
 
         y_sep_threshold = self.decide_histogram_threshold(y_histogram, is_row=True)
         y_sep_bounds = list(y_histogram.iter_intervals_below(y_sep_threshold))
-        # return x_sep_bounds, y_sep_bounds
 
         x_sep_max = max([x1 - x0 for x0, x1 in x_sep_bounds], default=None)
         y_sep_max = max([y1 - y0 for y0, y1 in y_sep_bounds], default=None)
