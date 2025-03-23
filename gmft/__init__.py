@@ -35,7 +35,7 @@ def _deprecation_warning(name):
     import warnings
 
     msg = f"(Deprecation) While once encouraged, \
-importing {name} and other classes from the top level module is now deprecated. \
+importing {name} and other classes from the top level module is now deprecated and will break in v0.5.0. \
 Please import from gmft.auto instead."
     warnings.warn(msg, DeprecationWarning, stacklevel=2)
     print(msg)

@@ -254,7 +254,8 @@ class DITRFormattedTable(HistogramFormattedTable):
         """
         if recalculate != False:
             raise DeprecationWarning(
-                "recalculate as a parameter in df() is deprecated; explicitly call recompute() instead."
+                "recalculate as a parameter in df() is deprecated; explicitly call recompute() instead. "
+                "Will break in v0.6.0."
             )
 
         if self._df is None:

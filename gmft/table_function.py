@@ -16,5 +16,5 @@ import warnings
 TATRTableFormatter = TATRFormatter
 
 warnings.warn(
-    "Importing from gmft.table_function is deprecated. Please import from gmft.formatters.base or gmft.formatters.tatr instead."
+    "Importing from gmft.table_function is deprecated, and will break in v0.6.0. Please import from gmft.formatters.base or gmft.formatters.tatr instead."
 )

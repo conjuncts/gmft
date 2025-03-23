@@ -26,11 +26,11 @@ class TATRDetectorConfig:
 
     @property
     def confidence_score_threshold(self):
-        raise DeprecationWarning("Use detector_base_threshold instead.")
+        raise DeprecationWarning("Use detector_base_threshold instead. Will break in v0.6.0.")
 
     @confidence_score_threshold.setter
     def confidence_score_threshold(self, value):
-        raise DeprecationWarning("Use detector_base_threshold instead.")
+        raise DeprecationWarning("Use detector_base_threshold instead. Will break in v0.6.0.")
 
 
     def __post_init__(self):

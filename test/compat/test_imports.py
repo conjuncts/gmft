@@ -60,8 +60,15 @@ def test_aliases():
     assert isinstance(config, TATRFormatConfig)
 
     # import from "common" as an alias for "base"
-    from gmft.common import Rect
+    from gmft.common import Rect as CommonRect
     from gmft.formatters.common import BaseFormatter
+
+    common_rect = CommonRect((1, 2, 3, 4))
+    rect = Rect((1, 2, 3, 4))
+    assert isinstance(common_rect, Rect)
+    assert isinstance(common_rect, CommonRect)
+    assert isinstance(rect, Rect)
+    assert isinstance(rect, CommonRect)
 
     # import from table_detection and table_function
     from gmft.table_detection import CroppedTable as CroppedTableAliased
