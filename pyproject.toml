@@ -1,34 +1,28 @@
 [project]
 name = "gmft"
-version = "0.4.1rc1"
+version = "0.4.1"
 description = "Lightweight, performant, deep table extraction"
 authors = [
-  {name = "conjunct"},
-  {name = "conjuncts"}
+    { name = "conjunct" },
+    { name = "conjuncts" }
 ]
-license = {text = "MIT License"}
+license = { text = "MIT License" }
 readme = "README.md"
 requires-python = ">=3.9"
 
 classifiers = [
-  "Development Status :: 4 - Beta",
-  "License :: OSI Approved :: MIT License",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
 ]
 
 dependencies = [
-  "pypdfium2 >= 4",
-  "transformers >= 4.35.2", # need the no_timm revision
-  "torch",
-  "pillow",
-  "pandas",
-  "matplotlib",
-  "tabulate"
-  
-]
-
-[project.optional-dependencies]
-tabled = [
-  "tabled-pdf == 0.1.4"
+    "pypdfium2 >= 4",
+    "transformers >= 4.35.2", # need the no_timm revision
+    "torch",
+    "pillow",
+    "pandas",
+    "matplotlib",
+    "tabulate"
 ]
 
 [project.urls]
@@ -40,7 +34,19 @@ build-backend = "flit_core.buildapi"
 requires = ["flit_core >=3.4,<4"]
 
 [tool.flit.sdist]
-include = ["gmft/**/*.py", "README.md", "LICENSE"]
-exclude = ["test/**/*", "docs/**/*", "notebooks/**/*", "data/**/*", "samples/**/*", "reading_list.md", "*.zip",
-  "*.tsv", "*.yaml", 
-  "TODO.md", "CHANGELOG.md", "dev.md", "comparison.md"]
+include = ["gmft/**/*.py", "README.md", "LICENSE", "gmft/py.typed"]
+exclude = [
+    "*.tsv",
+    "*.yaml",
+    "*.zip",
+    "CHANGELOG.md",
+    "TODO.md",
+    "comparison.md",
+    "data/**/*",
+    "dev.md",
+    "docs/**/*",
+    "notebooks/**/*",
+    "reading_list.md",
+    "samples/**/*",
+    "test/**/*",
+]
