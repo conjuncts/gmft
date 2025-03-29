@@ -1,10 +1,10 @@
 from __future__ import annotations  # 3.7
 
 # PyPDFium2 bindings
-from typing import Generator
+from typing import Generator, Tuple
 import pypdfium2 as pdfium
 
-from gmft.base import Rect
+from gmft.base import DocumentClosedException, Rect
 from gmft.pdf_bindings.base import BasePDFDocument, BasePage, _infer_line_breaks
 
 from PIL.Image import Image as PILImage
@@ -22,7 +22,15 @@ class PyPDFium2Page(BasePage):
     Therefore, beware: y0 and y1 are flipped from PyPDFium2's convention.
     """
 
-    def __init__(self, page: pdfium.PdfPage, filename: str, page_no: int):
+    def __init__(
+        self,
+        page: pdfium.PdfPage,
+        filename: str,
+        page_no: int,
+        *,
+        parent: "PyPDFium2Document" = None,
+    ):
+        self.parent = parent
         self.page = page
         self.filename = filename
         self.width = page.get_width()
@@ -33,7 +41,7 @@ class PyPDFium2Page(BasePage):
 
     def get_positions_and_text(
         self,
-    ) -> Generator[tuple[float, float, float, float, str], None, None]:
+    ) -> Generator[Tuple[float, float, float, float, str], None, None]:
         """
         A generator of text and positions.
         The tuple is (x0, y0, x1, y1, "string")
@@ -65,6 +73,8 @@ class PyPDFium2Page(BasePage):
                 yield item
             return
 
+        if self._is_closed():
+            raise DocumentClosedException("Document was already closed")
         result = []
         text_page = self.page.get_textpage()
 
@@ -90,9 +100,7 @@ class PyPDFium2Page(BasePage):
                         current_bbox[2],
                         self.height - current_bbox[1],
                     )
-                    result.append(
-                        (*current_bbox, current_word)
-                    )  # cache, because it is slow
+                    result.append((*current_bbox, current_word))  # cache, because it is slow
                     yield *current_bbox, current_word
                     current_word = ""
                     current_bbox = None
@@ -125,6 +133,8 @@ class PyPDFium2Page(BasePage):
         return self.filename
 
     def get_image(self, dpi: int = None, rect: Rect = None) -> PILImage:
+        if self._is_closed():
+            raise DocumentClosedException("Document was already closed")
         if dpi is None:
             dpi = 72
         scale_factor = dpi / 72
@@ -133,7 +143,6 @@ class PyPDFium2Page(BasePage):
         else:
             # crop is "amount to cut off" from each side
             # left, bottom, right, top
-            # crop = (rect.bbox[0], rect.bbox[1], self.page.get_width() - rect.bbox[0], self.page.get_height() - rect.bbox[1])
             xmin, ymin, xmax, ymax = rect.bbox
             # also remember that the origin is at the bottom left
             crop = (xmin, self.height - ymax, self.width - xmax, ymin)
@@ -141,17 +150,24 @@ class PyPDFium2Page(BasePage):
         return bitmap.to_pil()
 
     def close(self):
+        """
+        Not recommended: use close_document instead.
+        """
         self.page.close()
         self.page = None
 
-    # def __del__(self):
-    #     if self.page is not None:
-    #         self.close()
-
     def close_document(self):
-        if self.page.parent:
+        if self.parent:
+            self.parent.close()
+        elif self.page.parent:
             self.page.parent.close()
         self.page = None
+
+    def _is_closed(self):
+        """
+        Check if the page is closed.
+        """
+        return self.page is None or self.parent._is_closed()
 
     def _get_positions_and_text_and_breaks(self):
         """
@@ -172,8 +188,9 @@ class PyPDFium2Page(BasePage):
 
 class PyPDFium2Document(BasePDFDocument):
     """
-    Wraps a pdfium.PdfDocument object. Note that the memory lifecycle is tightly coupled to the pdfium.PdfDocument object. When this object is destroyed,
-    the underlying document is also destroyed.
+    Wraps a pdfium.PdfDocument object.
+    Note that you (the user) are responsible for calling doc.close() once you are done,
+    otherwise the document will remain open and consume resources.
     """
 
     def __init__(self, filename: str):
@@ -184,12 +201,14 @@ class PyPDFium2Document(BasePDFDocument):
         """
         Get 0-indexed page
         """
-        return PyPDFium2Page(self._doc[n], self.filename, n)
+        return PyPDFium2Page(self._doc[n], self.filename, n, parent=self)
 
     def get_filename(self) -> str:
         return self.filename
 
     def __len__(self) -> int:
+        if self._is_closed():
+            raise DocumentClosedException("Document was already closed")
         return len(self._doc)
 
     def close(self):
@@ -200,9 +219,11 @@ class PyPDFium2Document(BasePDFDocument):
             self._doc.close()
         self._doc = None
 
-    # def __del__(self):
-    #     if self._doc is not None:
-    #         self.close()
+    def _is_closed(self):
+        """
+        Check if the page is closed.
+        """
+        return self._doc is None
 
 
 class PyPDFium2Utils:
@@ -225,9 +246,7 @@ class PyPDFium2Utils:
         return doc.get_page(page_number)
 
     @staticmethod
-    def reload(
-        ct: "CroppedTable", doc=None
-    ) -> tuple["CroppedTable", "PyPDFium2Document"]:
+    def reload(ct: "CroppedTable", doc=None) -> Tuple["CroppedTable", "PyPDFium2Document"]:
         """
         Reloads the :class:`.CroppedTable` from disk.
         This is useful for a :class:`.CroppedTable` whose document has been closed.
