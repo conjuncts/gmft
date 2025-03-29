@@ -50,3 +50,9 @@ exclude = [
     "samples/**/*",
     "test/**/*",
 ]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+ignore = ["E712"]

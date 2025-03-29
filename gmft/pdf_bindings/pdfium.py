@@ -100,7 +100,8 @@ class PyPDFium2Page(BasePage):
                         current_bbox[2],
                         self.height - current_bbox[1],
                     )
-                    result.append((*current_bbox, current_word))  # cache, because it is slow
+                    result.append((*current_bbox, current_word))
+                    # cache, because it is slow
                     yield *current_bbox, current_word
                     current_word = ""
                     current_bbox = None
@@ -246,7 +247,9 @@ class PyPDFium2Utils:
         return doc.get_page(page_number)
 
     @staticmethod
-    def reload(ct: "CroppedTable", doc=None) -> Tuple["CroppedTable", "PyPDFium2Document"]:
+    def reload(
+        ct: "CroppedTable", doc=None
+    ) -> Tuple["CroppedTable", "PyPDFium2Document"]:
         """
         Reloads the :class:`.CroppedTable` from disk.
         This is useful for a :class:`.CroppedTable` whose document has been closed.

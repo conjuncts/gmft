@@ -20,8 +20,6 @@ from img2table.tables.objects.table import Table
 from img2table.tables.objects.extraction import ExtractedTable
 
 
-
-
 class _Img2TableCroppedPDF(img2table.document.PDF):
     """
     Creates a pdf document whose image only encloses a cropped table, for purposes of only feeding

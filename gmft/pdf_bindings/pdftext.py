@@ -30,14 +30,15 @@ from pdftext.extraction import dictionary_output
 # extraction._load_pdf = _fixed_load_pdf
 
 
-
 class PDFTextPage(BasePage):
     """
     Note: This follows PIL's convention of (0, 0) being top left.
     Therefore, beware: y0 and y1 are flipped from PyPDFium2's convention.
     """
 
-    def __init__(self, parent: PDFTextDocument, page: pdfium.PdfPage, filename: str, page_no: int):
+    def __init__(
+        self, parent: PDFTextDocument, page: pdfium.PdfPage, filename: str, page_no: int
+    ):
         self.page = page
         self.parent = parent
         self.filename = filename
@@ -88,7 +89,7 @@ class PDFTextPage(BasePage):
 
     def close_document(self):
         # if self.page.parent:
-            # self.page.parent.close()
+        # self.page.parent.close()
         # self.page = None
         self.parent.close()
 
@@ -105,12 +106,23 @@ class PDFTextPage(BasePage):
         # generate
         captured = []
         # disable_links necessary to not close the document
-        dict_page = dictionary_output(self.parent.pdfbytes, page_range=[self.page_number], disable_links=True)[0]
+        dict_page = dictionary_output(
+            self.parent.pdfbytes, page_range=[self.page_number], disable_links=True
+        )[0]
         for b, block in enumerate(dict_page["blocks"]):
             for l, line in enumerate(block["lines"]):
                 for s, span in enumerate(line["spans"]):
                     bbox = span["bbox"]
-                    out = (bbox[0], bbox[1], bbox[2], bbox[3], span["text"].replace('\n', '').strip(), b, l, s)
+                    out = (
+                        bbox[0],
+                        bbox[1],
+                        bbox[2],
+                        bbox[3],
+                        span["text"].replace("\n", "").strip(),
+                        b,
+                        l,
+                        s,
+                    )
                     captured.append(out)
                     yield out
         self._positions_and_text_and_breaks = captured
@@ -152,4 +164,3 @@ class PDFTextDocument(BasePDFDocument):
     # def __del__(self):
     #     if self._doc is not None:
     #         self.close()
-

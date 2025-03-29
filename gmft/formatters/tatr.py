@@ -153,30 +153,42 @@ class TATRFormatConfig:
     # aggregate_spanning_cells = False
     @property
     def aggregate_spanning_cells(self):
-        raise DeprecationWarning("aggregate_spanning_cells has been removed. Will break in v0.6.0.")
+        raise DeprecationWarning(
+            "aggregate_spanning_cells has been removed. Will break in v0.6.0."
+        )
 
     @aggregate_spanning_cells.setter
     def aggregate_spanning_cells(self, value):
-        raise DeprecationWarning("aggregate_spanning_cells has been removed. Will break in v0.6.0.")
+        raise DeprecationWarning(
+            "aggregate_spanning_cells has been removed. Will break in v0.6.0."
+        )
 
     # corner_clip_outlier_threshold = 0.1
     # """"corner clip" is when the text is clipped by a corner, and not an edge"""
     @property
     def corner_clip_outlier_threshold(self):
-        raise DeprecationWarning("corner_clip_outlier_threshold has been removed. Will break in v0.6.0.")
+        raise DeprecationWarning(
+            "corner_clip_outlier_threshold has been removed. Will break in v0.6.0."
+        )
 
     @corner_clip_outlier_threshold.setter
     def corner_clip_outlier_threshold(self, value):
-        raise DeprecationWarning("corner_clip_outlier_threshold has been removed. Will break in v0.6.0.")
+        raise DeprecationWarning(
+            "corner_clip_outlier_threshold has been removed. Will break in v0.6.0."
+        )
 
     # spanning_cell_minimum_width = 0.6
     @property
     def spanning_cell_minimum_width(self):
-        raise DeprecationWarning("spanning_cell_minimum_width has been removed. Will break in v0.6.0.")
+        raise DeprecationWarning(
+            "spanning_cell_minimum_width has been removed. Will break in v0.6.0."
+        )
 
     @spanning_cell_minimum_width.setter
     def spanning_cell_minimum_width(self, value):
-        raise DeprecationWarning("spanning_cell_minimum_width has been removed. Will break in v0.6.0.")
+        raise DeprecationWarning(
+            "spanning_cell_minimum_width has been removed. Will break in v0.6.0."
+        )
 
     @property
     def deduplication_iob_threshold(self):

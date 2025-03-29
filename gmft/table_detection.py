@@ -12,6 +12,6 @@ import warnings
 TATRTableDetector = TATRDetector
 
 warnings.warn(
-    "Importing from gmft.table_detection is deprecated, and will break in v0.6.0. Please import from gmft.detectors.base or gmft.detectors.tatr instead.", 
-    DeprecationWarning
+    "Importing from gmft.table_detection is deprecated, and will break in v0.6.0. Please import from gmft.detectors.base or gmft.detectors.tatr instead.",
+    DeprecationWarning,
 )

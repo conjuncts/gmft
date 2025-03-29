@@ -1,4 +1,4 @@
-#
+# ruff: noqa
 
 
 def test_aliases():
@@ -22,7 +22,6 @@ def test_aliases():
     obj = Rect((1, 2, 3, 4))
     assert obj.xmin == 1
     assert obj.ymin == 2
-
 
     # make sure that these work
     from gmft import (
@@ -73,4 +72,3 @@ def test_aliases():
     # import from table_detection and table_function
     from gmft.table_detection import CroppedTable as CroppedTableAliased
     from gmft.table_function import TATRFormatter
-    

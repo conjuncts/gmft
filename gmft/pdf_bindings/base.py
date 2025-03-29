@@ -72,6 +72,7 @@ class BasePage(ABC):
     def page_no(self):
         return self.page_number
 
+
 class BasePDFDocument(ABC):
     @abstractmethod
     def get_page(self, n: int) -> BasePage:

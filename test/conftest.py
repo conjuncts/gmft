@@ -175,6 +175,8 @@ def pdf7_tables(docs_bulk, detector, formatter, tatr_tables):
 def pdf8_tables(docs_bulk, detector, formatter, tatr_tables):
     yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 8)
 
+
 def pytest_sessionstart(session):
     import os
+
     os.makedirs("test/outputs/ditr", exist_ok=True)
