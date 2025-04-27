@@ -33,7 +33,7 @@ Recommendation:
 
 .. code-block:: python
 
-    from gmft.auto import HistogramFormatter
+    from gmft.formatters.histogram import HistogramFormatter
     formatter = HistogramFormatter()
     formatted_tables = [formatter.format(table) for table in tables]
 
