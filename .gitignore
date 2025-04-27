@@ -14,3 +14,4 @@ plans
 docs/build
 notebooks
 support_arena/*
+test/outputs/actual
