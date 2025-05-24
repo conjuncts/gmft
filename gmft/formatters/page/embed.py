@@ -1,15 +1,7 @@
-from gmft._rich_text.base import Paragraph, RichComponent, TableComponent
 from gmft.formatters.base import FormattedTable
+from gmft.formatters.page.base import FormattedPage
+from gmft.formatters.page.components import Paragraph, TableComponent
 from gmft.pdf_bindings.base import BasePDFDocument, BasePage
-
-
-class FormattedPage:
-    def __init__(self, orig_page: BasePage, components: list[RichComponent]) -> None:
-        self.components = components
-        self.page = orig_page
-
-    def get_text(self) -> str:
-        return "\n".join([component.rich_text() for component in self.components])
 
 
 def embed_tables_into_page(

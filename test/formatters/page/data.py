@@ -1,23 +1,52 @@
-from gmft import TATRFormattedTable
-from gmft._rich_text.rich_page import embed_tables
-from gmft.formatters.tatr import TATRFormatConfig
+_rich_page_0_text = """Infectious Alestig al. BMC Diseases 2011, 11:124 et
+http://www.biomedcentral.com/1471-2334/11/124
+Open S EARCH TIC R AR E L E Access
+polymorphisms and Core IL28B mutations,
+peginterferon/ribavirin in to treatment response
+Swedish with hepatitis C patients virus genotype
+infection 1
+Alestig1*, Arnholm2 Nilsson3 Eilard1 Lagging1 Norkrans1 Staffan Erik Anders Gunnar Birgitta Martin
+, , , , , Wahlberg4 Wejstål1 Westin1 Lindh1
+Johan and Thomas Rune Magnus
+, ,
+Abstract
+infected Background: with hepatitis respond poorly standard with (HCV) C Patients virus 1 genotype to treatment
+less achieving sustained virologic Predicting essential and could help avoid 50% is outcome or response.
+of and reduce health Recently, acid substitutions the association amino in treatment cost. unnecessary an core
+of and observed the study, the these Japanese In region in patients. impact treatment outcome present was
+kinetics and explored Caucasian mutations in patients. treatment outcome on response was
+of from peginterferon/ Methods: The samples obtained treated with HCV 50 region patients pre-treatment core
+infection ribavirin Swedish clinical trial with sequenced. The alleles rs12979860, in previous 1 genotype at a were a
+identify single nucleotide polymorphism assessed order with this (SNP), in co-association to strong were any
+predictor. response
+of found. Results: between and substitutions residue No In 91 association treatment contrast, response core was
+of of substitutions residue observed non-responders, but only responders (29%) (p 6/21 70 29 in in core were one =
+of of and subgenotype 1b than 0.03), (R70Q strains) (R70P 6 13 37 in in in in strains, 1a 1 were more common p =
+of The the overall the predictor 0.004). (p 0.0001). SNP IL28B rs12979860 upstream strongest gene was response =
+substitutions associated with kinetics the Core CT 70 in patients carrying genotype at were poorer response
+rs12979860.
+of Conclusions: The results indicate that substitutions residue related 70 in to treatment core are response
+infection, of with HCV-1b but less than polymorphism. Caucasian IL28B patients importance are
+Background and frequent side effects, identify it is important costs to
+(HCV) factors that predict the likelihood of infection of C Hepatitis virus is major response. cause can a
+Several host factors such of liver fibrosis, cirrhosis and hepatocellular affecting approxi\ufffemately stage age, as cancer
+(BMI), [1]. body index liver insulin million worldwide Combination steatosis, resistance 170 mass persons
+(Peg\ufffeIFN/RBV), and ethnicity, well viral influence the therapy with pegylated interferon and ribavirin genotype as as
+[5]. While the for weeks, eradicate the impact given 24 72 treatment outcome outcome to on may
+[2-4], by undisputed, with of with infection and of liver damage but 80% is patients progression genotype stop
+achieving compared with do achieve sustained virologic SVR 50% patients 3 2 genotype not as or many
+(SVR). [6], for the of subtypes regional this and light of high For importance in 1, genotype response reason,
+variability controversial. 1995 mutations In it was or are
+reported from that of the Japan mutations in part a
+Correspondence: erik.alestig@gu.se * associated with NS5A region treatment
+response were 1 of Infection of and Virology, Gothenburg, Department University
+1b The between in patients. association genotype Gothenburg, Sweden
+of information of Full list author available the end the article is at
+of Alestig al; licensee BioMed Central Ltd. This article distributed under the the Open Creative Commons Access 2011 is © et terms an
+Attribution (http://creativecommons.org/licenses/by/2.0), which unrestricted distribution, and reproduction License permits in use,
+medium, provided the original work properly cited. is any"""
 
-
-def test_rich_pdf7(docs_bulk, pdf7_tables):
-    doc = docs_bulk[6]  # n-1
-    # look at page 12
-
-    config = TATRFormatConfig()
-    for ft in pdf7_tables:
-        ft = ft  # type: TATRFormattedTable
-        ft.df(config_overrides=config)  # reset config to defaults
-
-    rich_pages = embed_tables(doc=doc, tables=pdf7_tables)
-
-    # print(rich_pages[2])
-    assert (
-        rich_pages[2].get_text()
-        == """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 3 7 et
+_rich_page_2_text = """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 3 7 et
 http://www.biomedcentral.com/1471-2334/11/124
 of infection Table Virological and clinical characteristics with hepatitis patients virus C 1
 |    | Patient no   | Genotype   |   Viral load (106 IU/ml) | Sex   |   Age (years) | Core \\n70   | amino acid \\n91   | rs12979860   | End of treatment response a   |
@@ -74,10 +103,8 @@ of infection Table Virological and clinical characteristics with hepatitis patie
 | 49 | N19          | 1b         |                     6.7  | F     |          54.2 | Q           | M                 | CT           | non-SVR                       |
 
 a sustained virologic sustained virologic SVR, non-SVR, response; no response"""
-    )
-    assert (
-        rich_pages[3].get_text()
-        == """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 4 7 et
+
+_rich_page_3_text = """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 4 7 et
 http://www.biomedcentral.com/1471-2334/11/124
 Table and viral baseline with and without in patients Host 2 parameters treatment response
 |    |                                     | SVR n = 29           | non-SVR n = 21      | Univariate p value   |
@@ -142,55 +169,3 @@ response on
 31st of found of total March the The C in Hepatitis A 3317 2010 sequences on the and different CT SNP in patients carrying genotype
 Database (http://hcv.lanl.gov/) analysed. Values less (HCV) Project Virus were
 compared. shown As HCV Figure variants in 1 was core than shown. 1% not"""
-    )
-    # control
-    assert (
-        rich_pages[0].get_text()
-        == """Infectious Alestig al. BMC Diseases 2011, 11:124 et
-http://www.biomedcentral.com/1471-2334/11/124
-Open S EARCH TIC R AR E L E Access
-polymorphisms and Core IL28B mutations,
-peginterferon/ribavirin in to treatment response
-Swedish with hepatitis C patients virus genotype
-infection 1
-Alestig1*, Arnholm2 Nilsson3 Eilard1 Lagging1 Norkrans1 Staffan Erik Anders Gunnar Birgitta Martin
-, , , , , Wahlberg4 Wejstål1 Westin1 Lindh1
-Johan and Thomas Rune Magnus
-, ,
-Abstract
-infected Background: with hepatitis respond poorly standard with (HCV) C Patients virus 1 genotype to treatment
-less achieving sustained virologic Predicting essential and could help avoid 50% is outcome or response.
-of and reduce health Recently, acid substitutions the association amino in treatment cost. unnecessary an core
-of and observed the study, the these Japanese In region in patients. impact treatment outcome present was
-kinetics and explored Caucasian mutations in patients. treatment outcome on response was
-of from peginterferon/ Methods: The samples obtained treated with HCV 50 region patients pre-treatment core
-infection ribavirin Swedish clinical trial with sequenced. The alleles rs12979860, in previous 1 genotype at a were a
-identify single nucleotide polymorphism assessed order with this (SNP), in co-association to strong were any
-predictor. response
-of found. Results: between and substitutions residue No In 91 association treatment contrast, response core was
-of of substitutions residue observed non-responders, but only responders (29%) (p 6/21 70 29 in in core were one =
-of of and subgenotype 1b than 0.03), (R70Q strains) (R70P 6 13 37 in in in in strains, 1a 1 were more common p =
-of The the overall the predictor 0.004). (p 0.0001). SNP IL28B rs12979860 upstream strongest gene was response =
-substitutions associated with kinetics the Core CT 70 in patients carrying genotype at were poorer response
-rs12979860.
-of Conclusions: The results indicate that substitutions residue related 70 in to treatment core are response
-infection, of with HCV-1b but less than polymorphism. Caucasian IL28B patients importance are
-Background and frequent side effects, identify it is important costs to
-(HCV) factors that predict the likelihood of infection of C Hepatitis virus is major response. cause can a
-Several host factors such of liver fibrosis, cirrhosis and hepatocellular affecting approxi\ufffemately stage age, as cancer
-(BMI), [1]. body index liver insulin million worldwide Combination steatosis, resistance 170 mass persons
-(Peg\ufffeIFN/RBV), and ethnicity, well viral influence the therapy with pegylated interferon and ribavirin genotype as as
-[5]. While the for weeks, eradicate the impact given 24 72 treatment outcome outcome to on may
-[2-4], by undisputed, with of with infection and of liver damage but 80% is patients progression genotype stop
-achieving compared with do achieve sustained virologic SVR 50% patients 3 2 genotype not as or many
-(SVR). [6], for the of subtypes regional this and light of high For importance in 1, genotype response reason,
-variability controversial. 1995 mutations In it was or are
-reported from that of the Japan mutations in part a
-Correspondence: erik.alestig@gu.se * associated with NS5A region treatment
-response were 1 of Infection of and Virology, Gothenburg, Department University
-1b The between in patients. association genotype Gothenburg, Sweden
-of information of Full list author available the end the article is at
-of Alestig al; licensee BioMed Central Ltd. This article distributed under the the Open Creative Commons Access 2011 is © et terms an
-Attribution (http://creativecommons.org/licenses/by/2.0), which unrestricted distribution, and reproduction License permits in use,
-medium, provided the original work properly cited. is any"""
-    )
