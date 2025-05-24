@@ -43,16 +43,16 @@ def try_jth_table(tables, tatr_csvs, pdf_no, j, config=None, REDETECT_TABLES=Fal
     if not expected == actual:
         # write images
         debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
-        debug_img.save(f"test/outputs/actual/pdf{pdf_no}_t{j}.png")
+        debug_img.save(f"data/test/outputs/actual/pdf{pdf_no}_t{j}.png")
 
         # write csvs
-        df.to_csv(f"test/outputs/actual/pdf{pdf_no}_t{j}.csv", index=False)
+        df.to_csv(f"data/test/outputs/actual/pdf{pdf_no}_t{j}.csv", index=False)
         with open(
-            f"test/outputs/actual/pdf{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
+            f"data/test/outputs/actual/pdf{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
         ) as f:
             f.write(expected)
         if REDETECT_TABLES:
-            with open(f"test/outputs/actual/pdf{pdf_no}_t{j}.info", "w") as f:
+            with open(f"data/test/outputs/actual/pdf{pdf_no}_t{j}.info", "w") as f:
                 json.dump(ft.to_dict(), f, indent=2)
     assert expected == actual, f"Mismatch in csv files for pdf {pdf_no} and table {j}"
     return ft

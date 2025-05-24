@@ -5,14 +5,14 @@ from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable
 
 
 def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):
-    with open(f"test/outputs/actual/span{pdf_no}_t{j}.csv", "w", encoding="utf-8") as f:
+    with open(f"data/test/outputs/actual/span{pdf_no}_t{j}.csv", "w", encoding="utf-8") as f:
         f.write(actual)
     with open(
-        f"test/outputs/actual/span{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
+        f"data/test/outputs/actual/span{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
     ) as f:
         f.write(expected)
     debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
-    debug_img.save(f"test/outputs/actual/span{pdf_no}_t{j}.png")
+    debug_img.save(f"data/test/outputs/actual/span{pdf_no}_t{j}.png")
 
 
 def try_jth_table(tables, pdf_no, j, expected, config=None):

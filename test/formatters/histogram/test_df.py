@@ -26,11 +26,11 @@ def try_jth_table(tables, tatr_csvs, pdf_no, j):
     if not expected == actual:
         # write to file
         debug_img = ft.visualize()
-        debug_img.save(f"test/outputs/histogram/pdf{pdf_no}_t{j}.png")
-        df.to_csv(f"test/outputs/histogram/pdf{pdf_no}_t{j}.csv", index=False)
+        debug_img.save(f"data/test/outputs/histogram/pdf{pdf_no}_t{j}.png")
+        df.to_csv(f"data/test/outputs/histogram/pdf{pdf_no}_t{j}.csv", index=False)
         # copy over the old csv as well
         with open(
-            f"test/outputs/histogram/pdf{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
+            f"data/test/outputs/histogram/pdf{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
         ) as f:
             f.write(expected)
     assert expected == actual, f"Mismatch in csv files for pdf {pdf_no} and table {j}"

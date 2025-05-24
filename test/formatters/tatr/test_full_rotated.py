@@ -79,18 +79,18 @@ GC+SWCNTs; CtCDH,Drop-casting,DET,p-Phenylenediamine,NH2,CV; 1 mV s−1,"7.4, 10
 GC+SWCNTs; CtCDH,Drop-casting,DET,p-Phenylenediamine+GA,NH2,CV; 1 mV s−1,"7.4, 10 mM lactose; 50 mM glucose",43; 21,(Ortiz et al. submitted)
 """
     if actual != expected:
-        df.to_csv("test/outputs/actual/pdf9_t4.csv", index=False)
-        with open("test/outputs/actual/pdf9_t4.old.csv", "w", encoding="utf-8") as f:
+        df.to_csv("data/test/outputs/actual/pdf9_t4.csv", index=False)
+        with open("data/test/outputs/actual/pdf9_t4.old.csv", "w", encoding="utf-8") as f:
             f.write(expected)
         ft.visualize(effective=True, show_labels=False, return_img=True).save(
-            "test/outputs/actual/pdf9_t4.png"
+            "data/test/outputs/actual/pdf9_t4.png"
         )
     assert actual == expected
 
     # structure recognition and df formatting
     # ft = formatter.extract(table)
     # df = ft.df()
-    # df.to_csv("test/outputs/actual/pdf9_p7.csv", index=True)
+    # df.to_csv("data/test/outputs/actual/pdf9_p7.csv", index=True)
 
 
 #     assert df.to_csv() == """\

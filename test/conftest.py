@@ -179,4 +179,4 @@ def pdf8_tables(docs_bulk, detector, formatter, tatr_tables):
 def pytest_sessionstart(session):
     import os
 
-    os.makedirs("test/outputs/ditr", exist_ok=True)
+    os.makedirs("data/test/outputs/ditr", exist_ok=True)

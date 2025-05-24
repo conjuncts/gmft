@@ -14,9 +14,9 @@ def try_table(want, ditr_tables, ditr_csvs, pdf):
     if expected != actual:
         # save images and csvs
         debug_img = ft.visualize()
-        debug_img.save(f"test/outputs/ditr/{want}.png")
-        ft.df().to_csv(f"test/outputs/ditr/{want}.csv", index=False)
-        with open(f"test/outputs/ditr/{want}.old.csv", "w", encoding="utf-8") as f:
+        debug_img.save(f"data/test/outputs/ditr/{want}.png")
+        ft.df().to_csv(f"data/test/outputs/ditr/{want}.csv", index=False)
+        with open(f"data/test/outputs/ditr/{want}.old.csv", "w", encoding="utf-8") as f:
             f.write(expected)
     assert expected == actual, f"Mismatch in csv files for {want}"
 

@@ -251,7 +251,7 @@ def test_FormattedTable_to_dict(doc_tiny):
     dict2table = TATRFormattedTable.from_dict(tiny_info, page)
     dict2table2dict = dict2table.to_dict()
 
-    with open("test/outputs/actual/tiny_df.info", "w") as f:
+    with open("data/test/outputs/actual/tiny_df.info", "w") as f:
         json.dump(dict2table2dict, f, indent=4)
     assert dict2table2dict == tiny_info
 

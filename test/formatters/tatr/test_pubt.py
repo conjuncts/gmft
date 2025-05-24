@@ -26,9 +26,9 @@ def test_pubt_p4(doc_pubt, detector, formatter):
 """
     if actual != expected:
         ft_4.visualize(effective=True, show_labels=False, return_img=True).save(
-            "test/outputs/actual/pubt_p4.png"
+            "data/test/outputs/actual/pubt_p4.png"
         )
-        df_4.to_csv("test/outputs/actual/pubt_p4.csv", index=True)
+        df_4.to_csv("data/test/outputs/actual/pubt_p4.csv", index=True)
         assert actual == expected
 
 
@@ -51,9 +51,9 @@ def test_pubt_p6(doc_pubt, tatr_tables):
 """
     if actual != expected:
         ft.visualize(effective=True, show_labels=False, return_img=True).save(
-            "test/outputs/actual/pubt_p6.png"
+            "data/test/outputs/actual/pubt_p6.png"
         )
-        df.to_csv("test/outputs/actual/pubt_p6.csv", index=True)
+        df.to_csv("data/test/outputs/actual/pubt_p6.csv", index=True)
         assert actual == expected
 
 
@@ -73,9 +73,9 @@ def test_pubt_p7(doc_pubt, detector, formatter):
 """
     if actual != expected:
         ft_7.visualize(effective=True, show_labels=False, return_img=True).save(
-            "test/outputs/actual/pubt_p7.png"
+            "data/test/outputs/actual/pubt_p7.png"
         )
-        df_7.to_csv("test/outputs/actual/pubt_p7.csv", index=True)
+        df_7.to_csv("data/test/outputs/actual/pubt_p7.csv", index=True)
         assert actual == expected
 
 
@@ -102,7 +102,7 @@ Canonical,DETR-NC,Simple,0.9349,0.9933,0.9920,0.9900,0.9865
 """
     if actual != expected:
         ft_8.visualize(effective=True, show_labels=False, return_img=True).save(
-            "test/outputs/actual/pubt_p8.png"
+            "data/test/outputs/actual/pubt_p8.png"
         )
-        df_8.to_csv("test/outputs/actual/pubt_p8.csv", index=False)
+        df_8.to_csv("data/test/outputs/actual/pubt_p8.csv", index=False)
         assert actual == expected

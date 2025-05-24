@@ -39,7 +39,7 @@ def test_CroppedTable_positions(doc_tiny):
     )
 
     # get reference positions from tiny_pdfium.txt
-    with open("test/outputs/tiny_cropped_positions.tsv") as f:
+    with open("data/test/references/tiny_cropped_positions.tsv") as f:
         reference = f.readlines()
     for i, line in enumerate(reference):
         x0, y0, x1, y1, text = line.strip().split("\t")
@@ -104,7 +104,7 @@ def test_RotatedCroppedTable_positions(doc_tiny):
     )
 
     # get reference positions from tiny_pdfium.txt
-    with open("test/outputs/tiny_cropped_positions.tsv", "r") as f:
+    with open("data/test/references/tiny_cropped_positions.tsv", "r") as f:
         reference = f.readlines()
     for i, line in enumerate(reference):
         x0, y0, x1, y1, text = line.strip().split("\t")
@@ -169,6 +169,6 @@ if __name__ == "__main__":
     )
 
     # create the tsv
-    with open("test/outputs/tiny_cropped_positions.tsv", "w") as f:
+    with open("data/test/references/tiny_cropped_positions.tsv", "w") as f:
         for pos in table.text_positions():
             f.write("\t".join(map(str, pos)) + "\n")
