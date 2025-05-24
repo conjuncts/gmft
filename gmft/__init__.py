@@ -140,22 +140,3 @@ class AutoTableDetector(AutoTableDetectorOrig):
     def __init__(self, *args, **kwargs):
         _deprecation_warning("AutoTableDetector")
         super().__init__(*args, **kwargs)
-
-
-# Rect = LazyHouse.Rect
-# BasePDFDocument = LazyHouse.BasePDFDocument
-# BasePage = LazyHouse.BasePage
-# CroppedTable = LazyHouse.CroppedTable
-# RotatedCroppedTable = LazyHouse.RotatedCroppedTable
-# TATRTableDetector = LazyHouse.TATRTableDetector
-# TableDetectorConfig = LazyHouse.TableDetectorConfig
-# TableDetector = LazyHouse.TableDetector
-# FormattedTable = LazyHouse.FormattedTable
-# TATRFormatConfig = LazyHouse.TATRFormatConfig
-# TATRFormattedTable = LazyHouse.TATRFormattedTable
-# TATRTableFormatter = LazyHouse.TATRTableFormatter
-
-
-# AutoTableFormatter = AccessTracker(lambda x: gmft_aliases.AutoTableFormatter)
-# AutoFormatConfig = AccessTracker(lambda x: gmft_aliases.AutoFormatConfig)
-# AutoTableDetector = AccessTracker(lambda x: gmft_aliases.AutoTableDetector)
