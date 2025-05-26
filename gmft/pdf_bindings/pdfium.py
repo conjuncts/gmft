@@ -4,7 +4,8 @@ from __future__ import annotations  # 3.7
 from typing import Generator, Tuple
 import pypdfium2 as pdfium
 
-from gmft.base import DocumentClosedException, Rect
+from gmft.base import Rect
+from gmft.exceptions import DocumentClosedException
 from gmft.pdf_bindings.base import BasePDFDocument, BasePage, _infer_line_breaks
 
 from PIL.Image import Image as PILImage
@@ -35,8 +36,7 @@ class PyPDFium2Page(BasePage):
         self.filename = filename
         self.width = page.get_width()
         self.height = page.get_height()
-        self._positions_and_text = []  # cache results, because this appears to be slow
-        self._positions_and_text_and_breaks = []
+        self._positions_and_text_and_breaks = None
         super().__init__(page_no)
 
     def get_positions_and_text(
@@ -50,7 +50,9 @@ class PyPDFium2Page(BasePage):
         """
         # {0: '?', 1: 'text', 2: 'path', 3: 'image', 4: 'shading', 5: 'form'}
 
-        # problem: num_rect is not finely grained enough, as it tends to clump multiple words together
+        # Problem: num_rect is not finely grained enough, as it tends to clump multiple words together
+        # For instance, the following code would NOT work:
+
         # textpage = self.page.get_textpage()
         # num_rects = textpage.count_rects()
         # for i in range(num_rects):
@@ -59,76 +61,12 @@ class PyPDFium2Page(BasePage):
         #     adjusted = (rect[0], self.height - rect[3], rect[2], self.height - rect[1])
         #     yield *adjusted, text
 
-        # this is a bit more fine-grained
+        if self._positions_and_text_and_breaks is None:
+            self._initialize_word_bboxes()
+            assert self._positions_and_text_and_breaks is not None
 
-        # cache results, because this appears to be slow
-        # from the superior data, take what we need
-        if self._positions_and_text_and_breaks:
-            for x0, x1, y0, y1, text, _, _, _ in self._positions_and_text_and_breaks:
-                yield x0, y0, x1, y1, text
-            return
-
-        if self._positions_and_text:
-            for item in self._positions_and_text:
-                yield item
-            return
-
-        if self._is_closed():
-            raise DocumentClosedException("Document was already closed")
-        result = []
-        text_page = self.page.get_textpage()
-
-        # "char" seems to not actually be a char, but a string-like token
-        # for index in range(text_page.count_chars()):
-        #     bbox = text_page.get_charbox(index)
-        #     char = text_page.get_text_range(index, 1)
-        #     yield *bbox, char
-
-        # Aggregate chars into words
-        current_word = ""
-        current_bbox = None
-        for index in range(text_page.count_chars()):
-            bbox = text_page.get_charbox(index)
-            char = text_page.get_text_range(index, 1)
-            # if is whitespace
-            if char.isspace():
-                if current_word:
-                    # perform negation
-                    current_bbox = (
-                        current_bbox[0],
-                        self.height - current_bbox[3],
-                        current_bbox[2],
-                        self.height - current_bbox[1],
-                    )
-                    result.append((*current_bbox, current_word))
-                    # cache, because it is slow
-                    yield *current_bbox, current_word
-                    current_word = ""
-                    current_bbox = None
-            else:
-                current_word += char
-                if current_bbox is None:
-                    current_bbox = bbox
-                else:
-                    # for the bbox, simply get the min/max
-                    current_bbox = (
-                        min(current_bbox[0], bbox[0]),
-                        min(current_bbox[1], bbox[1]),
-                        max(current_bbox[2], bbox[2]),
-                        max(current_bbox[3], bbox[3]),
-                    )
-        # Add the last word
-        if current_word:
-            current_bbox = (
-                current_bbox[0],
-                self.height - current_bbox[3],
-                current_bbox[2],
-                self.height - current_bbox[1],
-            )
-            result.append((*current_bbox, current_word))
-            yield *current_bbox, current_word
-
-        self._positions_and_text = result
+        for x0, y0, x1, y1, text, _, _, _ in self._positions_and_text_and_breaks:
+            yield x0, y0, x1, y1, text
 
     def get_filename(self) -> str:
         return self.filename
@@ -170,20 +108,75 @@ class PyPDFium2Page(BasePage):
         """
         return self.page is None or self.parent._is_closed()
 
+    def _initialize_word_bboxes(self):
+        if self._positions_and_text_and_breaks is not None:
+            return  # nothing to do
+
+        if self._is_closed():
+            raise DocumentClosedException("Document was already closed")
+
+        result = []
+        text_page = self.page.get_textpage()
+
+        # "char" seems to not actually be a char, but a string-like token
+        # for index in range(text_page.count_chars()):
+        #     bbox = text_page.get_charbox(index)
+        #     char = text_page.get_text_range(index, 1)
+        #     yield *bbox, char
+
+        # Aggregate chars into words
+        current_word = ""
+        current_bbox = None
+        for index in range(text_page.count_chars()):
+            bbox = text_page.get_charbox(index)
+            char = text_page.get_text_range(index, 1)
+            # if is whitespace
+            if char.isspace():
+                if current_word:
+                    # perform negation
+                    current_bbox = (
+                        current_bbox[0],
+                        self.height - current_bbox[3],
+                        current_bbox[2],
+                        self.height - current_bbox[1],
+                    )
+                    result.append((*current_bbox, current_word))
+                    # cache, because it is slow
+                    current_word = ""
+                    current_bbox = None
+            else:
+                current_word += char
+                if current_bbox is None:
+                    current_bbox = bbox
+                else:
+                    # for the bbox, simply get the min/max
+                    current_bbox = (
+                        min(current_bbox[0], bbox[0]),
+                        min(current_bbox[1], bbox[1]),
+                        max(current_bbox[2], bbox[2]),
+                        max(current_bbox[3], bbox[3]),
+                    )
+        # Add the last word
+        if current_word:
+            current_bbox = (
+                current_bbox[0],
+                self.height - current_bbox[3],
+                current_bbox[2],
+                self.height - current_bbox[1],
+            )
+            result.append((*current_bbox, current_word))
+        words = list(_infer_line_breaks(result))
+        self._positions_and_text_and_breaks = words
+
     def _get_positions_and_text_and_breaks(self):
         """
         [Experimental] This is a generator that returns the positions and text of the page, as well as the breaks.
         """
         # cache, since it is slow
-        if self._positions_and_text_and_breaks:
-            for item in self._positions_and_text_and_breaks:
-                yield item
-            return
+        if self._positions_and_text_and_breaks is None:
+            self._initialize_word_bboxes()
 
-        # generate
-        words = list(_infer_line_breaks(self.get_positions_and_text()))
-        self._positions_and_text_and_breaks = words
-        for item in words:
+        for item in self._positions_and_text_and_breaks:
             yield item
 
 

@@ -2,15 +2,12 @@ import json
 import os
 
 from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable
+from test.conftest import dump_text
 
 
 def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):
-    with open(f"data/test/outputs/actual/span{pdf_no}_t{j}.csv", "w", encoding="utf-8") as f:
-        f.write(actual)
-    with open(
-        f"data/test/outputs/actual/span{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
-    ) as f:
-        f.write(expected)
+    dump_text(actual, f"span{pdf_no}_t{j}.csv")
+    dump_text(expected, f"span{pdf_no}_t{j}.old.csv")
     debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
     debug_img.save(f"data/test/outputs/actual/span{pdf_no}_t{j}.png")
 

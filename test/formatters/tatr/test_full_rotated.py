@@ -4,7 +4,7 @@ from gmft.auto import AutoFormatConfig
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.detectors.base import RotatedCroppedTable
 from gmft.formatters.tatr import TATRFormattedTable
-
+from test.conftest import dump_text
 
 # @pytest.fixture
 # def doc_8():
@@ -80,8 +80,7 @@ GC+SWCNTs; CtCDH,Drop-casting,DET,p-Phenylenediamine+GA,NH2,CV; 1 mV s−1,"7.4,
 """
     if actual != expected:
         df.to_csv("data/test/outputs/actual/pdf9_t4.csv", index=False)
-        with open("data/test/outputs/actual/pdf9_t4.old.csv", "w", encoding="utf-8") as f:
-            f.write(expected)
+        dump_text(expected, "pdf9_t4.old.csv")
         ft.visualize(effective=True, show_labels=False, return_img=True).save(
             "data/test/outputs/actual/pdf9_t4.png"
         )

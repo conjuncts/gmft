@@ -1,4 +1,5 @@
 import json
+import os
 import pytest
 
 import matplotlib
@@ -104,6 +105,19 @@ def get_tables_for_pdf(
             page = doc[as_dict["page_no"]]
             tables.append(TATRFormattedTable.from_dict(as_dict, page))
     return tables
+
+
+def dump_text(string: str, filename: str):
+    """
+    Helper function to dump text to a file.
+    """
+    dest_folder = "data/test/outputs/actual"
+    os.makedirs(dest_folder, exist_ok=True)
+
+    with open(f"{dest_folder}/{filename}", "w", encoding="utf-8") as f:
+        f.write(string)
+    print(f"Dumped to {dest_folder}/{filename}")
+    return string
 
 
 @pytest.fixture(scope="session")

@@ -3,6 +3,7 @@ from gmft import TATRFormattedTable
 from gmft.formatters.page.embed import embed_tables
 from gmft.formatters.page.auto import AutoPageFormatter
 from gmft.formatters.tatr import TATRFormatConfig
+from test.conftest import dump_text
 
 from .data import (
     _rich_page_0_text,
@@ -35,7 +36,9 @@ def test_rich_pdf7(docs_bulk, pdf7_tables):
 
     rich_pages = embed_tables(doc=doc, tables=pdf7_tables)
 
-    assert rich_pages[2].get_text() == _rich_page_2_text
+    assert rich_pages[2].get_text() == _rich_page_2_text, dump_text(
+        rich_pages[2].get_text(), "rich_page_2.txt"
+    )
     assert rich_pages[3].get_text() == _rich_page_3_text
     # control
     assert rich_pages[0].get_text() == _rich_page_0_text

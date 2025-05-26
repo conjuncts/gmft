@@ -209,7 +209,7 @@ class _PdfOCR_For_I2TDoc(PdfOCR):
                 # raise ValueError("Currently not supported, as block_no and line_no are needed for accurate table extraction.")
                 # def generator_creator():
                 #     ctr = 0
-                #     for x0, x1, y0, y1, text in page.get_positions_and_text():
+                #     for x0, y0, x1, y1, text in page.get_positions_and_text():
                 #         approx_line_no = y0 // 10
                 #         yield x0, y0, x1, y1, text, 0, approx_line_no, ctr
                 #         ctr += 1

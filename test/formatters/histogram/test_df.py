@@ -30,7 +30,9 @@ def try_jth_table(tables, tatr_csvs, pdf_no, j):
         df.to_csv(f"data/test/outputs/histogram/pdf{pdf_no}_t{j}.csv", index=False)
         # copy over the old csv as well
         with open(
-            f"data/test/outputs/histogram/pdf{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
+            f"data/test/outputs/histogram/pdf{pdf_no}_t{j}.old.csv",
+            "w",
+            encoding="utf-8",
         ) as f:
             f.write(expected)
     assert expected == actual, f"Mismatch in csv files for pdf {pdf_no} and table {j}"

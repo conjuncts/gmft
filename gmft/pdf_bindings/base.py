@@ -150,7 +150,7 @@ def _infer_line_breaks(
     # pass 1: set the line height to the average line height
     all_words = list(generator_in)
     # sort by y, then x
-    all_words.sort(key=lambda x: (x[1], x[0]))
+    # all_words.sort(key=lambda x: (x[1], x[0]))
 
     if not all_words:
         return
