@@ -6,7 +6,7 @@ from typing import Generator, Union
 import numpy as np
 import pandas as pd
 
-from gmft._dataclasses import removed_property, non_defaults_only, with_config
+from gmft.config._dataclasses import removed_property, non_defaults_only, with_config
 from gmft.algorithm.dividers import (
     fill_using_true_partitions,
     _find_all_intervals_for_interval,
