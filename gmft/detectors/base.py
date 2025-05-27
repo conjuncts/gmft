@@ -123,8 +123,6 @@ class CroppedTable:
             padding = (pad, pad, pad, pad)
         elif padding == None:
             padding = (0, 0, 0, 0)
-        # if effective_dpi == self._img_dpi and effective_padding == self._img_padding:
-        # return self._img # cache results
         rect = self.rect
         if margin == "auto":
             margin = (30, 30, 30, 30)  # from the paper
@@ -172,16 +170,6 @@ class CroppedTable:
                     )
                 else:
                     yield w
-        # words = [w for w in self.page.get_positions_and_text()]
-        # if outside:
-        #     # get the table's complement
-        #     subset = [w for w in words if not Rect(w[:4]).is_intersecting(self.rect)]
-        # else:
-        #     # get the table
-        #     subset = [w for w in words if Rect(w[:4]).is_intersecting(self.rect)]
-        # if remove_table_offset:
-        #     subset = [(w[0] - self.rect.xmin, w[1] - self.rect.ymin, w[2] - self.rect.xmin, w[3] - self.rect.ymin, w[4]) for w in subset]
-        # return subset
 
     def text(self):
         """
@@ -259,7 +247,6 @@ class CroppedTable:
         labels = [self.label]
         bboxes = [self.rect.bbox]
         if show_text:
-            # text_positions = [(x0, y0, x1, y1) for x0, y0, x1, y1, _ in self.text_positions()]
             text_positions = [w[:4] for w in self.page.get_positions_and_text()]
             confidences += [0.9] * len(text_positions)
             labels += [-1] * len(text_positions)
@@ -282,8 +269,6 @@ class CroppedTable:
             "confidence_score": self.confidence_score,
             "label": self.label,
         }
-        # if self._captions:
-        # obj['captions'] = self._captions
         return obj
 
     @staticmethod
@@ -493,13 +478,6 @@ class RotatedCroppedTable(CroppedTable):
         )
         table._captions = d.get("captions", [])
         return table
-
-    # def visualize(self, **kwargs):
-    #     """
-    #     Visualize the cropped table.
-    #     """
-    #     img = self.page.get_image()
-    #     plot_results_unwr(img, [self.confidence_score], [self.label], [self.bbox], self.angle, **kwargs)
 
     @property
     def width(self):

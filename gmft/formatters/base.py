@@ -126,7 +126,6 @@ def _normalize_bbox(
     2. scale factor is normalized (dpi=72)
     3. margin is removed (so (0, 0) is the start of the original detected bbox)
     """
-    # print("Margin: ", used_margin)
     if used_margin is None:
         used_margin = (0, 0)
     bbox = [

@@ -102,7 +102,6 @@ class TestPdf3:
 class TestPdf4:
     def test_bulk_pdf4_t0(self, pdf4_tables, tatr_csvs):
         pass  # empty
-        # try_jth_table(pdf4_tables, tatr_csvs, 4, 0)
 
     def test_bulk_pdf4_t1(self, pdf4_tables, tatr_csvs):
         try_jth_table(pdf4_tables, tatr_csvs, 4, 1)

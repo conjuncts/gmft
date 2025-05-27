@@ -13,15 +13,6 @@ from gmft.formatters.tatr import TATRFormattedTable
 # (ie. dependence on environment - colab/local)
 
 
-# @pytest.fixture(scope="module")
-# def formatter():
-#     # try out microsoft/table-transformer-structure-recognition-v1.1-all
-#     config = AutoFormatConfig()
-#     config.detector_path = "microsoft/table-transformer-structure-recognition-v1.1-all"
-#     config.no_timm = False
-#     yield AutoTableFormatter(config)
-
-
 def try_jth_table(tables, tatr_csvs, pdf_no, j, config=None, REDETECT_TABLES=False):
     if config is None:
         config = AutoFormatConfig()

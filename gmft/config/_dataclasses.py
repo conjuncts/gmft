@@ -46,7 +46,6 @@ def non_defaults_only(config: object) -> dict:
     """
     Returns a dictionary of only the attributes that differ from the default values.
     """
-    # return {k: v for k, v in config.__dict__.items() if v != getattr(config.__class__, k)}
     result = {}
     for f in fields(config):
         current_value = getattr(config, f.name)

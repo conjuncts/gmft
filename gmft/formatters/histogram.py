@@ -25,9 +25,8 @@ class HistogramFormattedTable(FormattedTable):
     """
 
     id2label = {
-        # 0: 'table',
-        1: "column divider",  # table column',
-        2: "row divider",  # table row',
+        1: "column divider",
+        2: "row divider",
     }
     irvl_results: dict
     """
@@ -124,7 +123,6 @@ class HistogramFormatter(BaseFormatter):
                 return self.config.col_sep_threshold  # 0
             else:
                 return self.config.col_sep_threshold  # 0
-                # return 1
 
     def decide_separator(
         self, interval: tuple[float, float], max_width: float, is_row: bool
@@ -186,10 +184,8 @@ class HistogramFormatter(BaseFormatter):
         ]
 
         irvl_results = {
-            # 'labels': [],
-            # 'boxes': [],
-            "row_dividers": y_sep_bounds,  # .append([0, y0, tbl_width, y1])
-            "col_dividers": x_sep_bounds,  # .append([x0, 0, x1, tbl_height])
+            "row_dividers": y_sep_bounds,
+            "col_dividers": x_sep_bounds,
         }
 
         # compute for the first time

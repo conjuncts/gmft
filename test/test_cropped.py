@@ -17,9 +17,6 @@ def are_bboxes_close(reference, actual, EPS=0.01):
             f"Different text: expected {ref_text}, got {act_text}"
         )
         for ref, pos in zip(ref_bbox, act_bbox):
-            # ref = float(ref)
-            # pos = float(pos)
-            # assert abs(ref - pos) < EPS, f"Different positions: expected {ref}, got {pos}"
             assert ref == pytest.approx(pos, EPS), (
                 f"Different positions: expected {ref}, got {pos}"
             )

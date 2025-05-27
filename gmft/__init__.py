@@ -42,9 +42,7 @@ Please import from gmft.auto instead."
     has_warned = True
 
 
-# These are fine, but discouraged.
-# they are relatively light classes; also,
-# Needed out of fear that isinstance() calls will fail
+# These small classes are fine, but still discouraged.
 # Rect
 # BasePDFDocument
 # BasePage

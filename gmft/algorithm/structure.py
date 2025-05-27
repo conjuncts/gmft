@@ -115,6 +115,8 @@ def _find_leftmost_gt(sorted_list, value, key_func):
     Therefore, finds the leftmost box where box_max > y_min
 
     In other words, the first row where the row might intersect y_min, even a little bit
+
+    Exactly bisect.bisect_left(sorted_list, value, key=key_func)
     """
     # from bisect.bisect_left; copy the code to support key_func in python < 3.10
     a = sorted_list
@@ -139,7 +141,6 @@ def _find_leftmost_gt(sorted_list, value, key_func):
             else:
                 hi = mid
     return lo
-    # return bisect.bisect_left(sorted_list, value, key=key_func)
 
 
 def _widen_and_even_out_rows(sorted_rows, sorted_headers):
@@ -223,13 +224,12 @@ def _non_maxima_suppression(sorted_rows: list[dict], overlap_threshold=0.1):
     return num_removed
 
 
-def _is_within_header(
-    bbox, sorted_headers, _iob=_iob_for_rows, header_threshold=0.5
-):  # assume len(sorted_headers) <= 2
+def _is_within_header(bbox, sorted_headers, _iob=_iob_for_rows, header_threshold=0.5):
     """
     check if bbox is in any of the bboxes specified in sorted_headers
     sorted_headers: list of dictionaries, each with keys 'bbox', 'confidence', 'label'
     """
+    # Assume len(sorted_headers) <= 2
     return any(
         _iob(bbox, header["bbox"]) > header_threshold for header in sorted_headers
     )
@@ -240,7 +240,7 @@ def _is_within_any_bbox(
     haystack: list[tuple[float, float, float, float]],
     _iob=_iob_for_rows,
     threshold=0.5,
-):  # assume len(sorted_headers) <= 2
+):
     """
     check if needle bbox is in any of haystack bboxes
     """
@@ -301,8 +301,6 @@ def _guess_row_bboxes_for_large_tables(
                 continue
             y = mean - row_height / 2
             # do NOT construct mini row if there is a gap
-            # if prev_height is not None and y < prev_height:
-            # new_rows.append({'confidence': 1, 'label': 'table row', 'bbox': [leftmost, prev_height, rightmost, y]})
             new_rows.append(
                 {
                     "confidence": 1,
@@ -378,18 +376,17 @@ def _find_all_rows_for_box(
     """
     rows = []
     _, ymin, _, ymax = bbox
-    # linsearch
-    # for i, row in enumerate(sorted_rows):
-    i = _find_leftmost_gt(sorted_rows, ymin, lambda row: row[3])  # ['bbox'][3])
+    # Equivalent to linear search through sorted_rows
+    i = _find_leftmost_gt(sorted_rows, ymin, lambda row: row[3])
     while i < len(sorted_rows):
         row = sorted_rows[i]
-        iob_score = _iob(bbox, row)  # ['bbox'])
+        iob_score = _iob(bbox, row)
 
         if iob_score > threshold:
             rows.append(i)
         # we may break early when the row is below the textbox
-        # this assumes that row_min and row_max are roughly
-        if ymax < row[1]:  # ['bbox'][1]: # ymax < row_min
+        # this assumes that row_min and row_max are roughly accurate
+        if ymax < row[1]:  # ymax < row_min
             break
         i += 1
     return rows
@@ -406,16 +403,13 @@ def _find_all_columns_for_box(
     columns = []
     xmin, _, xmax, _ = bbox
     # linsearch
-    # for i, row in enumerate(sorted_columns):
-    i = _find_leftmost_gt(
-        sorted_columns, xmin, lambda bbox: bbox[2]
-    )  # column: column['bbox'][2])
+    i = _find_leftmost_gt(sorted_columns, xmin, lambda bbox: bbox[2])
     while i < len(sorted_columns):
         column = sorted_columns[i]
-        iob_score = _iob(bbox, column)  # column['bbox'])
+        iob_score = _iob(bbox, column)
         if iob_score > threshold:
             columns.append(i)
-        if xmax < column[0]:  # column['bbox'][0]: # xmax < column_min
+        if xmax < column[0]:
             break
         i += 1
     return columns
@@ -438,7 +432,7 @@ def _find_best_row_for_text(sorted_rows, textbox):
             row_max_iob = iob_score
             row_num = i
         # we may break early when the row is below the textbox
-        # this assumes that row_min and row_max are roughly
+        # this assumes that row_min and row_max are roughly accurate
         if ymax < row["bbox"][1]:  # ymax < row_min
             break
         i += 1
@@ -449,8 +443,7 @@ def _find_best_column_for_text(sorted_columns, textbox):
     column_num = None
     column_max_iob = 0
     xmin, _, xmax, _ = textbox
-    # linsearch
-    # for i, row in enumerate(sorted_columns):
+    # Equivalent to linear search through sorted_columns
     i = _find_leftmost_gt(sorted_columns, xmin, lambda column: column["bbox"][2])
     while i < len(sorted_columns):
         column = sorted_columns[i]
@@ -490,7 +483,6 @@ def _split_spanning_cells(
     sorted_monosemantic_top_headers = []
     sorted_hier_left_headers = []
     for x in spanning_cells:
-        # if _is_within_header(x['bbox'], sorted_headers): # , _iob=_iob):
         if _is_within_any_bbox(x["bbox"], sorted_headers_bboxes, _iob=_iob):
             # good - it is located in the header
             # if calculate_semantic_column_headers:
@@ -713,10 +705,7 @@ def _fill_using_partitions(
         # 6. let column_num be column with max iob
         column_num, column_max_iob = _find_best_column_for_text(sorted_columns, textbox)
 
-        # 7. check if it's a header
-        # if possible_header:
-        #     column_headers.setdefault(column_num, []).append(text)
-        #     continue
+        # 7. check if it's a header (deprecated)
 
         # we may now obtain row and column
         # if row_num is None:
@@ -807,12 +796,10 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
     # 2b. sort by xmax
     sorted_columns.sort(key=lambda x: x["bbox"][2])
 
-    # print(len(sorted_rows), len(sorted_columns))
     if not sorted_horizontals or not sorted_columns:
         raise ValueError("No rows or columns detected")
 
     # 3. deduplicate, because tatr places a 2 bboxes for header (it counts as a header and a row)
-    #     if _symmetric_iob(prev['bbox'], cur['bbox']) > config.deduplication_iob_threshold:
     sorted_rows, sorted_headers, sorted_projecting = _split_sorted_horizontals(
         sorted_horizontals
     )

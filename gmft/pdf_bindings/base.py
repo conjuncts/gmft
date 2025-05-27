@@ -133,11 +133,6 @@ class ImageOnlyPage(BasePage):
         self.img.close()
         self.img = None
 
-    # def __del__(self):
-    # pass
-    # if self.img is not None:
-    #     self.close()
-
 
 def _infer_line_breaks(
     generator_in: Generator[tuple[float, float, float, float, str], None, None],

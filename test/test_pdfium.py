@@ -11,7 +11,6 @@ def test_pypdfium2_bindings(doc_tiny):
     PyPDFium2Document("data/pdfs/tiny.pdf")
     assert len(doc_tiny) == 1
     page = doc_tiny.get_page(0)
-    # type: gmft.pdf_bindings.BasePage
 
     img = page.get_image()
     assert img.width == 612
@@ -23,7 +22,6 @@ def test_pypdfium2_bindings(doc_tiny):
 
 def test_pypdfium2_image(doc_tiny):
     page = doc_tiny.get_page(0)
-    # type: gmft.pdf_bindings.BasePage
     img = page.get_image()
     assert img.width == 612
     assert img.height == 792
@@ -43,7 +41,6 @@ def test_pypdfium2_image(doc_tiny):
 
 def test_pypdfium2_positions(doc_tiny):
     page = doc_tiny.get_page(0)
-    # type: gmft.pdf_bindings.BasePage
 
     # get reference positions from tiny_pdfium.txt
     with open("data/test/references/tiny_pdfium.tsv") as f:
@@ -66,5 +63,3 @@ def test_pypdfium2_positions(doc_tiny):
             assert abs(ref - pos) < EPS, (
                 f"Different positions: expected {ref}, got {pos}"
             )
-
-    # tuples = list(page.get_positions_and_text())

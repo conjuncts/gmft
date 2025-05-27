@@ -308,7 +308,7 @@ class TATRFormattedTable(FormattedTable):
         :param effective: if True, visualize the effective rows and columns, which may differ from the table transformer's output.
         :param return_img: if True, return the image. If False, the matplotlib figure is plotted.
         """
-        if dpi is None:  # dpi = needed_dpi
+        if dpi is None:
             dpi = self._img_dpi
         if dpi is None:
             dpi = 72
@@ -346,7 +346,6 @@ class TATRFormattedTable(FormattedTable):
 
         # get needed scale factor and dpi
         img = self.image(dpi=dpi, padding=padding, margin=margin)
-        # if self._img is not None:
         true_margin = [x * (dpi / 72) for x in self._img_margin]
         return plot_results_unwr(
             img,
@@ -422,7 +421,7 @@ class TATRFormattedTable(FormattedTable):
 
         table = TATRFormattedTable(
             cropped_table,
-            results,  # scale_factor, tuple(padding),
+            results,
             config=config,
         )
         table.outliers = d.get("outliers", None)
@@ -519,5 +518,5 @@ class TATRFormatter(TableFormatter):
         return formatted_table
 
 
-# legacy aliases from the nonstandard days
+# legacy aliases
 TATRTableFormatter = TATRFormatter

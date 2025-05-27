@@ -233,7 +233,6 @@ class DITRFormattedTable(HistogramFormattedTable):
         cropped_table: CroppedTable,
         irvl_results: dict,
         fctn_results: dict,
-        #  fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int],
         config: DITRFormatConfig = None,
     ):
         super(DITRFormattedTable, self).__init__(
@@ -317,8 +316,6 @@ class DITRFormattedTable(HistogramFormattedTable):
         return {
             **parent,
             **{
-                # 'fctn_scale_factor': self.fctn_scale_factor,
-                # 'fctn_padding': list(self.fctn_padding),
                 "config": non_defaults_only(self.config),
                 "outliers": self.outliers,
                 "fctn_results": self.fctn_results,
@@ -363,7 +360,7 @@ class DITRFormattedTable(HistogramFormattedTable):
         table = DITRFormattedTable(
             cropped_table,
             None,
-            results,  # scale_factor, tuple(padding),
+            results,
             config=config,
         )
         table.recompute()
@@ -394,7 +391,7 @@ class DITRFormatter(TableFormatter):
         self.image_processor = AutoImageProcessor.from_pretrained(
             config.image_processor_path
         )
-        # revision = "no_timm" if config.no_timm else None , revision=revision
+        # might need revision: "no_timm"
         self.structor = TableTransformerForObjectDetection.from_pretrained(
             config.formatter_path
         ).to(config.torch_device)
@@ -451,7 +448,7 @@ class DITRFormatter(TableFormatter):
         formatted_table = DITRFormattedTable(
             table,
             None,
-            results,  # scale_factor, padding,
+            results,
             config=config,
         )
         formatted_table.recompute()

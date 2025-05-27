@@ -92,10 +92,6 @@ class Img2TablePDFDocument(BasePDFDocument, img2table.document.PDF):
 
             if table_pages:
                 # Create PDF object for OCR
-                # pdf_ocr = PDF(src=self.bytes,
-                #               pages=table_pages,
-                #               _images=images,
-                #               _rotated=self._rotated)
 
                 pdf_ocr = self
                 # I don't think it mutates? TODO Verify
@@ -158,7 +154,6 @@ class Img2TablePage(img2table.document.PDF):
                 for k, v in tables.items()
                 if len(v) > 0
             ]
-            # images = [self.images[k] for k, v in tables.items() if len(v) > 0]
 
             if table_pages:
                 # Try to get OCRDataframe from PDF
@@ -185,16 +180,9 @@ class _PdfOCR_For_I2TDoc(PdfOCR):
         """
         list_pages = list()
 
-        # doc = fitz.Document(stream=document.bytes, filetype='pdf')
-        # for idx, page_number in enumerate(document.pages):
         for idx, page in enumerate(document):
-            # Get page
-            # page = doc.load_page(page_id=page_number)
-
             # Get image size and page dimensions
             img_height, img_width = list(document.images)[idx].shape[:2]
-            # page_height = (page.cropbox * page.rotation_matrix).height
-            # page_width = (page.cropbox * page.rotation_matrix).width
             page_height = page.height
             page_width = page.width
 
@@ -206,17 +194,8 @@ class _PdfOCR_For_I2TDoc(PdfOCR):
                 stuff = list(page.get_positions_and_text_mu())
                 generator = sorted(stuff, key=lambda x: (x[1], x[0]))
             else:
-                # raise ValueError("Currently not supported, as block_no and line_no are needed for accurate table extraction.")
-                # def generator_creator():
-                #     ctr = 0
-                #     for x0, y0, x1, y1, text in page.get_positions_and_text():
-                #         approx_line_no = y0 // 10
-                #         yield x0, y0, x1, y1, text, 0, approx_line_no, ctr
-                #         ctr += 1
-                # stuff = list(generator_creator())
+                # TODO: sort by position
                 # generator = sorted(stuff, key=lambda x: (x[1], x[0]))
-
-                # this will automatically sort
                 generator = page._get_positions_and_text_and_breaks()
             for (
                 x1,
@@ -227,8 +206,7 @@ class _PdfOCR_For_I2TDoc(PdfOCR):
                 block_no,
                 line_no,
                 word_no,
-            ) in generator:  # page.get_text("words", sort=True):
-                # (x1, y1), (x2, y2) = fitz.Point(x1, y1) * page.rotation_matrix, fitz.Point(x2, y2) * page.rotation_matrix
+            ) in generator:
                 x1, y1, x2, y2 = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
                 word = {
                     "page": idx,
@@ -277,8 +255,6 @@ class _PdfOCR_For_I2TPage(PdfOCR):
 
         # Get image size and page dimensions
         img_height, img_width = list(document.images)[0].shape[:2]
-        # page_height = (page.cropbox * page.rotation_matrix).height
-        # page_width = (page.cropbox * page.rotation_matrix).width
         page = document._basepage
         page_height = page.height
         page_width = page.width
@@ -294,7 +270,6 @@ class _PdfOCR_For_I2TPage(PdfOCR):
             # this will automatically sort
             generator = page._get_positions_and_text_and_breaks()
         for x1, y1, x2, y2, value, block_no, line_no, word_no in generator:
-            # (x1, y1), (x2, y2) = fitz.Point(x1, y1) * page.rotation_matrix, fitz.Point(x2, y2) * page.rotation_matrix
             x1, y1, x2, y2 = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
             word = {
                 "page": 0,
@@ -384,7 +359,6 @@ class Img2TableTable(FormattedTable):
         )
 
 
-# @auto_init
 @dataclass
 class Img2TableDetectorConfig:
     implicit_rows: bool = False
