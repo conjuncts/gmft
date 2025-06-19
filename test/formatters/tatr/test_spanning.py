@@ -1,7 +1,8 @@
 import json
 import os
 
-from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable
+from gmft.impl.tatr.config import TATRFormatConfig
+from gmft.formatters.tatr import TATRFormattedTable
 from test.conftest import dump_text
 
 

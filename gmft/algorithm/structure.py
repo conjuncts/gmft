@@ -8,7 +8,8 @@ from gmft.base import Rect
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable
+    from gmft.impl.tatr.config import TATRFormatConfig
+    from gmft.formatters.tatr import TATRFormattedTable
 
 
 def _iob(

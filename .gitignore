@@ -12,3 +12,4 @@ docs/build
 notebooks
 support_arena/*
 data/test/outputs
+experiments

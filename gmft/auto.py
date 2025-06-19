@@ -5,6 +5,7 @@ For convenience, please import using `gmft.auto` instead of `gmft`.
 """
 
 from gmft.base import Rect
+from gmft.impl.tatr.config import TATRFormatConfig
 from gmft.pdf_bindings.base import BasePDFDocument, BasePage
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
@@ -15,7 +16,7 @@ from gmft.detectors.tatr import (
     TableDetector,
 )
 from gmft.formatters.base import FormattedTable
-from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable, TATRFormatter
+from gmft.formatters.tatr import TATRFormattedTable, TATRFormatter
 
 TATRTableDetector = TATRDetector
 TATRTableFormatter = TATRFormatter

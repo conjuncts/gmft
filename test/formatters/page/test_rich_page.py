@@ -2,7 +2,7 @@ import pytest
 from gmft import TATRFormattedTable
 from gmft.formatters.page.embed import embed_tables
 from gmft.formatters.page.auto import AutoPageFormatter
-from gmft.formatters.tatr import TATRFormatConfig
+from gmft.impl.tatr.config import TATRFormatConfig
 from test.conftest import dump_text
 
 from .data import (

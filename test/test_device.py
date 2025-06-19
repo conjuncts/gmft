@@ -2,7 +2,8 @@ import pytest
 import torch
 
 from gmft.detectors.tatr import TATRDetector, TATRDetectorConfig
-from gmft.formatters.tatr import TATRFormatConfig, TATRFormatter
+from gmft.impl.tatr.config import TATRFormatConfig
+from gmft.formatters.tatr import TATRFormatter
 
 
 def test_cuda(doc_tiny):

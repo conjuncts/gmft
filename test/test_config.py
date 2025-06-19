@@ -2,7 +2,7 @@
 
 
 from gmft.core._dataclasses import with_config
-from gmft.formatters.tatr import TATRFormatConfig
+from gmft.impl.tatr.config import TATRFormatConfig
 
 
 def test_overrides():
