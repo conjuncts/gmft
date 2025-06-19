@@ -1,7 +1,7 @@
 import copy
 from dataclasses import dataclass, field
 import statistics
-from typing import Generator, Union
+from typing import Generator, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -96,7 +96,7 @@ class DITRFormatConfig(HistogramConfig):
     [Experimental] Enable semantic spanning cells, which often encode hierarchical multi-level indices.
     """
 
-    semantic_hierarchical_left_fill: Union[str, None] = "deep"
+    semantic_hierarchical_left_fill: Literal["algorithm", "deep", None] = "deep"
     """
     [Experimental] When semantic spanning cells is enabled, when a left header is detected which might
     represent a group of rows, that same value is reduplicated for each row.

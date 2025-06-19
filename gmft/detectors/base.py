@@ -8,7 +8,7 @@ Example:
 
 from abc import ABC, abstractmethod
 
-from typing import Generator, Generic, TypeVar, Union
+from typing import Generator, Generic, Literal, TypeVar, Union
 import PIL.Image
 from PIL.Image import Image as PILImage
 from PIL import ImageOps  # necessary to call PIL.ImageOps later
@@ -96,8 +96,8 @@ class CroppedTable:
     def image(
         self,
         dpi: int = None,
-        padding: Union[str, tuple[int, int, int, int], None] = None,
-        margin: Union[str, tuple[int, int, int, int]] = None,
+        padding: Union[tuple[int, int, int, int], Literal["auto", None]] = None,
+        margin: Union[tuple[int, int, int, int], Literal["auto", None]] = None,
     ) -> PILImage:
         """
         Return the image of the cropped table.
@@ -403,8 +403,8 @@ class RotatedCroppedTable(CroppedTable):
     def image(
         self,
         dpi: int = None,
-        padding: Union[str, tuple[int, int, int, int]] = None,
-        margin: Union[str, tuple[int, int, int, int]] = None,
+        padding: Union[tuple[int, int, int, int], Literal["auto", None]] = None,
+        margin: Union[tuple[int, int, int, int], Literal["auto", None]] = None,
         **kwargs,
     ) -> PILImage:
         """

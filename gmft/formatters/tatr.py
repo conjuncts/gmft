@@ -1,6 +1,6 @@
 import copy
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Literal, Union
 
 from gmft.config._dataclasses import non_defaults_only, with_config
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
@@ -76,7 +76,7 @@ class TATRFormatConfig:
     [Experimental] Enable semantic spanning cells, which often encode hierarchical multi-level indices.
     """
 
-    semantic_hierarchical_left_fill: Union[str, None] = "algorithm"
+    semantic_hierarchical_left_fill: Literal["algorithm", "deep", None] = "algorithm"
     """
     [Experimental] When semantic spanning cells is enabled, when a left header is detected which might
     represent a group of rows, that same value is reduplicated for each row.
