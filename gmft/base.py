@@ -1,5 +1,5 @@
 from typing import TypeVar, Union
-from gmft.exceptions import DocumentClosedException
+from gmft.core.exceptions import DocumentClosedException
 
 
 class Rect:

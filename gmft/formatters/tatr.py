@@ -2,7 +2,7 @@ import copy
 from dataclasses import dataclass, field
 from typing import Literal, Union
 
-from gmft.config._dataclasses import non_defaults_only, with_config
+from gmft.core._dataclasses import non_defaults_only, with_config
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
 from gmft.pdf_bindings.base import BasePage

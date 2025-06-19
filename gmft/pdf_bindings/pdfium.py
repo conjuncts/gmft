@@ -5,7 +5,7 @@ from typing import Generator, Tuple
 import pypdfium2 as pdfium
 
 from gmft.base import Rect
-from gmft.exceptions import DocumentClosedException
+from gmft.core.exceptions import DocumentClosedException
 from gmft.pdf_bindings.base import BasePDFDocument, BasePage, _infer_line_breaks
 
 from PIL.Image import Image as PILImage

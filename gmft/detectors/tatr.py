@@ -1,7 +1,7 @@
 import copy
 from dataclasses import dataclass
 import torch
-from gmft.config._dataclasses import with_config
+from gmft.core._dataclasses import with_config
 from gmft.detectors.base import BaseDetector, CroppedTable, RotatedCroppedTable
 
 from gmft.pdf_bindings.base import BasePage
