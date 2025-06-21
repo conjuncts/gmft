@@ -2,6 +2,7 @@ import copy
 from typing import Union
 
 from gmft.core._dataclasses import non_defaults_only, with_config
+from gmft.core.ml import _resolve_device
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 from gmft.impl.tatr.config import TATRFormatConfig
 from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
@@ -264,7 +265,7 @@ class TATRFormatter(TableFormatter):
         revision = "no_timm" if config.no_timm else None
         self.structor = TableTransformerForObjectDetection.from_pretrained(
             config.formatter_path, revision=revision
-        ).to(config.torch_device)
+        ).to(_resolve_device(config.torch_device))
         self.config = config
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
@@ -289,7 +290,7 @@ class TATRFormatter(TableFormatter):
 
         scale_factor = dpi / 72
         encoding = self.image_processor(image, return_tensors="pt").to(
-            self.config.torch_device
+            _resolve_device(self.config.torch_device)
         )
         with torch.no_grad():
             outputs = self.structor(**encoding)

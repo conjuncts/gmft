@@ -1,12 +1,8 @@
 from gmft.core._dataclasses import removed_property
 from gmft.formatters.histogram import HistogramConfig
 
-
-import torch
-
-
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, Union
 
 
 @dataclass
@@ -23,7 +19,7 @@ class DITRFormatConfig(HistogramConfig):
     )
     formatter_path: str = "conjuncts/ditr-e15"
     # no_timm: bool = True # use a model which uses AutoBackbone.
-    torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    torch_device: Union[Literal["auto", "cpu", "cuda"], str] = "auto"
 
     verbosity: int = 1
     """

@@ -17,7 +17,7 @@ class TATRFormatConfig:
     image_processor_path: str = "microsoft/table-transformer-detection"
     formatter_path: str = "microsoft/table-transformer-structure-recognition"
     no_timm: bool = True  # use a model which uses AutoBackbone.
-    torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    torch_device: Union[Literal["auto", "cpu", "cuda"], str] = "auto"
     # https://huggingface.co/microsoft/table-transformer-structure-recognition/discussions/5
     # "microsoft/table-transformer-structure-recognition-v1.1-all"
 

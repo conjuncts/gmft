@@ -12,6 +12,7 @@ from gmft.algorithm.dividers import (
     _ioa,
     get_good_between_dividers,
 )
+from gmft.core.ml import _resolve_device
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 from gmft.impl.ditr.config import DITRFormatConfig
 from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
@@ -232,7 +233,7 @@ class DITRFormatter(TableFormatter):
         # might need revision: "no_timm"
         self.structor = TableTransformerForObjectDetection.from_pretrained(
             config.formatter_path
-        ).to(config.torch_device)
+        ).to(_resolve_device(config.torch_device))
         self.config = config
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
@@ -260,7 +261,7 @@ class DITRFormatter(TableFormatter):
             image,
             size={"shortest_edge": 800, "longest_edge": 1333},
             return_tensors="pt",
-        ).to(self.config.torch_device)
+        ).to(_resolve_device(self.config.torch_device))
         with torch.no_grad():
             outputs = self.structor(**encoding)
 
