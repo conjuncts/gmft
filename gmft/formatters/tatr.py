@@ -3,6 +3,7 @@ from typing import Union
 
 from gmft.core._dataclasses import non_defaults_only, with_config
 from gmft.core.ml import _resolve_device
+from gmft.core.ml.prediction import BboxPrediction
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 from gmft.impl.tatr.config import TATRFormatConfig
 from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
@@ -44,19 +45,19 @@ class TATRFormattedTable(FormattedTable):
     config: TATRFormatConfig
     outliers: dict[str, bool]
 
-    effective_rows: list[tuple]
+    effective_rows: list[BboxPrediction]
     "Rows as seen by the image --> df algorithm, which may differ from what the table transformer sees."
 
-    effective_columns: list[tuple]
+    effective_columns: list[BboxPrediction]
     "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
 
-    effective_headers: list[tuple]
+    effective_headers: list[BboxPrediction]
     "Headers as seen by the image --> df algorithm."
 
-    effective_projecting: list[tuple]
+    effective_projecting: list[BboxPrediction]
     "Projected rows as seen by the image --> df algorithm."
 
-    effective_spanning: list[tuple]
+    effective_spanning: list[BboxPrediction]
     "Spanning cells as seen by the image --> df algorithm."
 
     _top_header_indices: list[int] = None
