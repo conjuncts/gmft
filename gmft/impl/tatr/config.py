@@ -3,6 +3,7 @@ import torch
 
 from dataclasses import dataclass, field
 from typing import Literal, Union
+from typing_extensions import deprecated
 
 
 @dataclass
@@ -61,7 +62,7 @@ class TATRFormatConfig:
 
     enable_multi_header: bool = False
     """Enable multi-indices in the dataframe.
-    If false, then multiple headers will be merged column-wise."""
+    If false, then multiple headers will be merged vertically."""
 
     semantic_spanning_cells: bool = False
     """

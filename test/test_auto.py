@@ -27,4 +27,3 @@ def test_auto_format_config_instantiation():
     """Test that AutoFormatConfig properly instantiates as TATRFormatConfig."""
     config = AutoFormatConfig()
     assert isinstance(config, TATRFormatConfig)
-
