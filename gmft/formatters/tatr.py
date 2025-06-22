@@ -1,9 +1,15 @@
 import copy
-from typing import Union
+from typing import List, Union
 
 from gmft.core._dataclasses import non_defaults_only, with_config
+from gmft.core.io.serial.dicts import _extract_fctn_results, _extract_indices
+from gmft.core.legacy.fctn_results import LegacyFctnResults
 from gmft.core.ml import _resolve_device
-from gmft.core.ml.prediction import BboxPrediction
+from gmft.core.ml.prediction import (
+    BboxPrediction,
+    _empty_effective_predictions,
+    _empty_indices_predictions,
+)
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 from gmft.impl.tatr.config import TATRFormatConfig
 from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
@@ -15,7 +21,7 @@ from gmft.algorithm.structure import extract_to_df
 from gmft.table_visualization import plot_results_unwr
 
 
-class TATRFormattedTable(FormattedTable):
+class TATRFormattedTable(FormattedTable, LegacyFctnResults):
     """
     FormattedTable, as seen by a Table Transformer (TATR).
     See :class:`.TATRTableFormatter`.
@@ -45,25 +51,6 @@ class TATRFormattedTable(FormattedTable):
     config: TATRFormatConfig
     outliers: dict[str, bool]
 
-    effective_rows: list[BboxPrediction]
-    "Rows as seen by the image --> df algorithm, which may differ from what the table transformer sees."
-
-    effective_columns: list[BboxPrediction]
-    "Columns as seen by the image --> df algorithm, which may differ from what the table transformer sees."
-
-    effective_headers: list[BboxPrediction]
-    "Headers as seen by the image --> df algorithm."
-
-    effective_projecting: list[BboxPrediction]
-    "Projected rows as seen by the image --> df algorithm."
-
-    effective_spanning: list[BboxPrediction]
-    "Spanning cells as seen by the image --> df algorithm."
-
-    _top_header_indices: list[int] = None
-    _projecting_indices: list[int] = None
-    _hier_left_indices: list[int] = None
-
     def __init__(
         self,
         cropped_table: CroppedTable,
@@ -71,7 +58,11 @@ class TATRFormattedTable(FormattedTable):
         config: TATRFormatConfig = None,
     ):
         super(TATRFormattedTable, self).__init__(cropped_table)
-        self.fctn_results = fctn_results
+        self.predictions = {
+            "tatr": fctn_results,
+            "effective": _empty_effective_predictions(),
+            "indices": _empty_indices_predictions(),
+        }
 
         if config is None:
             config = TATRFormatConfig()
@@ -130,13 +121,11 @@ class TATRFormattedTable(FormattedTable):
         if effective:
             if self._df is None:
                 self._df = self.df()
-            vis = (
-                self.effective_rows
-                + self.effective_columns
-                + self.effective_headers
-                + self.effective_projecting
-                + self.effective_spanning
-            )
+            vis: List[BboxPrediction] = [
+                item
+                for sublist in self.predictions["effective"].values()
+                for item in sublist
+            ]
             boxes = [x["bbox"] for x in vis]
             boxes = [(x * scale_by for x in bbox) for bbox in boxes]
             _to_visualize = {
@@ -147,12 +136,13 @@ class TATRFormattedTable(FormattedTable):
         else:
             # transform functionalized coordinates into image coordinates
             boxes = [
-                (x * scale_by for x in bbox) for bbox in self.fctn_results["boxes"]
+                (x * scale_by for x in bbox)
+                for bbox in self.predictions["tatr"]["boxes"]
             ]
 
             _to_visualize = {
-                "scores": self.fctn_results["scores"],
-                "labels": self.fctn_results["labels"],
+                "scores": self.predictions["tatr"]["scores"],
+                "labels": self.predictions["tatr"]["labels"],
                 "boxes": boxes,
             }
 
@@ -181,18 +171,14 @@ class TATRFormattedTable(FormattedTable):
         else:
             parent = CroppedTable.to_dict(self)
         optional = {}
-        if self._projecting_indices is not None:
-            optional["_projecting_indices"] = self._projecting_indices
-        if self._hier_left_indices is not None:
-            optional["_hier_left_indices"] = self._hier_left_indices
-        if self._top_header_indices is not None:
-            optional["_top_header_indices"] = self._top_header_indices
+        if self.predictions["indices"]:
+            optional["predictions.indices"] = self.predictions["indices"]
         return {
             **parent,
             **{
                 "config": non_defaults_only(self.config),
                 "outliers": self.outliers,
-                "fctn_results": self.fctn_results,
+                "fctn_results": self.predictions["tatr"],
             },
             **optional,
         }
@@ -206,30 +192,8 @@ class TATRFormattedTable(FormattedTable):
         d = copy.deepcopy(d)  # don't modify the original dict
         cropped_table = CroppedTable.from_dict(d, page)
 
-        if "fctn_results" not in d:
-            raise ValueError(
-                "fctn_results not found in dict -- dict may be a CroppedTable but not a TATRFormattedTable."
-            )
-
+        results = _extract_fctn_results(d)
         config = TATRFormatConfig(**d["config"])
-
-        results = d["fctn_results"]  # fix shallow copy issue
-        if (
-            "fctn_scale_factor" in d
-            or "scale_factor" in d
-            or "fctn_padding" in d
-            or "padding" in d
-        ):
-            # deprecated: this is for backwards compatibility
-            scale_factor = d.get("fctn_scale_factor", d.get("scale_factor", 1))
-            padding = d.get("fctn_padding", d.get("padding", (0, 0)))
-            padding = tuple(padding)
-
-            # normalize results here
-            for i, bbox in enumerate(results["boxes"]):
-                results["boxes"][i] = _normalize_bbox(
-                    bbox, used_scale_factor=scale_factor, used_padding=padding
-                )
 
         table = TATRFormattedTable(
             cropped_table,
@@ -237,6 +201,7 @@ class TATRFormattedTable(FormattedTable):
             config=config,
         )
         table.outliers = d.get("outliers", None)
+        table.predictions["indices"] = _extract_indices(d)
         return table
 
 

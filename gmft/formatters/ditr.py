@@ -12,7 +12,13 @@ from gmft.algorithm.dividers import (
     _ioa,
     get_good_between_dividers,
 )
+from gmft.core.io.serial.dicts import _extract_fctn_results, _extract_indices
+from gmft.core.legacy.fctn_results import LegacyFctnResults
 from gmft.core.ml import _resolve_device
+from gmft.core.ml.prediction import (
+    _empty_effective_predictions,
+    _empty_indices_predictions,
+)
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 from gmft.impl.ditr.config import DITRFormatConfig
 from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
@@ -34,7 +40,7 @@ import torch
 from transformers import DetrForObjectDetection
 
 
-class DITRFormattedTable(HistogramFormattedTable):
+class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
     """
     FormattedTable, as seen by a Table Transformer for dividers (dubbed DITR).
     See :class:`.DITRTableFormatter`.
@@ -54,19 +60,6 @@ class DITRFormattedTable(HistogramFormattedTable):
     config: DITRFormatConfig
     outliers: dict[str, bool]
 
-    effective_headers: list[tuple]
-    "Headers as seen by the image --> df algorithm."
-
-    effective_projecting: list[tuple]
-    "Projected rows as seen by the image --> df algorithm."
-
-    effective_spanning: list[tuple]
-    "Spanning cells as seen by the image --> df algorithm."
-
-    _top_header_indices: list[int] = None
-    _projecting_indices: list[int] = None
-    _hier_left_indices: list[int] = None
-
     def __init__(
         self,
         cropped_table: CroppedTable,
@@ -77,7 +70,11 @@ class DITRFormattedTable(HistogramFormattedTable):
         super(DITRFormattedTable, self).__init__(
             cropped_table, None, irvl_results, config=config
         )
-        self.fctn_results = fctn_results
+        self.predictions = {
+            "tatr": fctn_results,
+            "effective": _empty_effective_predictions(),
+            "indices": _empty_indices_predictions(),
+        }
 
         if config is None:
             config = DITRFormatConfig()
@@ -87,7 +84,7 @@ class DITRFormattedTable(HistogramFormattedTable):
     def df(self, recalculate=False, config_overrides: DITRFormatConfig = None):
         """
         Return the table as a pandas dataframe.
-        :param recalculate: by default, the dataframe is cached
+        :param recalculate: by default, the dataframe is cached. DEPRECATED: use recompute() instead.
         :param config_overrides: override the config settings for this call only
         """
         if recalculate != False:
@@ -113,8 +110,6 @@ class DITRFormattedTable(HistogramFormattedTable):
         Visualize the cropped table.
         """
         img = self.image()
-        # labels = self.fctn_results['labels']
-        # bboxes = self.fctn_results['boxes']
         tbl_width = self.width  # adjust for rotations too
         tbl_height = self.height
 
@@ -126,13 +121,13 @@ class DITRFormattedTable(HistogramFormattedTable):
         for y0, y1 in self.irvl_results["row_dividers"]:
             bboxes.append([0, y0, tbl_width, y1])
             labels.append(2)
-        for x0, y0, x1, y1 in self.effective_headers:
+        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(3)
-        for x0, y0, x1, y1 in self.effective_projecting:
+        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(4)
-        for x0, y0, x1, y1 in self.effective_spanning:
+        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(5)
         return plot_shaded_boxes(img, labels=labels, boxes=bboxes, **kwargs)
@@ -146,18 +141,14 @@ class DITRFormattedTable(HistogramFormattedTable):
         else:
             parent = CroppedTable.to_dict(self)
         optional = {}
-        if self._projecting_indices is not None:
-            optional["_projecting_indices"] = self._projecting_indices
-        if self._hier_left_indices is not None:
-            optional["_hier_left_indices"] = self._hier_left_indices
-        if self._top_header_indices is not None:
-            optional["_top_header_indices"] = self._top_header_indices
+        if self.predictions["indices"]:
+            optional["predictions.indices"] = self.predictions["indices"]
         return {
             **parent,
             **{
                 "config": non_defaults_only(self.config),
                 "outliers": self.outliers,
-                "fctn_results": self.fctn_results,
+                "fctn_results": self.predictions["tatr"],
             },
             **optional,
         }
@@ -171,30 +162,9 @@ class DITRFormattedTable(HistogramFormattedTable):
         d = copy.deepcopy(d)  # don't modify the original dict
         cropped_table = CroppedTable.from_dict(d, page)
 
-        if "fctn_results" not in d:
-            raise ValueError(
-                "fctn_results not found in dict -- dict may be a CroppedTable but not a TATRFormattedTable."
-            )
+        results = _extract_fctn_results(d)
 
         config = DITRFormatConfig(**d["config"])
-
-        results = d["fctn_results"]  # fix shallow copy issue
-        if (
-            "fctn_scale_factor" in d
-            or "scale_factor" in d
-            or "fctn_padding" in d
-            or "padding" in d
-        ):
-            # deprecated: this is for backwards compatibility
-            scale_factor = d.get("fctn_scale_factor", d.get("scale_factor", 1))
-            padding = d.get("fctn_padding", d.get("padding", (0, 0)))
-            padding = tuple(padding)
-
-            # normalize results here
-            for i, bbox in enumerate(results["boxes"]):
-                results["boxes"][i] = _normalize_bbox(
-                    bbox, used_scale_factor=scale_factor, used_padding=padding
-                )
 
         table = DITRFormattedTable(
             cropped_table,
@@ -204,6 +174,7 @@ class DITRFormattedTable(HistogramFormattedTable):
         )
         table.recompute()
         table.outliers = d.get("outliers", None)
+        table.predictions["indices"] = _extract_indices(d)
         return table
 
 
@@ -463,7 +434,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
 
     outliers = {}  # store table-wide information about outliers or pecularities
 
-    results = table.fctn_results
+    results = table.predictions["tatr"]
     row_divider_boxes, col_divider_boxes, top_headers, projected, spanning_cells = (
         proportion_fctn_results(results, config)
     )
@@ -491,9 +462,13 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
         "row_dividers": row_divider_intervals,
         "col_dividers": col_divider_intervals,
     }
-    table.effective_headers = top_headers
-    table.effective_projecting = projected
-    table.effective_spanning = [span["bbox"] for span in spanning_cells]
+    table.predictions["effective"] = {
+        "rows": [],
+        "columns": [],
+        "headers": top_headers,
+        "projecting": projected,
+        "spanning": [span["bbox"] for span in spanning_cells],
+    }
 
     # table_bounds = table.bbox # empirical_table_bbox(row_divider_boxes, col_divider_boxes)
     fixed_table_bounds = (0, 0, table.width, table.height)  # adjust for rotations too
@@ -549,6 +524,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
         projecting_indices = [i for i in projecting_indices if i not in empty_rows]
 
     # semantic spanning fill
+    indices_preds = {}
     if config.semantic_spanning_cells:
         # TODO probably not worth it to duplicate the code
         old_rows = [(None, y0, None, y1) for y0, y1 in good_row_intervals]
@@ -582,15 +558,15 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
             header_indices=header_indices,
             config=config,
         )
-        table._hier_left_indices = hier_left_idxs
+        indices_preds["_hier_left"] = hier_left_idxs
     else:
-        table._hier_left_indices = []  # for the user
+        indices_preds["_hier_left"] = []  # for the user
 
     # technically these indices will be off by the number of header rows ;-;
     if config.enable_multi_header:
-        table._top_header_indices = header_indices
+        indices_preds["_top_header"] = header_indices
     else:
-        table._top_header_indices = [0] if header_indices else []
+        indices_preds["_top_header"] = [0] if header_indices else []
 
     # extract out the headers
     header_rows = table_array[header_indices]
@@ -621,8 +597,9 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
         # remove the header_indices
         # note that ditr._determine_headers_and_projecting
         # automatically makes is_projecting and header_indices mutually exclusive
-        table._projecting_indices = [i for i, x in enumerate(is_projecting) if x]
+        indices_preds["_projecting"] = [i for i, x in enumerate(is_projecting) if x]
 
+    table.predictions["indices"] = indices_preds
     # b. drop the former header rows always
     table._df.drop(index=header_indices, inplace=True)
 

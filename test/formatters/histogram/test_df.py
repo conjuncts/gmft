@@ -112,7 +112,7 @@ class TestPdf5:
         pass  # this one just doesn't work very well
         # TODO make it work based on minima
         # try_jth_table(pdf5_tables, 5, 0)
-        # assert pdf5_tables[0]._projecting_indices == [15, 18, 22, 29]
+        # assert pdf5_tables[0].predictions["indices"]["_projecting"] == [15, 18, 22, 29]
 
     def test_bulk_pdf5_t1(self, pdf5_tables, tatr_csvs):
         try_jth_table(pdf5_tables, tatr_csvs, 5, 1)

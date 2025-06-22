@@ -1,23 +1,29 @@
-from typing import Tuple, TypedDict, List, Union
+from typing import Optional, Tuple, TypedDict, List, Union
+from typing_extensions import NotRequired
+
 
 # Type definitions for predictions structure
 class RawBboxPredictions(TypedDict):
     """Type definition for a single model's bbox prediction output."""
+
     scores: List[float]
     labels: List[int]
     boxes: List[List[float]]
+
 
 class BboxPrediction(TypedDict):
     confidence: float
     label: str
     bbox: Tuple[float, float, float, float]
 
+
 class EffectivePredictions(TypedDict):
     """
     Effective rows/columns/etc as seen by the image --> df algorithm.
-    
+
     May be postprocessed from the table structure recognition model of choice (ie. TATR).
     """
+
     rows: List[BboxPrediction]
 
     columns: List[BboxPrediction]
@@ -31,11 +37,38 @@ class EffectivePredictions(TypedDict):
     "Spanning cells as seen by the image --> df algorithm."
 
 
+class IndicesPredictions(TypedDict):
+    """
+    Indices of key rows/columns, such as: top header, projecting, hier_left.
+    """
+
+    _top_header: NotRequired[List[int]]
+    _projecting: NotRequired[List[int]]
+    _hier_left: NotRequired[List[int]]
+
+
 class TablePredictions(TypedDict):
     """Type definition for the complete predictions dictionary."""
+
     tatr: RawBboxPredictions
-    
+
     effective: EffectivePredictions
+    indices: IndicesPredictions
+
+
+def _empty_effective_predictions():
+    return {
+        "rows": [],
+        "columns": [],
+        "headers": [],
+        "projecting": [],
+        "spanning": [],
+    }
+
+
+def _empty_indices_predictions():
+    return {}
+
 
 # predictions: Predictions = {
 #     "tatr": {

@@ -7,6 +7,11 @@ import pandas as pd
 from gmft.base import Rect
 from typing import TYPE_CHECKING
 
+from gmft.core.ml.prediction import (
+    _empty_effective_predictions,
+    _empty_indices_predictions,
+)
+
 if TYPE_CHECKING:
     from gmft.impl.tatr.config import TATRFormatConfig
     from gmft.formatters.tatr import TATRFormattedTable
@@ -772,7 +777,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
 
     outliers = {}  # store table-wide information about outliers or pecularities
 
-    results = table.fctn_results
+    results = table.predictions["tatr"]
 
     # 1. collate identified boxes
     boxes = []
@@ -894,14 +899,8 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         if not known_means:
             # no text was detected
             outliers["no text"] = True
-            table.effective_rows = []
-            table.effective_columns = []
-            table.effective_headers = []
-            table.effective_projecting = []
-            table.effective_spanning = []
-            table._top_header_indices = []
-            table._projecting_indices = []
-            table._hier_left_indices = []
+            table.predictions["effective"] = _empty_effective_predictions()
+            table.predictions["indices"] = _empty_indices_predictions()
             table._df = pd.DataFrame()
             table.outliers = outliers
             return table._df
@@ -941,12 +940,13 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         )
 
     # nms takes care of deduplication
-
-    table.effective_rows = sorted_rows
-    table.effective_columns = sorted_columns
-    table.effective_headers = sorted_headers
-    table.effective_projecting = sorted_projecting
-    table.effective_spanning = spanning_cells
+    table.predictions["effective"] = {
+        "rows": sorted_rows,
+        "columns": sorted_columns,
+        "headers": sorted_headers,
+        "projecting": sorted_projecting,
+        "spanning": spanning_cells,
+    }
 
     # 4b. check for catastrophic overlap
     total_column_area = 0
@@ -1004,6 +1004,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
     )
 
     # semantic spanning fill
+    indices_preds = {}
     if config.semantic_spanning_cells:
         sorted_headers_bboxes = [x["bbox"] for x in sorted_headers]
         sorted_row_bboxes = [x["bbox"] for x in sorted_rows]
@@ -1037,15 +1038,15 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
             header_indices=header_indices,
             config=config,
         )
-        table._hier_left_indices = hier_left_idxs
+        indices_preds["_hier_left"] = hier_left_idxs
     else:
-        table._hier_left_indices = []  # for the user
+        indices_preds["_hier_left"] = []  # for the user
 
     # technically these indices will be off by the number of header rows ;-;
     if config.enable_multi_header:
-        table._top_header_indices = header_indices
+        indices_preds["_top_header"] = header_indices
     else:
-        table._top_header_indices = [0] if header_indices else []
+        indices_preds["_top_header"] = [0] if header_indices else []
 
     # extract out the headers
     header_rows = table_array[header_indices]
@@ -1078,7 +1079,9 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         is_projecting = [
             x for i, x in enumerate(is_projecting) if i not in header_indices
         ]
-        table._projecting_indices = [i for i, x in enumerate(is_projecting) if x]
+        indices_preds["_projecting"] = [i for i, x in enumerate(is_projecting) if x]
+
+    table.predictions["indices"] = indices_preds
 
     # if projecting_indices:
     # insert at end
