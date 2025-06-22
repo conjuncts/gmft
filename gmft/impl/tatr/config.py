@@ -5,9 +5,11 @@ from dataclasses import dataclass, field
 from typing import Literal, Union
 from typing_extensions import deprecated
 
+from gmft.core.legacy.removed_config import LegacyRemovedConfig
+
 
 @dataclass
-class TATRFormatConfig:
+class TATRFormatConfig(LegacyRemovedConfig):
     """
     Configuration for :class:`.TATRTableFormatter`.
     """
@@ -141,56 +143,3 @@ class TATRFormatConfig:
     _smallest_supported_text_height: float = 0.1
     """The smallest supported text height. Text smaller than this height will be ignored. 
     Helps prevent very small text from creating huge arrays under large table assumption."""
-
-    # ---- deprecated ----
-    # aggregate_spanning_cells = False
-    @property
-    def aggregate_spanning_cells(self):
-        raise DeprecationWarning(
-            "aggregate_spanning_cells has been removed. Will break in v0.6.0."
-        )
-
-    @aggregate_spanning_cells.setter
-    def aggregate_spanning_cells(self, value):
-        raise DeprecationWarning(
-            "aggregate_spanning_cells has been removed. Will break in v0.6.0."
-        )
-
-    # corner_clip_outlier_threshold = 0.1
-    # """"corner clip" is when the text is clipped by a corner, and not an edge"""
-    @property
-    def corner_clip_outlier_threshold(self):
-        raise DeprecationWarning(
-            "corner_clip_outlier_threshold has been removed. Will break in v0.6.0."
-        )
-
-    @corner_clip_outlier_threshold.setter
-    def corner_clip_outlier_threshold(self, value):
-        raise DeprecationWarning(
-            "corner_clip_outlier_threshold has been removed. Will break in v0.6.0."
-        )
-
-    # spanning_cell_minimum_width = 0.6
-    @property
-    def spanning_cell_minimum_width(self):
-        raise DeprecationWarning(
-            "spanning_cell_minimum_width has been removed. Will break in v0.6.0."
-        )
-
-    @spanning_cell_minimum_width.setter
-    def spanning_cell_minimum_width(self, value):
-        raise DeprecationWarning(
-            "spanning_cell_minimum_width has been removed. Will break in v0.6.0."
-        )
-
-    @property
-    def deduplication_iob_threshold(self):
-        raise DeprecationWarning(
-            "deduplication_iob_threshold is deprecated. See nms_overlap_threshold instead. Will break in v0.6.0."
-        )
-
-    @deduplication_iob_threshold.setter
-    def deduplication_iob_threshold(self, value):
-        raise DeprecationWarning(
-            "deduplication_iob_threshold is deprecated. See nms_overlap_threshold instead. Will break in v0.6.0."
-        )

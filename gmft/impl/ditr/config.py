@@ -1,9 +1,8 @@
-from gmft.core._dataclasses import removed_property
+from dataclasses import dataclass
+from typing import Literal
+from typing_extensions import deprecated
+
 from gmft.formatters.histogram import HistogramConfig
-
-from dataclasses import dataclass, field
-from typing import Literal, Union
-
 from gmft.impl.tatr.config import TATRFormatConfig
 
 
@@ -44,19 +43,19 @@ class DITRFormatConfig(HistogramConfig, TATRFormatConfig):
 
     # hence nms is also not useful anymore.
 
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
+    @deprecated("Large table approach ({name}) is not used for the DITR model.")
     def large_table_if_n_rows_removed(self):
         pass
 
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
+    @deprecated("Large table approach ({name}) is not used for the DITR model.")
     def large_table_threshold(self):
         pass
 
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
+    @deprecated("Large table approach ({name}) is not used for the DITR model.")
     def large_table_row_overlap_threshold(self):
         pass
 
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
+    @deprecated("Large table approach ({name}) is not used for the DITR model.")
     def force_large_table_assumption(self):
         pass
 
@@ -67,23 +66,23 @@ class DITRFormatConfig(HistogramConfig, TATRFormatConfig):
 
     # hence nms is also not useful anymore.
 
-    @removed_property("Overlap ({name}) is not used for the DITR model.")
+    @deprecated("Overlap ({name}) is not used for the DITR model.")
     def total_overlap_reject_threshold(self):
         pass
 
-    @removed_property("Overlap ({name}) is not used for the DITR model.")
+    @deprecated("Overlap ({name}) is not used for the DITR model.")
     def total_overlap_warn_threshold(self):
         pass
 
-    @removed_property("Overlap (nms) ({name}) is not used for the DITR model.")
+    @deprecated("Overlap (nms) ({name}) is not used for the DITR model.")
     def nms_warn_threshold(self):
         pass
 
-    @removed_property("Overlap ({name}) is not used for the DITR model.")
+    @deprecated("Overlap ({name}) is not used for the DITR model.")
     def iob_reject_threshold(self):
         pass
 
-    @removed_property("Overlap ({name}) is not used for the DITR model.")
+    @deprecated("Overlap ({name}) is not used for the DITR model.")
     def iob_warn_threshold(self):
         pass
 
@@ -91,6 +90,6 @@ class DITRFormatConfig(HistogramConfig, TATRFormatConfig):
 
     _nms_overlap_threshold_larger: float = 0.5
 
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
+    @deprecated("Large table approach ({name}) is not used for the DITR model.")
     def _large_table_merge_distance(self):
         pass
