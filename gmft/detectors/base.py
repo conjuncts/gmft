@@ -67,6 +67,8 @@ class CroppedTable:
         bbox: Union[tuple[int, int, int, int], Rect],
         confidence_score: float = 1.0,
         label=0,
+        *,
+        angle: Literal[0, 90, 180, 270] = 0,
     ):
         """
         Construct a CroppedTable object.
@@ -92,6 +94,10 @@ class CroppedTable:
         self.label = label
         self._word_height = None
         self._captions = None
+
+        self.angle = angle
+        if angle not in [0, 90, 180, 270]:
+            raise ValueError("Only 0, 90, 180, 270 are supported.")
 
     def image(
         self,
@@ -138,10 +144,15 @@ class CroppedTable:
         img = self.page.get_image(dpi=dpi, rect=rect)
         if padding is not None:
             img = PIL.ImageOps.expand(img, padding, fill="white")
+
+        if self.angle != 0:
+            # rotate by negative angle to get back to original orientation
+            img = img.rotate(-self.angle, expand=True)
         self._img = img
         self._img_dpi = dpi
         self._img_padding = padding
         self._img_margin = margin
+
         return self._img
 
     def text_positions(
@@ -152,24 +163,52 @@ class CroppedTable:
 
         Any words that intersect the table are captured, even if they are not fully contained.
 
-        :param remove_table_offset: if True, the positions are adjusted to be relative to the top-left corner of the table.
+        :param remove_table_offset: if True, the coordinates are transformed (rotated and translated) so that the top-left corner of the table is (0, 0) and the bottom-right corner is (width, height).
+            If False, transforms (including rotation) are ignored and original coordinates are returned.
         :param outside: if True, returns the **complement** of the table: all the text positions outside the table.
-            By default, it returns the text positions inside the table.
+            (default: False)
         :return: list of text positions, which is a tuple
             ``(x0, y0, x1, y1, "string")``
         """
-        for w in self.page.get_positions_and_text():
-            if Rect(w[:4]).is_intersecting(self.rect) != outside:
-                if remove_table_offset:
-                    yield (
-                        w[0] - self.rect.xmin,
-                        w[1] - self.rect.ymin,
-                        w[2] - self.rect.xmin,
-                        w[3] - self.rect.ymin,
-                        w[4],
-                    )
-                else:
-                    yield w
+
+        def _old_generator(remove_table_offset, outside):
+            for w in self.page.get_positions_and_text():
+                if Rect(w[:4]).is_intersecting(self.rect) != outside:
+                    if remove_table_offset:
+                        yield (
+                            w[0] - self.rect.xmin,
+                            w[1] - self.rect.ymin,
+                            w[2] - self.rect.xmin,
+                            w[3] - self.rect.ymin,
+                            w[4],
+                        )
+                    else:
+                        yield w
+
+        if self.angle == 0 or remove_table_offset == False:
+            yield from _old_generator(
+                remove_table_offset=remove_table_offset, outside=outside
+            )
+        elif self.angle == 90:
+            for w in _old_generator(remove_table_offset=True, outside=outside):
+                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1 = self.rect.height - y1, x0, self.rect.height - y0, x1
+                yield (x0, y0, x1, y1, text)
+        elif self.angle == 180:
+            for w in _old_generator(remove_table_offset=True, outside=outside):
+                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1 = (
+                    self.rect.width - x1,
+                    self.rect.height - y1,
+                    self.rect.width - x0,
+                    self.rect.height - y0,
+                )
+                yield (x0, y0, x1, y1, text)
+        elif self.angle == 270:
+            for w in _old_generator(remove_table_offset=True, outside=outside):
+                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1 = y0, self.rect.width - x1, y1, self.rect.width - x0
+                yield (x0, y0, x1, y1, text)
 
     def text(self):
         """
@@ -269,6 +308,8 @@ class CroppedTable:
             "confidence_score": self.confidence_score,
             "label": self.label,
         }
+        if self.angle != 0:
+            obj["angle"] = self.angle
         return obj
 
     @staticmethod
@@ -297,10 +338,14 @@ class CroppedTable:
         :param page: BasePage
         :return: CroppedTable object
         """
-        if "angle" in d:
+        if "angle" in d and d["angle"] != 0:
             return RotatedCroppedTable.from_dict(d, page)
         table = CroppedTable(
-            page, d["bbox"], d.get("confidence_score", 1.0), d.get("label", 0)
+            page,
+            d["bbox"],
+            d.get("confidence_score", 1.0),
+            label=d.get("label", 0),
+            angle=d.get("angle", 0),
         )
         table._captions = d.get("captions", [])
         return table
@@ -327,10 +372,14 @@ class CroppedTable:
 
     @property
     def width(self):
+        if self.angle == 90 or self.angle == 270:
+            return self.rect.height
         return self.rect.width
 
     @property
     def height(self):
+        if self.angle == 90 or self.angle == 270:
+            return self.rect.width
         return self.rect.height
 
 
@@ -374,7 +423,10 @@ class RotatedCroppedTable(CroppedTable):
     Currently, only 0, 90, 180, and 270 degree rotations are supported.
     An angle of 90 would mean that a 90 degree cc rotation has been applied to a level image.
 
-    In practice, the majority of rotated tables are rotated by 90 degrees.
+    In practice, most rotated tables are rotated by 90 degrees.
+
+    Note: after v0.5, this class is nearly identical to CroppedTable. `angle` is now directly availble in CroppedTable.
+
     """
 
     def __init__(
@@ -385,84 +437,8 @@ class RotatedCroppedTable(CroppedTable):
         angle: float,
         label=0,
     ):
-        """
-        Currently, only 0, 90, 180, and 270 degree rotations are supported.
-
-        :param page: BasePage
-        :param angle: angle in degrees, counterclockwise.
-            That is, 90 would mean that a 90 degree cc rotation has been applied to a level image.
-            In practice, the majority of rotated tables are rotated by 90 degrees.
-
-        """
-        super().__init__(page, bbox, confidence_score, label)
-
-        if angle not in [0, 90, 180, 270]:
-            raise ValueError("Only 0, 90, 180, 270 are supported.")
-        self.angle = angle
-
-    def image(
-        self,
-        dpi: int = None,
-        padding: Union[tuple[int, int, int, int], Literal["auto", None]] = None,
-        margin: Union[tuple[int, int, int, int], Literal["auto", None]] = None,
-        **kwargs,
-    ) -> PILImage:
-        """
-        Return the image of the cropped table.
-
-        """
-        img = super().image(dpi=dpi, padding=padding, margin=margin, **kwargs)
-        # if self.angle == 90:
-        if self.angle != 0:
-            # rotate by negative angle to get back to original orientation
-            img = img.rotate(-self.angle, expand=True)
-
-        return img
-
-    def text_positions(
-        self, remove_table_offset: bool = False, outside: bool = False
-    ) -> Generator[tuple[int, int, int, int, str], None, None]:
-        """
-        Return the text positions of the cropped table.
-
-        If remove_table_offset is False, positions are relative to the top-left corner of the pdf (no adjustment for rotation).
-
-        If remove_table_offset is True, positions are relative to a hypothetical pdf where the text in the table is perfectly level, and
-        pdf's top-left corner is also the table's top-left corner (both at 0, 0).
-
-        :param remove_table_offset: if True, the positions are adjusted to be relative to the top-left corner of the table.
-        :param outside: if True, returns the **complement** of the table: all the text positions outside the table.
-        :return: list of text positions, which are tuples of (xmin, ymin, xmax, ymax, "string")
-        """
-        if self.angle == 0 or remove_table_offset == False:
-            yield from super().text_positions(
-                remove_table_offset=remove_table_offset, outside=outside
-            )
-        elif self.angle == 90:
-            for w in super().text_positions(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w
-                x0, y0, x1, y1 = self.rect.height - y1, x0, self.rect.height - y0, x1
-                yield (x0, y0, x1, y1, text)
-        elif self.angle == 180:
-            for w in super().text_positions(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w
-                x0, y0, x1, y1 = (
-                    self.rect.width - x1,
-                    self.rect.height - y1,
-                    self.rect.width - x0,
-                    self.rect.height - y0,
-                )
-                yield (x0, y0, x1, y1, text)
-        elif self.angle == 270:
-            for w in super().text_positions(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w
-                x0, y0, x1, y1 = y0, self.rect.width - x1, y1, self.rect.width - x0
-                yield (x0, y0, x1, y1, text)
-
-    def to_dict(self):
-        d = super().to_dict()
-        d["angle"] = self.angle
-        return d
+        # NOTE: angle and label are permuted (historical artifact)
+        super().__init__(page, bbox, confidence_score, label, angle=angle)
 
     @staticmethod
     def from_dict(
@@ -474,19 +450,7 @@ class RotatedCroppedTable(CroppedTable):
         if "angle" not in d:
             return CroppedTable.from_dict(d, page)
         table = RotatedCroppedTable(
-            page, d["bbox"], d["confidence_score"], d["angle"], d["label"]
+            page, d["bbox"], d["confidence_score"], angle=d["angle"], label=d["label"]
         )
         table._captions = d.get("captions", [])
         return table
-
-    @property
-    def width(self):
-        if self.angle == 90 or self.angle == 270:
-            return self.rect.height
-        return self.rect.width
-
-    @property
-    def height(self):
-        if self.angle == 90 or self.angle == 270:
-            return self.rect.width
-        return self.rect.height

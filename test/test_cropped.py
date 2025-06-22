@@ -34,6 +34,7 @@ def test_CroppedTable_positions(doc_tiny):
         },
         page,
     )
+    assert not isinstance(table, RotatedCroppedTable)
 
     # get reference positions from tiny_pdfium.txt
     with open("data/test/references/tiny_cropped_positions.tsv") as f:
@@ -152,20 +153,28 @@ Water Freezing Point 0"""
     )
 
 
-if __name__ == "__main__":
-    page = PyPDFium2Document("data/pdfs/tiny.pdf")[0]
+def test_CroppedTable_angle(doc_tiny):
+    # Reflect the fact that 'angle' has been absorbed into CroppedTable
+    page = doc_tiny[0]
     table = CroppedTable.from_dict(
         {
             "filename": "data/pdfs/tiny.pdf",
             "page_no": 0,
-            "bbox": (10, 10, 300, 150),
+            "bbox": (10, 12, 300, 150),
             "confidence_score": 0.9,
             "label": 0,
+            "angle": 0,
         },
         page,
     )
+    assert not isinstance(table, RotatedCroppedTable)
 
-    # create the tsv
-    with open("data/test/references/tiny_cropped_positions.tsv", "w") as f:
-        for pos in table.text_positions():
-            f.write("\t".join(map(str, pos)) + "\n")
+    with pytest.raises(ValueError, match="Only 0, 90, 180, 270 are supported."):
+        _ = CroppedTable(page, (1, 2, 3, 4), angle=42)
+
+
+# TODO: ct.image() with margin='auto',
+# ct.image() with rotated image,
+# text_positions with angle==[180,270]
+# ct.visualize(),
+# ct.from_image_only()
