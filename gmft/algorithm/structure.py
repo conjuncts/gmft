@@ -106,16 +106,6 @@ def _symmetric_iob_for_columns(bbox1, bbox2):
     return intersect_area / min(a1 - a0, b1 - b0)
 
 
-def _find_rightmost_le(sorted_list, value, key_func):
-    """Find rightmost value less than or equal to value
-    Therefore, finds the rightmost box where box_min <= y1
-    """
-    i = bisect.bisect_right(sorted_list, value, key=key_func)
-    if i:
-        return i - 1
-    return None
-
-
 def _find_leftmost_gt(sorted_list, value, key_func):
     """Find leftmost value greater than value
     Therefore, finds the leftmost box where box_max > y_min
