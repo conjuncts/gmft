@@ -1,4 +1,7 @@
 import json
+import pandas as pd
+from pandas.testing import assert_frame_equal
+
 from gmft.detectors.tatr import TATRDetector
 from gmft.auto import AutoTableFormatter
 
@@ -13,7 +16,13 @@ def test_tiny_df(doc_tiny):
     table = tables[0]
     formatter = AutoTableFormatter()
     ft = formatter.extract(table)
-    ft.df().to_csv("data/test/outputs/actual/tiny_df.csv", index=False)
-    with open("data/test/outputs/actual/tiny_df.info", "w") as f:
-        # ft.to_dict()
-        json.dump(ft.to_dict(), f, indent=4)
+
+    expected = pd.DataFrame(
+        {
+            "Name": ["Water Freezing Point", "Water Boiling Point", "Body Temperature"],
+            "Celsius": ["0", "100", "37"],
+            "Fahrenheit": ["32", "212", "98.6"],
+        }
+    )
+
+    assert_frame_equal(expected, ft.df())
