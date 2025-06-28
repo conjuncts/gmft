@@ -12,15 +12,13 @@ df = ft.df(config_overrides={
 New customization:
 ```python
 ft: FormattedTable = formatter.extract(cropped) # 
-plan = (
-    reformat(ft)
+new_ft = (
+    ft
+    .reformat()
     .with_strategy("lta")
+    .to_table()
 )
-new_ft = plan.to_table()
 df = new_ft.df()
-
-# alternatively:
-# df = plan.to_pandas()
 ```
 
 
@@ -29,7 +27,8 @@ Legacy customization can also be directly ported with `with_legacy`.
 ```python
 ft: FormattedTable = formatter.extract(cropped) # 
 df = (
-    reformat(ft)
+    ft
+    .reformat()
     .with_legacy({
         'large_table_assumption': True
     })

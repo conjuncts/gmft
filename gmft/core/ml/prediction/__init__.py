@@ -1,4 +1,5 @@
-from typing import Optional, Tuple, TypedDict, List, Union
+from dataclasses import dataclass
+from typing import Literal, Optional, Tuple, TypedDict, List, Union
 from typing_extensions import NotRequired
 
 
@@ -47,13 +48,16 @@ class IndicesPredictions(TypedDict):
     _hier_left: NotRequired[List[int]]
 
 
-class TablePredictions(TypedDict):
+@dataclass
+class TablePredictions:
     """Type definition for the complete predictions dictionary."""
 
     tatr: RawBboxPredictions
 
     effective: EffectivePredictions
     indices: IndicesPredictions
+
+    status: Literal["unready", "ready"] = "unready"
 
 
 def _empty_effective_predictions():

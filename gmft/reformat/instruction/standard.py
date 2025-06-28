@@ -11,6 +11,7 @@ class EngineInstruction(BaseInstruction):
     def __init__(self, engine_type: Literal["standard"]):
         self.engine_type = engine_type
 
+
 class StrategyInstruction(BaseInstruction):
     """
     Instruction to use a specific strategy.
@@ -18,6 +19,7 @@ class StrategyInstruction(BaseInstruction):
 
     def __init__(self, strategy: Literal["asis", "lta", "histogram"]):
         self.strategy = strategy
+
 
 class VerbosityInstruction(BaseInstruction):
     """

@@ -1,6 +1,7 @@
 class BasePlan:
     pass
 
+
 class SplitMergePlan(BasePlan):
     pass
 

@@ -1,7 +1,7 @@
 from gmft.reformat.instruction import BaseInstruction
 
 
-class FilterPredictionsInstruction(BaseInstruction):
+class PredictionThresholdInstruction(BaseInstruction):
     """
     Filter predictions based on a given threshold.
     """
@@ -14,12 +14,3 @@ class FilterPredictionsInstruction(BaseInstruction):
         """
         super().__init__()
         self.threshold = threshold
-
-    def execute(self, predictions):
-        """
-        Execute the filtering of predictions based on the threshold.
-
-        :param predictions: List of predictions to filter.
-        :return: Filtered list of predictions.
-        """
-        return [pred for pred in predictions if pred['score'] >= self.threshold]

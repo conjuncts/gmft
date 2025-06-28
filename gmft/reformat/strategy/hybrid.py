@@ -12,7 +12,7 @@ class HybridSettings(StrategySettings):
     """
     If >= n rows are removed due to non-maxima suppression (NMS), then this table is classified as a large table.
     """
-    
+
     large_table_threshold: int = 10
     """With large tables, table transformer struggles with placing too many overlapping rows. 
     Luckily, with more rows, we have more info on the usual size of text, which we can use to make 

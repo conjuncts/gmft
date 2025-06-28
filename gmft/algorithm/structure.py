@@ -767,7 +767,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
 
     outliers = {}  # store table-wide information about outliers or pecularities
 
-    results = table.predictions["tatr"]
+    results = table.predictions.tatr
 
     # 1. collate identified boxes
     boxes = []
@@ -889,8 +889,9 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         if not known_means:
             # no text was detected
             outliers["no text"] = True
-            table.predictions["effective"] = _empty_effective_predictions()
-            table.predictions["indices"] = _empty_indices_predictions()
+            table.predictions.effective = _empty_effective_predictions()
+            table.predictions.indices = _empty_indices_predictions()
+            table.predictions.status = "ready"
             table._df = pd.DataFrame()
             table.outliers = outliers
             return table._df
@@ -930,7 +931,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         )
 
     # nms takes care of deduplication
-    table.predictions["effective"] = {
+    table.predictions.effective = {
         "rows": sorted_rows,
         "columns": sorted_columns,
         "headers": sorted_headers,
@@ -1071,7 +1072,8 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         ]
         indices_preds["_projecting"] = [i for i, x in enumerate(is_projecting) if x]
 
-    table.predictions["indices"] = indices_preds
+    table.predictions.indices = indices_preds
+    table.predictions.status = "ready"
 
     # if projecting_indices:
     # insert at end
