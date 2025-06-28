@@ -3,6 +3,7 @@ from typing import Optional
 from gmft.core.ml.prediction import (
     IndicesPredictions,
     RawBboxPredictions,
+    _empty_effective_predictions,
     _empty_indices_predictions,
 )
 from gmft.detectors.base import CroppedTable
@@ -57,3 +58,11 @@ def _extract_indices(d: dict) -> IndicesPredictions:
         }
 
     return _empty_indices_predictions()
+
+
+def _extract_effective(d: dict) -> IndicesPredictions:
+    # version gmft>=0.5 format
+    if "predictions.effective" in d:
+        return d["predictions.effective"]
+
+    return _empty_effective_predictions()

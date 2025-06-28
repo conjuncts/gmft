@@ -178,7 +178,7 @@ Plasma Neu5Ac,"Css,ave (ng/mL)",,,,,
 
         try_jth_table(pdf2_tables, 2, 2, expected, config=config2)
 
-        assert pdf2_tables[2].predictions["indices"]["_projecting"] == [0, 5]
+        assert pdf2_tables[2].predictions.indices["_projecting"] == [0, 5]
 
     # pdf4 t1 is arguably HierTop, but the ground truth is not yet clear
 
