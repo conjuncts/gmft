@@ -1,140 +1,133 @@
 """
 Currently, contains aliases for key classes and functions.
 
-Unfortunately, although at one point the ability to import classes from the top level module (ie. `from gmft import AutoTableFormatter`) was encouraged,
-it is now discouraged and may be removed in future versions. The reason being: importing through the top level module
-loads the entire library, even when you're using only a small part of it.
+Importing from the top-level module previously resulted in long load times.
+However, v0.5 introduces lazy loading, which greatly improves the situation.
 
-Instead, `gmft.auto` is now encouraged. For example, `from gmft.auto import AutoTableFormatter`.
+Now, classes may either be imported from their original locations,
+`gmft.auto`, or from here, where they will be lazy loaded.
 """
 
+# small classes are fine, but discouraged.
 from gmft.base import Rect
+from gmft.core.legacy.mirror import DeprecationMirrorMeta
 from gmft.pdf_bindings.base import BasePDFDocument, BasePage
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 from gmft.formatters.base import FormattedTable
 
-from gmft.auto import (
-    TATRDetector as TATRTableDetectorOrig,
-    TableDetectorConfig as TableDetectorConfigOrig,
-    TableDetector as TableDetectorOrig,
-    TATRFormatConfig as TATRFormatConfigOrig,
-    TATRFormattedTable as TATRFormattedTableOrig,
-    TATRFormatter as TATRTableFormatterOrig,
-    AutoTableFormatter as AutoTableFormatterOrig,
-    AutoFormatConfig as AutoFormatConfigOrig,
-    AutoTableDetector as AutoTableDetectorOrig,
+# config-only classes specific to TATR are still discouraged.
+
+# these auto classes are lazy-loaded
+from gmft.core.auto_lazy import (
+    AutoTableFormatter,
+    AutoFormatConfig,
+    AutoTableDetector,
 )
 
-has_warned = False
+# We need to support these imports for compatibility:
+# TATRTableDetector
+# TableDetectorConfig
+# TableDetector
+# TATRFormatConfig
+# TATRFormattedTable
+# TATRTableFormatter
+# AutoTableFormatter
+# AutoFormatConfig
+# AutoTableDetector
 
 
-def _deprecation_warning(name):
-    global has_warned
-    if has_warned:
-        return
-    import warnings
-
-    msg = f"(Deprecation) While once encouraged, \
-importing {name} and other classes from the top level module is now deprecated and will break in v0.5.0. \
-Please import from gmft.auto instead."
-    warnings.warn(msg, DeprecationWarning, stacklevel=2)
-    print(msg)
-    has_warned = True
-
-
-# These small classes are fine, but still discouraged.
-# Rect
-# BasePDFDocument
-# BasePage
-# CroppedTable
-# RotatedCroppedTable
-
-
-class TATRTableDetector(TATRTableDetectorOrig):
+# These bulky TATR-specific detectors are discouraged, but still available for compatibility.
+class TATRTableDetector(metaclass=DeprecationMirrorMeta):
     """
-    Deprecated. Please import from gmft.auto instead.
+    This import is deprecated.
+
+    Please use:
+    - gmft.AutoTableDetector
+    - gmft.detectors.tatr.TATRDetector
     """
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("TATRTableDetector")
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def get_mirrored_class(cls):
+        from gmft.detectors.tatr import TATRDetector as OrigCls
+
+        return OrigCls
 
 
-class TableDetectorConfig(TableDetectorConfigOrig):
+class TableDetectorConfig(metaclass=DeprecationMirrorMeta):
     """
-    Deprecated. Please import from gmft.auto instead.
-    """
+    This import is deprecated.
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("TableDetectorConfig")
-        super().__init__(*args, **kwargs)
-
-
-class TableDetector(TableDetectorOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
+    Please use:
+    - Reformat API (v0.5)
+    - gmft.detectors.tatr.TATRDetectorConfig
     """
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("TableDetector")
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def get_mirrored_class(cls):
+        from gmft.impl.tatr.config import TATRDetectorConfig as OrigCls
+
+        return OrigCls
 
 
-class TATRFormatConfig(TATRFormatConfigOrig):
+class TableDetector(metaclass=DeprecationMirrorMeta):
     """
-    Deprecated. Please import from gmft.auto instead.
-    """
+    This import is deprecated.
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("TATRFormatConfig")
-        super().__init__(*args, **kwargs)
-
-
-class TATRFormattedTable(TATRFormattedTableOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
+    Please use:
+    - gmft.AutoTableDetector
+    - gmft.detectors.tatr.TATRDetector
     """
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("TATRFormattedTable")
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def get_mirrored_class(cls):
+        from gmft.auto import TATRDetector as OrigCls
+
+        return OrigCls
 
 
-class TATRTableFormatter(TATRTableFormatterOrig):
+class TATRFormatConfig(metaclass=DeprecationMirrorMeta):
     """
-    Deprecated. Please import from gmft.auto instead.
-    """
+    This import is deprecated.
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("TATRTableFormatter")
-        super().__init__(*args, **kwargs)
-
-
-class AutoTableFormatter(AutoTableFormatterOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
+    Please use:
+    - Reformat API (v0.5)
+    - gmft.formatters.tatr.TATRFormatConfig
     """
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("AutoTableFormatter")
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def get_mirrored_class(cls):
+        from gmft.impl.tatr.config import TATRFormatConfig as OrigCls
+
+        return OrigCls
 
 
-class AutoFormatConfig(AutoFormatConfigOrig):
+class TATRFormattedTable(metaclass=DeprecationMirrorMeta):
     """
-    Deprecated. Please import from gmft.auto instead.
-    """
+    This import is deprecated.
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("AutoFormatConfig")
-        super().__init__(*args, **kwargs)
-
-
-class AutoTableDetector(AutoTableDetectorOrig):
-    """
-    Deprecated. Please import from gmft.auto instead.
+    Please use:
+    - Reformat API (v0.5)
+    - gmft.formatters.tatr.TATRFormattedTable
     """
 
-    def __init__(self, *args, **kwargs):
-        _deprecation_warning("AutoTableDetector")
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def get_mirrored_class(cls):
+        from gmft.formatters.tatr import TATRFormattedTable as OrigCls
+
+        return OrigCls
+
+
+class TATRTableFormatter(metaclass=DeprecationMirrorMeta):
+    """
+    This import is deprecated.
+
+    Please use:
+    - gmft.auto.AutoTableFormatter
+    - gmft.formatters.tatr.TATRFormatter
+    """
+
+    @classmethod
+    def get_mirrored_class(cls):
+        from gmft.formatters.tatr import TATRFormatter as OrigCls
+
+        return OrigCls

@@ -51,14 +51,33 @@ def test_aliases():
 
     assert isinstance(ct, CroppedTableOrig)
 
-    from gmft import TATRFormatConfig
 
-    config = TATRFormatConfig(large_table_threshold=2)
+def test_idem_isinstance():
+    # test that isinstance(self, cls) is true
+    # which is tricky with lazy-loaded classes
+    from gmft import TATRFormatConfig as LazyConfig
+
+    from gmft.impl.tatr.config import TATRFormatConfig as OrigConfig
+
+    config = LazyConfig(large_table_threshold=2)
     assert config.large_table_threshold == 2
 
-    assert isinstance(config, TATRFormatConfig)
+    # check is instanceof self
+    assert isinstance(config, LazyConfig)
 
+    # check equivalency of OrigConfig and TATRFormatConfig
+    assert isinstance(config, OrigConfig)
+
+    config_orig = OrigConfig(large_table_threshold=3)
+    assert config_orig.large_table_threshold == 3
+
+    assert isinstance(config_orig, OrigConfig)
+    assert isinstance(config_orig, LazyConfig)  # FAILS
+
+
+def test_common_alias():
     # import from "common" as an alias for "base"
+    from gmft import Rect
     from gmft.common import Rect as CommonRect
     from gmft.formatters.common import BaseFormatter
 
