@@ -5,41 +5,8 @@ from gmft.core._dataclasses import with_config
 from gmft.core.ml import _resolve_device
 from gmft.detectors.base import BaseDetector, CroppedTable, RotatedCroppedTable
 
+from gmft.impl.tatr.config import TATRDetectorConfig
 from gmft.pdf_bindings.base import BasePage
-
-
-@dataclass
-class TATRDetectorConfig:
-    """
-    Configuration for the :class:`.TATRDetector` class.
-
-    Specific to the TableTransformerForObjectDetection model. (Do not subclass this.)
-    """
-
-    image_processor_path: str = "microsoft/table-transformer-detection"
-    detector_path: str = "microsoft/table-transformer-detection"
-    no_timm: bool = True  # huggingface revision
-    warn_uninitialized_weights: bool = False
-    torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
-
-    detector_base_threshold: float = 0.9
-    """Minimum confidence score required for a table"""
-
-    @property
-    def confidence_score_threshold(self):
-        raise DeprecationWarning(
-            "Use detector_base_threshold instead. Will break in v0.6.0."
-        )
-
-    @confidence_score_threshold.setter
-    def confidence_score_threshold(self, value):
-        raise DeprecationWarning(
-            "Use detector_base_threshold instead. Will break in v0.6.0."
-        )
-
-    def __post_init__(self):
-        # use cuda if available
-        pass
 
 
 class TATRDetector(BaseDetector[TATRDetectorConfig]):

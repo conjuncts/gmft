@@ -9,6 +9,40 @@ from gmft.core.legacy.removed_config import LegacyRemovedConfig
 
 
 @dataclass
+class TATRDetectorConfig:
+    """
+    Configuration for the :class:`.TATRDetector` class.
+
+    Specific to the TableTransformerForObjectDetection model. (Do not subclass this.)
+    """
+
+    image_processor_path: str = "microsoft/table-transformer-detection"
+    detector_path: str = "microsoft/table-transformer-detection"
+    no_timm: bool = True  # huggingface revision
+    warn_uninitialized_weights: bool = False
+    torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
+
+    detector_base_threshold: float = 0.9
+    """Minimum confidence score required for a table"""
+
+    @property
+    def confidence_score_threshold(self):
+        raise DeprecationWarning(
+            "Use detector_base_threshold instead. Will break in v0.6.0."
+        )
+
+    @confidence_score_threshold.setter
+    def confidence_score_threshold(self, value):
+        raise DeprecationWarning(
+            "Use detector_base_threshold instead. Will break in v0.6.0."
+        )
+
+    def __post_init__(self):
+        # use cuda if available
+        pass
+
+
+@dataclass
 class TATRFormatConfig(LegacyRemovedConfig):
     """
     Configuration for :class:`.TATRTableFormatter`.
