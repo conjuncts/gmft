@@ -9,8 +9,9 @@ Example:
     >>> from gmft.auto import AutoTableFormatter
 """
 
+from gmft.impl.tatr.config import TATRFormatConfig
 from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
-from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable, TATRFormatter
+from gmft.formatters.tatr import TATRFormattedTable, TATRFormatter
 import warnings
 
 TATRTableFormatter = TATRFormatter

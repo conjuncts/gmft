@@ -2,6 +2,7 @@
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
 
 
+from typing import List, Optional, Tuple
 import matplotlib.pyplot as plt
 
 
@@ -19,17 +20,17 @@ colors = {
 
 def plot_results_unwr(
     pil_img,
-    confidence,
-    labels,
-    boxes,
-    id2label,
-    filter=None,
-    figsize=(32, 20),
-    padding=None,
-    margin=None,
-    linewidth=3,
-    show_labels=True,
-    return_img=False,
+    confidence: List[float],
+    labels: List[int],
+    boxes: List[Tuple[float, float, float, float]],
+    id2label: dict[int, str],
+    filter: List[int] = None,
+    figsize: Tuple[int, int] = (32, 20),
+    padding: Optional[Tuple[int, int]] = None,
+    margin: Optional[Tuple[int, int]] = None,
+    linewidth: int = 3,
+    show_labels: bool = True,
+    return_img: bool = False,
 ):  # prob, boxes):
     """
     Helper method to visualize the results of the table detection/format model.
@@ -52,9 +53,6 @@ def plot_results_unwr(
             [10.001, 0.001, 0.998, 0.998]
         ]
     """
-    # confidence = results["scores"].tolist()
-    # labels = results["labels"].tolist()
-    # boxes = results["boxes"].tolist()
     if id2label is None:
         id2label = {0: "table", 1: "table rotated"}
 
@@ -173,21 +171,22 @@ def plot_shaded_boxes(
         border = id2border.get(label, (255, 255, 255, 0))
 
         # Draw the shaded rectangle (box) with the given color
-        draw.rectangle(
-            [xmin, ymin, xmax, ymax], fill=c, width=3, outline=border
-        )  # , outline=c[:3] + (255,)
+        draw.rectangle([xmin, ymin, xmax, ymax], fill=c, width=3, outline=border)
 
     # Return the modified image
     return pil_img
 
 
 def plot_results_orig(pil_img, results, id2label, filter=None):  # prob, boxes):
-    # results = {
-    # "scores": tensor([0.993, 0.927]),
-    # "labels": tensor([0, 0]),
-    # "boxes": tensor([[0.000, 0.000, 70.333, 20.333], # bounding boxes: xmin, ymin, xmax, ymax
-    #                  [10.001, 0.001, 0.998, 0.998]]),
-    # }
+    """
+    Takes tensor input.
+    results = {
+        "scores": tensor([0.993, 0.927]),
+        "labels": tensor([0, 0]),
+        "boxes": tensor([[0.000, 0.000, 70.333, 20.333], # bounding boxes: xmin, ymin, xmax, ymax
+                        [10.001, 0.001, 0.998, 0.998]]),
+    }
+    """
     plot_results_unwr(
         pil_img,
         results["scores"].tolist(),
@@ -268,15 +267,11 @@ def plot_interval_histogram(
         p, pfreq = histogram.sorted_points[i]
         q, _ = histogram.sorted_points[i + 1]
 
-        # if rotate_graph:
-        #     ax.add_patch(plt.Rectangle((0, p), pfreq, q - p, fill=True, color='blue', alpha=0.5, linewidth=0))
-        # else:
         ax.add_patch(
             plt.Rectangle(
                 (p, 0), q - p, pfreq, fill=True, color="blue", alpha=0.5, linewidth=0
             )
         )
-        # max_freq = max(max_freq, pfreq)
 
     if histogram.sorted_points:
         min_x = histogram.sorted_points[0][0]
@@ -288,21 +283,11 @@ def plot_interval_histogram(
         ax.invert_xaxis()
 
     # Set labels and title
-    # if rotate_graph:
-    #     ax.set_ylabel('Position')
-    #     ax.set_xlabel('Frequency')
-    # else:
     ax.set_xlabel("Position")
     ax.set_ylabel("Frequency")
     ax.set_title("Interval Histogram")
 
     # Adjust y-axis to show intervals if needed
-    # if show_intervals:
-    # ymin, ymax = ax.get_ylim()
-    # if rotate_graph:
-    #     ax.set_xlim(0, histogram.height + 0.5)
-    #     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-    # else:
     ax.set_ylim(0, histogram.height + 0.5)
     # set y ticks to integers
     ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True))

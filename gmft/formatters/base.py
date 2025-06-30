@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
+from gmft.core.ml.prediction import TablePredictions
 from gmft.pdf_bindings.base import BasePage
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 
@@ -13,6 +14,8 @@ class FormattedTable(RotatedCroppedTable):
 
     Warning: This class is not meant to be instantiated directly. Use a :class:`.TableFormatter` to convert a :class:`.CroppedTable` to a :class:`.FormattedTable`.
     """
+
+    predictions: TablePredictions
 
     def __init__(self, cropped_table: CroppedTable, df: pd.DataFrame = None):
         self._df = df
@@ -126,7 +129,6 @@ def _normalize_bbox(
     2. scale factor is normalized (dpi=72)
     3. margin is removed (so (0, 0) is the start of the original detected bbox)
     """
-    # print("Margin: ", used_margin)
     if used_margin is None:
         used_margin = (0, 0)
     bbox = [

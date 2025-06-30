@@ -18,9 +18,6 @@ def ingest_pdf(pdf_path) -> tuple[list[CroppedTable], PyPDFium2Document]:
 
     tables = []
     for page in doc:
-        # page_text = ""
-        # for text in page.get_positions_and_text():
-        # page_text += text[4] + " "
-        # if any([re.search(x, page_text) for x in page_keywords_re_s]):
+        # Possible to insert a text regex before extraction to filter out unwanted text
         tables += default_detector.extract(page)
     return tables, doc

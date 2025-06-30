@@ -64,15 +64,8 @@ class _Img2TableCroppedPDF(img2table.document.PDF):
                 for k, v in tables.items()
                 if len(v) > 0
             ]
-            # images = [self.images[k] for k, v in tables.items() if len(v) > 0]
 
             if table_pages:
-                # Create PDF object for OCR
-                # pdf_ocr = PDF(src=self.bytes,
-                #               pages=table_pages,
-                #               _images=images,
-                #               _rotated=self._rotated)
-
                 pdf_ocr = self
                 # I don't think it mutates? TODO Verify
 

@@ -1,21 +1,28 @@
 import copy
-from dataclasses import dataclass, field
 import statistics
-from typing import Generator, Union
+from typing import Generator, Optional, Union
 
 import numpy as np
 import pandas as pd
 
-from gmft._dataclasses import removed_property, non_defaults_only, with_config
+from gmft.core._dataclasses import non_defaults_only, with_config
 from gmft.algorithm.dividers import (
     fill_using_true_partitions,
     _find_all_intervals_for_interval,
     _ioa,
     get_good_between_dividers,
 )
+from gmft.core.io.serial.dicts import _extract_fctn_results, _extract_indices
+from gmft.core.legacy.fctn_results import LegacyFctnResults
+from gmft.core.ml import _resolve_device
+from gmft.core.ml.prediction import (
+    _empty_effective_predictions,
+    _empty_indices_predictions,
+)
 from gmft.detectors.base import CroppedTable, RotatedCroppedTable
+from gmft.impl.ditr.config import DITRFormatConfig
 from gmft.formatters.base import FormattedTable, TableFormatter, _normalize_bbox
-from gmft.formatters.histogram import HistogramConfig, HistogramFormattedTable
+from gmft.formatters.histogram import HistogramFormattedTable
 from gmft.pdf_bindings.base import BasePage
 
 
@@ -33,169 +40,7 @@ import torch
 from transformers import DetrForObjectDetection
 
 
-@dataclass
-class DITRFormatConfig(HistogramConfig):
-    """
-    Configuration for :class:`.DITRTableFormatter`.
-    """
-
-    # ---- model settings ----
-
-    warn_uninitialized_weights: bool = False
-    image_processor_path: str = (
-        "microsoft/table-transformer-structure-recognition-v1.1-all"
-    )
-    formatter_path: str = "conjuncts/ditr-e15"
-    # no_timm: bool = True # use a model which uses AutoBackbone.
-    torch_device: str = "cuda" if torch.cuda.is_available() else "cpu"
-
-    verbosity: int = 1
-    """
-    0: errors only\n
-    1: print warnings\n
-    2: print warnings and info\n
-    3: print warnings, info, and debug
-    """
-
-    formatter_base_threshold: float = 0.3
-    """Base threshold for the confidence demanded of a separating line.
-    
-    Since merged rows are generally harder to deal with than empty rows, a low threshold is usually
-    better, because then more separating lines are detected.
-    """
-
-    cell_required_confidence: dict = field(
-        default_factory=lambda: {
-            0: 0.3,  # table
-            1: 0.3,  # column
-            2: 0.3,  # row
-            3: 0.3,  # column header
-            4: 0.5,  # projected row header
-            5: 0.5,  # spanning cell
-            6: 99,  # no object
-        }
-    )
-    """Confidences required (>=) for a row/column feature to be considered good. See DITRFormattedTable.id2label
-    
-    But low confidences may be better than too high confidence (see formatter_base_threshold)
-    """
-
-    # ---- df() settings ----
-
-    # ---- options ----
-
-    remove_null_rows: bool = True
-    """Remove rows with no text."""
-
-    enable_multi_header: bool = True
-    """Enable multi-indices in the dataframe.
-    If false, then multiple headers will be merged column-wise."""
-
-    semantic_spanning_cells: bool = True
-    """
-    [Experimental] Enable semantic spanning cells, which often encode hierarchical multi-level indices.
-    """
-
-    semantic_hierarchical_left_fill: Union[str, None] = "deep"
-    """
-    [Experimental] When semantic spanning cells is enabled, when a left header is detected which might
-    represent a group of rows, that same value is reduplicated for each row.
-    Possible values: 'algorithm', 'deep', None.
-    
-    'algorithm': assumes that the higher-level header is always the first row followed by several empty rows.\n
-    'deep': merges headers according to the spanning cells detected by the Table Transformer.\n
-    None: headers are not duplicated.
-    """
-
-    # ---- large table ----
-
-    # note that the overlap metric is not useful anymore since separating lines are not
-    # supposed to cover the entire table.
-
-    # hence nms is also not useful anymore.
-
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
-    def large_table_if_n_rows_removed(self):
-        pass
-
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
-    def large_table_threshold(self):
-        pass
-
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
-    def large_table_row_overlap_threshold(self):
-        pass
-
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
-    def force_large_table_assumption(self):
-        pass
-
-    large_table_maximum_rows: int = 1000
-    """If the table predicts a large number of rows, refuse to proceed. Therefore prevent memory issues for super small text."""
-
-    # ---- rejection and warnings ----
-
-    # note that the overlap metric is not useful anymore since separating lines are not
-    # supposed to cover the entire table.
-
-    # hence nms is also not useful anymore.
-
-    @removed_property("Overlap ({name}) is not used for the DITR model.")
-    def total_overlap_reject_threshold(self):
-        pass
-
-    @removed_property("Overlap ({name}) is not used for the DITR model.")
-    def total_overlap_warn_threshold(self):
-        pass
-
-    @removed_property("Overlap (nms) ({name}) is not used for the DITR model.")
-    def nms_warn_threshold(self):
-        pass
-
-    @removed_property("Overlap ({name}) is not used for the DITR model.")
-    def iob_reject_threshold(self):
-        pass
-
-    @removed_property("Overlap ({name}) is not used for the DITR model.")
-    def iob_warn_threshold(self):
-        pass
-
-    # ---- technical ----
-
-    _nms_overlap_threshold: float = 0.1
-    _nms_overlap_threshold_larger: float = 0.5
-
-    @removed_property("Large table approach ({name}) is not used for the DITR model.")
-    def _large_table_merge_distance(self):
-        pass
-
-    _smallest_supported_text_height: float = 0.1
-    """The smallest supported text height. Text smaller than this height will be ignored. 
-    Helps prevent very small text from creating huge arrays under large table assumption."""
-
-    # ---- deprecated ----
-    # aggregate_spanning_cells = False
-    @removed_property
-    def aggregate_spanning_cells(self):
-        pass
-
-    # corner_clip_outlier_threshold = 0.1
-    # """"corner clip" is when the text is clipped by a corner, and not an edge"""
-    @removed_property
-    def corner_clip_outlier_threshold(self):
-        pass
-
-    # spanning_cell_minimum_width = 0.6
-    @removed_property
-    def spanning_cell_minimum_width(self):
-        pass
-
-    @property
-    def deduplication_iob_threshold(self):
-        pass
-
-
-class DITRFormattedTable(HistogramFormattedTable):
+class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
     """
     FormattedTable, as seen by a Table Transformer for dividers (dubbed DITR).
     See :class:`.DITRTableFormatter`.
@@ -215,31 +60,21 @@ class DITRFormattedTable(HistogramFormattedTable):
     config: DITRFormatConfig
     outliers: dict[str, bool]
 
-    effective_headers: list[tuple]
-    "Headers as seen by the image --> df algorithm."
-
-    effective_projecting: list[tuple]
-    "Projected rows as seen by the image --> df algorithm."
-
-    effective_spanning: list[tuple]
-    "Spanning cells as seen by the image --> df algorithm."
-
-    _top_header_indices: list[int] = None
-    _projecting_indices: list[int] = None
-    _hier_left_indices: list[int] = None
-
     def __init__(
         self,
         cropped_table: CroppedTable,
         irvl_results: dict,
         fctn_results: dict,
-        #  fctn_scale_factor: float, fctn_padding: tuple[int, int, int, int],
         config: DITRFormatConfig = None,
     ):
         super(DITRFormattedTable, self).__init__(
             cropped_table, None, irvl_results, config=config
         )
-        self.fctn_results = fctn_results
+        self.predictions = {
+            "tatr": fctn_results,
+            "effective": _empty_effective_predictions(),
+            "indices": _empty_indices_predictions(),
+        }
 
         if config is None:
             config = DITRFormatConfig()
@@ -249,7 +84,7 @@ class DITRFormattedTable(HistogramFormattedTable):
     def df(self, recalculate=False, config_overrides: DITRFormatConfig = None):
         """
         Return the table as a pandas dataframe.
-        :param recalculate: by default, the dataframe is cached
+        :param recalculate: by default, the dataframe is cached. DEPRECATED: use recompute() instead.
         :param config_overrides: override the config settings for this call only
         """
         if recalculate != False:
@@ -275,8 +110,6 @@ class DITRFormattedTable(HistogramFormattedTable):
         Visualize the cropped table.
         """
         img = self.image()
-        # labels = self.fctn_results['labels']
-        # bboxes = self.fctn_results['boxes']
         tbl_width = self.width  # adjust for rotations too
         tbl_height = self.height
 
@@ -288,13 +121,13 @@ class DITRFormattedTable(HistogramFormattedTable):
         for y0, y1 in self.irvl_results["row_dividers"]:
             bboxes.append([0, y0, tbl_width, y1])
             labels.append(2)
-        for x0, y0, x1, y1 in self.effective_headers:
+        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(3)
-        for x0, y0, x1, y1 in self.effective_projecting:
+        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(4)
-        for x0, y0, x1, y1 in self.effective_spanning:
+        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(5)
         return plot_shaded_boxes(img, labels=labels, boxes=bboxes, **kwargs)
@@ -308,20 +141,14 @@ class DITRFormattedTable(HistogramFormattedTable):
         else:
             parent = CroppedTable.to_dict(self)
         optional = {}
-        if self._projecting_indices is not None:
-            optional["_projecting_indices"] = self._projecting_indices
-        if self._hier_left_indices is not None:
-            optional["_hier_left_indices"] = self._hier_left_indices
-        if self._top_header_indices is not None:
-            optional["_top_header_indices"] = self._top_header_indices
+        if self.predictions["indices"]:
+            optional["predictions.indices"] = self.predictions["indices"]
         return {
             **parent,
             **{
-                # 'fctn_scale_factor': self.fctn_scale_factor,
-                # 'fctn_padding': list(self.fctn_padding),
                 "config": non_defaults_only(self.config),
                 "outliers": self.outliers,
-                "fctn_results": self.fctn_results,
+                "fctn_results": self.predictions["tatr"],
             },
             **optional,
         }
@@ -335,39 +162,19 @@ class DITRFormattedTable(HistogramFormattedTable):
         d = copy.deepcopy(d)  # don't modify the original dict
         cropped_table = CroppedTable.from_dict(d, page)
 
-        if "fctn_results" not in d:
-            raise ValueError(
-                "fctn_results not found in dict -- dict may be a CroppedTable but not a TATRFormattedTable."
-            )
+        results = _extract_fctn_results(d)
 
         config = DITRFormatConfig(**d["config"])
-
-        results = d["fctn_results"]  # fix shallow copy issue
-        if (
-            "fctn_scale_factor" in d
-            or "scale_factor" in d
-            or "fctn_padding" in d
-            or "padding" in d
-        ):
-            # deprecated: this is for backwards compatibility
-            scale_factor = d.get("fctn_scale_factor", d.get("scale_factor", 1))
-            padding = d.get("fctn_padding", d.get("padding", (0, 0)))
-            padding = tuple(padding)
-
-            # normalize results here
-            for i, bbox in enumerate(results["boxes"]):
-                results["boxes"][i] = _normalize_bbox(
-                    bbox, used_scale_factor=scale_factor, used_padding=padding
-                )
 
         table = DITRFormattedTable(
             cropped_table,
             None,
-            results,  # scale_factor, tuple(padding),
+            results,
             config=config,
         )
         table.recompute()
         table.outliers = d.get("outliers", None)
+        table.predictions["indices"] = _extract_indices(d)
         return table
 
 
@@ -394,10 +201,10 @@ class DITRFormatter(TableFormatter):
         self.image_processor = AutoImageProcessor.from_pretrained(
             config.image_processor_path
         )
-        # revision = "no_timm" if config.no_timm else None , revision=revision
+        # might need revision: "no_timm"
         self.structor = TableTransformerForObjectDetection.from_pretrained(
             config.formatter_path
-        ).to(config.torch_device)
+        ).to(_resolve_device(config.torch_device))
         self.config = config
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
@@ -425,7 +232,7 @@ class DITRFormatter(TableFormatter):
             image,
             size={"shortest_edge": 800, "longest_edge": 1333},
             return_tensors="pt",
-        ).to(self.config.torch_device)
+        ).to(_resolve_device(self.config.torch_device))
         with torch.no_grad():
             outputs = self.structor(**encoding)
 
@@ -451,7 +258,7 @@ class DITRFormatter(TableFormatter):
         formatted_table = DITRFormattedTable(
             table,
             None,
-            results,  # scale_factor, padding,
+            results,
             config=config,
         )
         formatted_table.recompute()
@@ -627,7 +434,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
 
     outliers = {}  # store table-wide information about outliers or pecularities
 
-    results = table.fctn_results
+    results = table.predictions["tatr"]
     row_divider_boxes, col_divider_boxes, top_headers, projected, spanning_cells = (
         proportion_fctn_results(results, config)
     )
@@ -655,9 +462,13 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
         "row_dividers": row_divider_intervals,
         "col_dividers": col_divider_intervals,
     }
-    table.effective_headers = top_headers
-    table.effective_projecting = projected
-    table.effective_spanning = [span["bbox"] for span in spanning_cells]
+    table.predictions["effective"] = {
+        "rows": [],
+        "columns": [],
+        "headers": top_headers,
+        "projecting": projected,
+        "spanning": [span["bbox"] for span in spanning_cells],
+    }
 
     # table_bounds = table.bbox # empirical_table_bbox(row_divider_boxes, col_divider_boxes)
     fixed_table_bounds = (0, 0, table.width, table.height)  # adjust for rotations too
@@ -713,6 +524,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
         projecting_indices = [i for i in projecting_indices if i not in empty_rows]
 
     # semantic spanning fill
+    indices_preds = {}
     if config.semantic_spanning_cells:
         # TODO probably not worth it to duplicate the code
         old_rows = [(None, y0, None, y1) for y0, y1 in good_row_intervals]
@@ -746,15 +558,15 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
             header_indices=header_indices,
             config=config,
         )
-        table._hier_left_indices = hier_left_idxs
+        indices_preds["_hier_left"] = hier_left_idxs
     else:
-        table._hier_left_indices = []  # for the user
+        indices_preds["_hier_left"] = []  # for the user
 
     # technically these indices will be off by the number of header rows ;-;
     if config.enable_multi_header:
-        table._top_header_indices = header_indices
+        indices_preds["_top_header"] = header_indices
     else:
-        table._top_header_indices = [0] if header_indices else []
+        indices_preds["_top_header"] = [0] if header_indices else []
 
     # extract out the headers
     header_rows = table_array[header_indices]
@@ -785,8 +597,9 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
         # remove the header_indices
         # note that ditr._determine_headers_and_projecting
         # automatically makes is_projecting and header_indices mutually exclusive
-        table._projecting_indices = [i for i, x in enumerate(is_projecting) if x]
+        indices_preds["_projecting"] = [i for i, x in enumerate(is_projecting) if x]
 
+    table.predictions["indices"] = indices_preds
     # b. drop the former header rows always
     table._df.drop(index=header_indices, inplace=True)
 

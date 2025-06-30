@@ -16,19 +16,6 @@ if TYPE_CHECKING:
 import pypdfium2 as pdfium
 from pdftext.extraction import dictionary_output
 
-# monkey patch a method
-# from pdftext import extraction
-# def _fixed_load_pdf(pdf, flatten_pdf):
-#     if isinstance(pdf, pdfium.PdfDocument):
-#         return pdf
-#     pdf = pdfium.PdfDocument(pdf)
-
-#     if flatten_pdf:
-#         pdf.init_forms()
-
-#     return pdf
-# extraction._load_pdf = _fixed_load_pdf
-
 
 class PDFTextPage(BasePage):
     """
@@ -72,7 +59,6 @@ class PDFTextPage(BasePage):
         else:
             # crop is "amount to cut off" from each side
             # left, bottom, right, top
-            # crop = (rect.bbox[0], rect.bbox[1], self.page.get_width() - rect.bbox[0], self.page.get_height() - rect.bbox[1])
             xmin, ymin, xmax, ymax = rect.bbox
             # also remember that the origin is at the bottom left
             crop = (xmin, self.height - ymax, self.width - xmax, ymin)
@@ -83,14 +69,7 @@ class PDFTextPage(BasePage):
         self.page.close()
         self.page = None
 
-    # def __del__(self):
-    #     if self.page is not None:
-    #         self.close()
-
     def close_document(self):
-        # if self.page.parent:
-        # self.page.parent.close()
-        # self.page = None
         self.parent.close()
 
     def _get_positions_and_text_and_breaks(self):
@@ -160,7 +139,3 @@ class PDFTextDocument(BasePDFDocument):
         if self._doc is not None:
             self._doc.close()
         self._doc = None
-
-    # def __del__(self):
-    #     if self._doc is not None:
-    #         self.close()

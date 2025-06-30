@@ -1,7 +1,8 @@
 import copy
 from dataclasses import dataclass
 import torch
-from gmft._dataclasses import with_config
+from gmft.core._dataclasses import with_config
+from gmft.core.ml import _resolve_device
 from gmft.detectors.base import BaseDetector, CroppedTable, RotatedCroppedTable
 
 from gmft.pdf_bindings.base import BasePage
@@ -79,7 +80,7 @@ class TATRDetector(BaseDetector[TATRDetectorConfig]):
         revision = "no_timm" if config.no_timm else None
         self.detector = TableTransformerForObjectDetection.from_pretrained(
             config.detector_path, revision=revision
-        ).to(config.torch_device)
+        ).to(_resolve_device(config.torch_device))
 
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)
@@ -101,7 +102,7 @@ class TATRDetector(BaseDetector[TATRDetectorConfig]):
             72
         )  # use standard dpi = 72, which means we don't need any scaling
         encoding = self.image_processor(img, return_tensors="pt").to(
-            self.config.torch_device
+            _resolve_device(self.config.torch_device)
         )
         with torch.no_grad():
             outputs = self.detector(**encoding)

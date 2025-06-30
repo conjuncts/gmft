@@ -14,9 +14,9 @@ def try_table(want, ditr_tables, ditr_csvs, pdf):
     if expected != actual:
         # save images and csvs
         debug_img = ft.visualize()
-        debug_img.save(f"test/outputs/ditr/{want}.png")
-        ft.df().to_csv(f"test/outputs/ditr/{want}.csv", index=False)
-        with open(f"test/outputs/ditr/{want}.old.csv", "w", encoding="utf-8") as f:
+        debug_img.save(f"data/test/outputs/ditr/{want}.png")
+        ft.df().to_csv(f"data/test/outputs/ditr/{want}.csv", index=False)
+        with open(f"data/test/outputs/ditr/{want}.old.csv", "w", encoding="utf-8") as f:
             f.write(expected)
     assert expected == actual, f"Mismatch in csv files for {want}"
 
@@ -95,7 +95,7 @@ class TestPdf5:
         pass  # this one just doesn't work very well
         # TODO make it work based on minima
         # try_jth_table(pdf5_tables, 5, 0)
-        # assert pdf5_tables[0]._projecting_indices == [15, 18, 22, 29]
+        # assert pdf5_tables[0].predictions["indices"]["_projecting"] == [15, 18, 22, 29]
 
     def test_bulk_pdf5_t1(self, ditr_tables, ditr_csvs, docs_bulk):
         try_table("pdf5_t1", ditr_tables, ditr_csvs, docs_bulk[5 - 1])

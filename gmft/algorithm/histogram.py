@@ -30,7 +30,8 @@ class IntervalHistogram:
         Return the index of the last change point that is <= the query point.
         If no such point exists, return -1.
         """
-        idx = bisect_right(self.sorted_points, point, key=lambda x: x[0]) - 1
+        points = [x[0] for x in self.sorted_points]
+        idx = bisect_right(points, point) - 1
         return idx
 
     def get_index_after(self, point):
@@ -38,7 +39,8 @@ class IntervalHistogram:
         Return the index of the first change point that is strictly > the query point.
         If no such point exists, return len(self.sorted_points).
         """
-        return bisect_right(self.sorted_points, point, key=lambda x: x[0])
+        points = [x[0] for x in self.sorted_points]
+        return bisect_right(points, point)
 
     def frequency(self, point):
         """

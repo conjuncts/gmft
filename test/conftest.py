@@ -1,4 +1,5 @@
 import json
+import os
 import pytest
 
 import matplotlib
@@ -106,6 +107,19 @@ def get_tables_for_pdf(
     return tables
 
 
+def dump_text(string: str, filename: str):
+    """
+    Helper function to dump text to a file.
+    """
+    dest_folder = "data/test/outputs/actual"
+    os.makedirs(dest_folder, exist_ok=True)
+
+    with open(f"{dest_folder}/{filename}", "w", encoding="utf-8") as f:
+        f.write(string)
+    print(f"Dumped to {dest_folder}/{filename}")
+    return string
+
+
 @pytest.fixture(scope="session")
 def cropped_tables():
     with open("data/test/references/cropped_tables.json", "r") as f:
@@ -179,4 +193,5 @@ def pdf8_tables(docs_bulk, detector, formatter, tatr_tables):
 def pytest_sessionstart(session):
     import os
 
-    os.makedirs("test/outputs/ditr", exist_ok=True)
+    os.makedirs("data/test/outputs/actual", exist_ok=True)
+    os.makedirs("data/test/outputs/ditr", exist_ok=True)

@@ -1,26 +1,75 @@
-from gmft import TATRFormattedTable
-from gmft._rich_text.rich_page import embed_tables
-from gmft.formatters.tatr import TATRFormatConfig
-
-
-def test_rich_pdf7(docs_bulk, pdf7_tables):
-    doc = docs_bulk[6]  # n-1
-    # look at page 12
-
-    config = TATRFormatConfig()
-    for ft in pdf7_tables:
-        ft = ft  # type: TATRFormattedTable
-        ft.df(config_overrides=config)  # reset config to defaults
-
-    rich_pages = embed_tables(doc=doc, tables=pdf7_tables)
-
-    # print(rich_pages[2])
-    assert (
-        rich_pages[2].get_text()
-        == """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 3 7 et
+_rich_page_0_text = r"""R E S EARCH AR TIC L E Open Access
+Core mutations, IL28B polymorphisms and
+response to peginterferon/ribavirin treatment in
+Swedish patients with hepatitis C virus genotype
+1 infection
+Erik Alestig1*, Birgitta Arnholm2
+,
+Anders Eilard1
+,
+Martin Lagging1
+,
+Staffan Nilsson3
+,
+Gunnar Norkrans1
+,
+Thomas Wahlberg4
+,
+Rune Wejstål1
+,
+Johan Westin1 and Magnus Lindh1
+Abstract
+Background: Patients infected with hepatitis C virus (HCV) genotype 1 respond poorly to standard treatment with
+50% or less achieving sustained virologic response. Predicting outcome is essential and could help avoid
+unnecessary treatment and reduce health cost. Recently, an association of amino acid substitutions in the core
+region and treatment outcome was observed in Japanese patients. In the present study, the impact of these
+mutations on response kinetics and treatment outcome was explored in Caucasian patients.
+Methods: The core region of HCV pre-treatment samples obtained from 50 patients treated with peginterferon/
+ribavirin in a previous Swedish clinical trial with genotype 1 infection were sequenced. The alleles at rs12979860, a
+single nucleotide polymorphism (SNP), were assessed in order to identify any co-association with this strong
+response predictor.
+Results: No association between treatment response and substitutions of core residue 91 was found. In contrast,
+substitutions of core residue 70 were observed in 6/21 (29%) non-responders, but only in one of 29 responders (p =
+0.03), and were more common in subgenotype 1b (R70Q in 6 of 13 strains) than in 1a (R70P in 1 of 37 strains, p =
+0.004). The rs12979860 SNP upstream of the IL28B gene was overall the strongest response predictor (p = 0.0001).
+Core 70 substitutions were associated with poorer response kinetics in patients carrying the CT genotype at
+rs12979860.
+Conclusions: The results indicate that substitutions of core residue 70 are related to treatment response in
+Caucasian patients with HCV-1b infection, but are of less importance than IL28B polymorphism.
+Background
+Hepatitis C virus (HCV) infection is a major cause of
+cirrhosis and hepatocellular cancer affecting approxi￾mately
+170 million persons worldwide [1]. Combination
+therapy with pegylated interferon and ribavirin (Peg￾IFN/RBV),
+given for 24 to 72 weeks, may eradicate the
+infection and stop progression of liver damage [2-4], but
+many patients do not achieve sustained virologic
+response (SVR). For this reason, and in light of high
+costs and frequent side effects, it is important to identify
+factors that can predict the likelihood of response.
+Several host factors such as age, stage of liver fibrosis,
+body mass index (BMI), liver steatosis, insulin resistance
+and ethnicity, as well as viral genotype influence the
+treatment outcome [5]. While the impact on outcome
+by genotype is undisputed, with 80% of patients with
+genotype 2 or 3 achieving SVR as compared with 50%
+for genotype 1, the importance of subtypes [6], regional
+variability or mutations are controversial. In 1995 it was
+reported from Japan that mutations in a part of the
+NS5A region were associated with treatment response
+in genotype 1b patients. The association between
+* Correspondence: erik.alestig@gu.se
+1 Department of Infection and Virology, University of Gothenburg,
+Gothenburg, Sweden
+Full list of author information is available at the end of the article
+Alestig et al. BMC Infectious Diseases 2011, 11:124
 http://www.biomedcentral.com/1471-2334/11/124
-of infection Table Virological and clinical characteristics with hepatitis patients virus C 1
-|    | Patient no   | Genotype   |   Viral load (106 IU/ml) | Sex   |   Age (years) | Core \\n70   | amino acid \\n91   | rs12979860   | End of treatment response a   |
+© 2011 Alestig et al; licensee BioMed Central Ltd. This is an Open Access article distributed under the terms of the Creative Commons
+Attribution License (http://creativecommons.org/licenses/by/2.0), which permits unrestricted use, distribution, and reproduction in
+any medium, provided the original work is properly cited."""
+
+_rich_page_2_text = r"""Table 1 Virological and clinical characteristics of patients with hepatitis C virus infection
+|    | Patient no   | Genotype   |   Viral load (106 IU/ml) | Sex   |   Age (years) | Core \n70   | amino acid \n91   | rs12979860   | End of treatment response a   |
 |---:|:-------------|:-----------|-------------------------:|:------|--------------:|:------------|:------------------|:-------------|:------------------------------|
 |  0 | R1           | 1a         |                     4.36 | M     |          52.6 | R           | C                 | CC           | SVR                           |
 |  1 | R2           | 1a         |                     6.37 | M     |          34.9 | R           | C                 | CC           | SVR                           |
@@ -73,13 +122,67 @@ of infection Table Virological and clinical characteristics with hepatitis patie
 | 48 | N18          | 1b         |                     6.69 | M     |          62.8 | Q           | L                 | CT           | non-SVR                       |
 | 49 | N19          | 1b         |                     6.7  | F     |          54.2 | Q           | M                 | CT           | non-SVR                       |
 
-a sustained virologic sustained virologic SVR, non-SVR, response; no response"""
-    )
-    assert (
-        rich_pages[3].get_text()
-        == """Infectious of Alestig al. BMC Diseases Page 2011, 11:124 4 7 et
+a SVR, sustained virologic response; non-SVR, no sustained virologic response
+Alestig et al. BMC Infectious Diseases 2011, 11:124
 http://www.biomedcentral.com/1471-2334/11/124
-Table and viral baseline with and without in patients Host 2 parameters treatment response
+Page 3 of 7"""
+
+_rich_page_3_text = r"""Subgenotypes, core mutations and treatment response
+The virologic response was not associated with substitu￾tions
+at residue 91. However, a poor response was asso￾ciated
+with substitutions of core residue 70: One of the
+7 patients (14%) with substitutions at residue 70 (six
+subtype 1b strains with Q70 and one subtype 1a strain
+with P70) achieved SVR, as compared with 28 of 43
+patients (65%) carrying strains with R70 (p = 0.03).
+Substitutions of core residues 70 and 91 were closely
+linked to subgenotype 1b: Six (5 non-SVR) of 13 geno￾type
+1b strains had Q70, while only one of 37 subgeno￾type
+1a strain had a substitution (P70) at this site (p =
+0.0007). Similarly, all 1a strains had cysteine at residue
+91, while in 1b 9 had methionine and 4 had leucine (p <
+0.0001). This association between core variability and
+genotype was further explored by analysis of 3313
+sequences from the HCV Database Project (http://hcv.
+lanl.gov/), showing a predominance (≥93%) of R70 in
+genotypes 1a, 2, 3 and 4, and high rates of Q70 in 1b, 5
+and 6 (Table 3). In the 13 patients carrying subtype 1b
+strains, the correlation was strong: 7 of 8 responders
+had arginine (R70) and 5 non-responders had glutamine
+(Q70) at residue 70 (p = 0.005). In contrast, in the 37
+patients with 1a infection, all the 21 patients with SVR
+carried HCV with R70, while 15 of the 16 non-SVR car￾ried
+strains with R70.
+Phylogenetic analysis of NS5A and ISDR substitutions
+In order to find out if the variability at positions 70 and
+91 was linked to subgroups of HCV-1b phylogenetic
+analysis of NS5A was performed, including the 13
+strains from the present study as well as database
+sequences. The different core 70/91 variants were found
+in many sub-branches of the tree without clustering,
+indicating that they are not the result of a few historical
+mutations but evolve continuously (data not shown).
+One substitution within ISDR (as compared with the
+HCV-J reference sequence) was observed in 9 of the 13
+subgenotype 1b strains (7 H2218R, 2 H2218N), and 2
+substitutions (H2219Y and D2225E) were seen in one
+strain. There was no association between ISDR substitu￾tion
+and treatment response.
+IL28B SNP
+The rs12979860 T allele frequency was 40% as com￾pared
+with 46% in 163 health subjects without HCV
+infection. The CC genotype, which has been associated
+with better treatment response in several previous stu￾dies,
+was identified in 18 patients, and 16 of them (89%)
+were achieved SVR. The unfavourable SNP genotype
+(TT) was found in 8 patients and none of them was
+responder. The remaining 24 patients were CT hetero￾zygous,
+13 (54%) of them achieved SVR. In an attempt
+to explore whether core variation might have an impact
+on response irrespective of rs12979860, the viral kinetics
+in patients carrying the CT SNP genotype and different
+HCV core variants was compared. As shown in Figure 1
+Table 2 Host and viral baseline parameters in patients with and without treatment response
 |    |                                     | SVR n = 29           | non-SVR n = 21      | Univariate p value   |
 |---:|:------------------------------------|:---------------------|:--------------------|:---------------------|
 |  0 | Age (mean)                          | 45.2                 | 48.8                | 0.09a                |
@@ -95,34 +198,12 @@ Table and viral baseline with and without in patients Host 2 parameters treatmen
 
 a Mann-Whitney U test.
 b Fisher’s exact test.
-c for Fibrosis scored according Ludwig and and available Batts, patients. 34 to was was
+c Fibrosis was scored according to Ludwig and Batts, and was available for 34 patients.
 d Logistic regression.
-e Chi test. square
-the correlation of responders Subgenotypes, and mutations strains, 8 7 treatment strong: core response was
-substitu\ufffetions The virologic associated with (R70) had and non-responders had glutamine 5 arginine not response was
-residue (Q70) (p 0.005). residue the However, 91. In in 37 70 at at contrast, asso\ufffeciated poor response was a =
-with substitutions of residue of the with infection, all the with One SVR 70: patients patients 1a 21 core
-(14%) (six with substitutions residue carried with while of the patients HCV non-SVR 70 7 R70, 15 16 at car\uffferied
-subtype 1b with and subtype with Q70 strains strain 1a R70. strains one
-P70) with achieved compared with of SVR, 43 28 of Phylogenetic analysis and substitutions NS5A ISDR as
-(65%) (p 0.03). with order find if the variability and R70 patients carrying strains In positions 70 to out at =
-Substitutions of residues and closely linked subgroups of HCV-1b phylogenetic 70 91 91 to core were was
-(5 non-SVR) linked subgenotype 1b: of Six analysis of performed, including the 13 NS5A 13 to geno\ufffetype was
-subgeno\ufffetype 1b had while only of from the study well database Q70, strains 37 strains present one as as
-(P70) (p had substitution this The different found strain site 1a 70/91 variants at a sequences. core were =
-0.0007). Similarly, all had residue sub-branches of the without clustering, strains cysteine 1a in at tree many
-(p while 1b had methionine and had leucine indicating that they the result of few historical in 91, 9 4 not < are a
-0.0001). This between variability and (data shown). but evolve continuously association mutations not core
-further explored by analysis of (as substitution within compared with the 3313 One ISDR genotype was
-(http://hcv. from the Database sequence) HCV reference observed of the Project HCV-J in 13 9 sequences was
-(≥93%) lanl.gov/), showing predominance of (7 H2218N), subgenotype 1b and R70 in H2218R, strains 2 2 a
-and and high of 1b, (H2219Y D2225E) substitutions and Q70 5 in 3 1a, 2, 4, in genotypes rates seen were one
-(Table 3). and the subtype 1b substitu\ufffetion There between 6 In patients carrying 13 ISDR strain. association was no
-and treatment response.
-SNP IL28B of Table Distribution acids residue and amino 3 70 91 at
-The allele frequency T 40% rs12979860 was as of com\ufffepared the region core
-with health subjects without HCV 46% 163 in
-|    | Genotype   | Q   | Amino \\nR   | acid 70 \\nP   | H   | Amino \\nC   | acid \\nM   | 91 \\nL   |   Total |
+e Chi square test.
+Table 3 Distribution of amino acids at residue 70 and 91
+of the core region
+|    | Genotype   | Q   | Amino \nR   | acid 70 \nP   | H   | Amino \nC   | acid \nM   | 91 \nL   |   Total |
 |---:|:-----------|:----|:------------|:--------------|:----|:------------|:-----------|:---------|--------:|
 |  0 | 1a         | 2%  | 98%         | -             | -   | 100%        | -          | -        |     920 |
 |  1 | 1b         | 60% | 35%         | -             | 4%  | 1%          | 71%        | 28%      |    2022 |
@@ -132,65 +213,9 @@ with health subjects without HCV 46% 163 in
 |  5 | 5          | 86% | 14%         | -             | -   | -           | -          | 100%     |      14 |
 |  6 | 6          | 60% | 13%         | 13%           | 15% | 100%        | -          | -        |      55 |
 
-infection. The which has been associated CC genotype,
-with better several in previous stu\ufffedies, treatment response (89%) identified and of them 16 in patients, 18
-was achieved The unfavourable SVR. SNP genotype were (TT) found and of them in patients 8
-was was none responder. hetero\ufffezygous, The CT remaining patients 24 were (54%) of them achieved SVR. In 13
-attempt an explore whether might have variation impact
-to core an of the viral kinetics rs12979860, irrespective
-response on
-31st of found of total March the The C in Hepatitis A 3317 2010 sequences on the and different CT SNP in patients carrying genotype
-Database (http://hcv.lanl.gov/) analysed. Values less (HCV) Project Virus were
-compared. shown As HCV Figure variants in 1 was core than shown. 1% not"""
-    )
-    # control
-    assert (
-        rich_pages[0].get_text()
-        == """Infectious Alestig al. BMC Diseases 2011, 11:124 et
+A total of 3317 sequences found on 31st of March 2010 in the The Hepatitis C
+Virus (HCV) Database Project (http://hcv.lanl.gov/) were analysed. Values less
+than 1% not shown.
+Alestig et al. BMC Infectious Diseases 2011, 11:124
 http://www.biomedcentral.com/1471-2334/11/124
-Open S EARCH TIC R AR E L E Access
-polymorphisms and Core IL28B mutations,
-peginterferon/ribavirin in to treatment response
-Swedish with hepatitis C patients virus genotype
-infection 1
-Alestig1*, Arnholm2 Nilsson3 Eilard1 Lagging1 Norkrans1 Staffan Erik Anders Gunnar Birgitta Martin
-, , , , , Wahlberg4 Wejstål1 Westin1 Lindh1
-Johan and Thomas Rune Magnus
-, ,
-Abstract
-infected Background: with hepatitis respond poorly standard with (HCV) C Patients virus 1 genotype to treatment
-less achieving sustained virologic Predicting essential and could help avoid 50% is outcome or response.
-of and reduce health Recently, acid substitutions the association amino in treatment cost. unnecessary an core
-of and observed the study, the these Japanese In region in patients. impact treatment outcome present was
-kinetics and explored Caucasian mutations in patients. treatment outcome on response was
-of from peginterferon/ Methods: The samples obtained treated with HCV 50 region patients pre-treatment core
-infection ribavirin Swedish clinical trial with sequenced. The alleles rs12979860, in previous 1 genotype at a were a
-identify single nucleotide polymorphism assessed order with this (SNP), in co-association to strong were any
-predictor. response
-of found. Results: between and substitutions residue No In 91 association treatment contrast, response core was
-of of substitutions residue observed non-responders, but only responders (29%) (p 6/21 70 29 in in core were one =
-of of and subgenotype 1b than 0.03), (R70Q strains) (R70P 6 13 37 in in in in strains, 1a 1 were more common p =
-of The the overall the predictor 0.004). (p 0.0001). SNP IL28B rs12979860 upstream strongest gene was response =
-substitutions associated with kinetics the Core CT 70 in patients carrying genotype at were poorer response
-rs12979860.
-of Conclusions: The results indicate that substitutions residue related 70 in to treatment core are response
-infection, of with HCV-1b but less than polymorphism. Caucasian IL28B patients importance are
-Background and frequent side effects, identify it is important costs to
-(HCV) factors that predict the likelihood of infection of C Hepatitis virus is major response. cause can a
-Several host factors such of liver fibrosis, cirrhosis and hepatocellular affecting approxi\ufffemately stage age, as cancer
-(BMI), [1]. body index liver insulin million worldwide Combination steatosis, resistance 170 mass persons
-(Peg\ufffeIFN/RBV), and ethnicity, well viral influence the therapy with pegylated interferon and ribavirin genotype as as
-[5]. While the for weeks, eradicate the impact given 24 72 treatment outcome outcome to on may
-[2-4], by undisputed, with of with infection and of liver damage but 80% is patients progression genotype stop
-achieving compared with do achieve sustained virologic SVR 50% patients 3 2 genotype not as or many
-(SVR). [6], for the of subtypes regional this and light of high For importance in 1, genotype response reason,
-variability controversial. 1995 mutations In it was or are
-reported from that of the Japan mutations in part a
-Correspondence: erik.alestig@gu.se * associated with NS5A region treatment
-response were 1 of Infection of and Virology, Gothenburg, Department University
-1b The between in patients. association genotype Gothenburg, Sweden
-of information of Full list author available the end the article is at
-of Alestig al; licensee BioMed Central Ltd. This article distributed under the the Open Creative Commons Access 2011 is © et terms an
-Attribution (http://creativecommons.org/licenses/by/2.0), which unrestricted distribution, and reproduction License permits in use,
-medium, provided the original work properly cited. is any"""
-    )
+Page 4 of 7"""

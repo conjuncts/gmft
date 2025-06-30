@@ -1,8 +1,8 @@
 #  test to_dict and from_dict
 
 
-from gmft._dataclasses import with_config
-from gmft.formatters.tatr import TATRFormatConfig
+from gmft.core._dataclasses import with_config
+from gmft.impl.tatr.config import TATRFormatConfig
 
 
 def test_overrides():

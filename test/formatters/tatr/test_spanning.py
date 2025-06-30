@@ -1,18 +1,16 @@
 import json
 import os
 
-from gmft.formatters.tatr import TATRFormatConfig, TATRFormattedTable
+from gmft.impl.tatr.config import TATRFormatConfig
+from gmft.formatters.tatr import TATRFormattedTable
+from test.conftest import dump_text
 
 
 def dump_debug(pdf_no, j, actual, expected, ft: TATRFormattedTable):
-    with open(f"test/outputs/actual/span{pdf_no}_t{j}.csv", "w", encoding="utf-8") as f:
-        f.write(actual)
-    with open(
-        f"test/outputs/actual/span{pdf_no}_t{j}.old.csv", "w", encoding="utf-8"
-    ) as f:
-        f.write(expected)
+    dump_text(actual, f"span{pdf_no}_t{j}.csv")
+    dump_text(expected, f"span{pdf_no}_t{j}.old.csv")
     debug_img = ft.visualize(effective=True, show_labels=False, return_img=True)
-    debug_img.save(f"test/outputs/actual/span{pdf_no}_t{j}.png")
+    debug_img.save(f"data/test/outputs/actual/span{pdf_no}_t{j}.png")
 
 
 def try_jth_table(tables, pdf_no, j, expected, config=None):
@@ -180,7 +178,7 @@ Plasma Neu5Ac,"Css,ave (ng/mL)",,,,,
 
         try_jth_table(pdf2_tables, 2, 2, expected, config=config2)
 
-        assert pdf2_tables[2]._projecting_indices == [0, 5]
+        assert pdf2_tables[2].predictions["indices"]["_projecting"] == [0, 5]
 
     # pdf4 t1 is arguably HierTop, but the ground truth is not yet clear
 

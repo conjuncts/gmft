@@ -44,7 +44,7 @@ def script_collect_jsons():
     from gmft.detectors.tatr import TATRDetector
 
     # run DITR formatting
-    # search all 'test/outputs/bulk/*.info'
+    # search all 'data/test/outputs/bulk/*.info'
 
     formatter = DITRFormatter()
     tatr_formatter = TATRFormatter()
@@ -59,7 +59,7 @@ def script_collect_jsons():
     difts = []
 
     for i in range(1, 10):
-        for filename in glob.glob(f"test/outputs/bulk/pdf{i}_t*.info"):
+        for filename in glob.glob(f"data/test/outputs/bulk/pdf{i}_t*.info"):
             basename = os.path.basename(filename).replace(".info", "")
 
             with open(filename, encoding="utf-8") as f:
@@ -74,7 +74,7 @@ def script_collect_jsons():
             dift = formatter.extract(ct)
             difts.append((basename, dift))
 
-    for filename in glob.glob(f"test/outputs/pubt/pubt_p*.info"):
+    for filename in glob.glob(f"data/test/outputs/pubt/pubt_p*.info"):
         basename = os.path.basename(filename).replace(".info", "")
         with open(filename, encoding="utf-8") as f:
             as_dict = json.load(f)
@@ -128,7 +128,7 @@ def script_collect_csvs():
     # collect csvs for tatr
     tatr_csvs = {}
     for i in range(1, 10):
-        for filename in glob.glob(f"test/outputs/bulk/pdf{i}_t*.csv"):
+        for filename in glob.glob(f"data/test/outputs/bulk/pdf{i}_t*.csv"):
             basename = os.path.basename(filename).replace(".csv", "")
             with open(filename, encoding="utf-8") as f:
                 tatr_csvs[basename] = f.read()
@@ -152,10 +152,10 @@ def script_generate_tatr():
         for j, ft in enumerate(fts):
             if j not in [9]:
                 continue
-            with open(f"test/outputs/bulk/pdf{i}_t{j}.info", "w") as f:
+            with open(f"data/test/outputs/bulk/pdf{i}_t{j}.info", "w") as f:
                 pass
             try:
-                ft.df().to_csv(f"test/outputs/bulk/pdf{i}_t{j}.csv", index=False)
+                ft.df().to_csv(f"data/test/outputs/bulk/pdf{i}_t{j}.csv", index=False)
             except Exception as e:
                 print(f"df Error in pdf {i} and table {j}")
         doc.close()

@@ -17,9 +17,6 @@ def are_bboxes_close(reference, actual, EPS=0.01):
             f"Different text: expected {ref_text}, got {act_text}"
         )
         for ref, pos in zip(ref_bbox, act_bbox):
-            # ref = float(ref)
-            # pos = float(pos)
-            # assert abs(ref - pos) < EPS, f"Different positions: expected {ref}, got {pos}"
             assert ref == pytest.approx(pos, EPS), (
                 f"Different positions: expected {ref}, got {pos}"
             )
@@ -37,9 +34,10 @@ def test_CroppedTable_positions(doc_tiny):
         },
         page,
     )
+    assert not isinstance(table, RotatedCroppedTable)
 
     # get reference positions from tiny_pdfium.txt
-    with open("test/outputs/tiny_cropped_positions.tsv") as f:
+    with open("data/test/references/tiny_cropped_positions.tsv") as f:
         reference = f.readlines()
     for i, line in enumerate(reference):
         x0, y0, x1, y1, text = line.strip().split("\t")
@@ -104,7 +102,7 @@ def test_RotatedCroppedTable_positions(doc_tiny):
     )
 
     # get reference positions from tiny_pdfium.txt
-    with open("test/outputs/tiny_cropped_positions.tsv", "r") as f:
+    with open("data/test/references/tiny_cropped_positions.tsv", "r") as f:
         reference = f.readlines()
     for i, line in enumerate(reference):
         x0, y0, x1, y1, text = line.strip().split("\t")
@@ -155,20 +153,28 @@ Water Freezing Point 0"""
     )
 
 
-if __name__ == "__main__":
-    page = PyPDFium2Document("data/pdfs/tiny.pdf")[0]
+def test_CroppedTable_angle(doc_tiny):
+    # Reflect the fact that 'angle' has been absorbed into CroppedTable
+    page = doc_tiny[0]
     table = CroppedTable.from_dict(
         {
             "filename": "data/pdfs/tiny.pdf",
             "page_no": 0,
-            "bbox": (10, 10, 300, 150),
+            "bbox": (10, 12, 300, 150),
             "confidence_score": 0.9,
             "label": 0,
+            "angle": 0,
         },
         page,
     )
+    assert not isinstance(table, RotatedCroppedTable)
 
-    # create the tsv
-    with open("test/outputs/tiny_cropped_positions.tsv", "w") as f:
-        for pos in table.text_positions():
-            f.write("\t".join(map(str, pos)) + "\n")
+    with pytest.raises(ValueError, match="Only 0, 90, 180, 270 are supported."):
+        _ = CroppedTable(page, (1, 2, 3, 4), angle=42)
+
+
+# TODO: ct.image() with margin='auto',
+# ct.image() with rotated image,
+# text_positions with angle==[180,270]
+# ct.visualize(),
+# ct.from_image_only()

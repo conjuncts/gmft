@@ -1,7 +1,11 @@
 import pytest
-from gmft.detectors.img2table import Img2TableDetector, Img2TablePDFDocument
-from gmft.formatters.img2table import Img2TableFormatter
 from gmft.detectors.base import CroppedTable
+
+try:
+    from gmft.detectors.img2table import Img2TableDetector, Img2TablePDFDocument
+    from gmft.formatters.img2table import Img2TableFormatter
+except ImportError as e:
+    pass
 
 _ = pytest.importorskip("img2table")
 

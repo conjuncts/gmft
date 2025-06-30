@@ -98,13 +98,8 @@ def _find_captions(
     :param stop_y_factor_above: if the top caption gets taller than stop_y_factor_above * caption_word_height, we stop. This is intended to eliminate paragraphs.
     :param stop_y_factor_below: if the bottom caption gets taller than stop_y_factor_below * caption_word_height, we stop. This is intended to eliminate paragraphs.
     """
-    # if max_gap_space is None:
-    # word_height = ct.predicted_word_height()
-    # max_gap_space = ct.predicted_word_height() * 2.5
-    # maximum_supported_rows=5
     if margin is None:
         margin = (50, 50, 0, 50)  # d_xmin, d_ymin, d_xmax, d_ymax to look for captions
-    # search_rect = Rect(ct.rect.xmin - margin[0], ct.rect.ymin - margin[1], ct.rect.xmax + margin[2], ct.rect.ymax + margin[3])
 
     midpoint = (ct.rect.ymax + ct.rect.ymin) / 2
 
@@ -287,60 +282,3 @@ def _find_captions(
         captions.append(caption)
 
     return (captions[0], captions[1])  # [caption_above, caption_below]
-
-
-def _detect_caption_with_mu(
-    table_bbox: Tuple[float, float, float, float],
-    block: Tuple[float, float, float, float, str],
-    max_abs_dist: float = 2.5,
-) -> Tuple[str, str]:
-    x1, y1, x2, y2 = block[:4]
-    text = block[4]
-
-    # Block in PyMupdf can consist of multiple lines of text
-    n_lines = text.count("\n") + 1
-
-    normalized_dist = 1000
-    top_caption, bottom_caption = "", ""
-
-    # Take care of captions above the table
-    if y2 < table_bbox[1]:  # block in question is above the table
-        # Normalized distance = how many word "lines" this current sentence is from the table
-        normalized_dist = (y2 - table_bbox[1]) / ((y2 - y1) / n_lines)
-        if abs(normalized_dist) < max_abs_dist:
-            top_caption = block[4]
-
-    # Take care of captions below the table
-    elif y1 > table_bbox[3]:  # block in question is below the table
-        normalized_dist = (y1 - table_bbox[3]) / ((y2 - y1) / n_lines)
-        if abs(normalized_dist) < max_abs_dist:
-            bottom_caption = block[4]
-    return top_caption, bottom_caption
-
-
-# Extract captions using PyMuPDF, assumes we have table bbox
-
-
-def _find_caption_with_mu(ct: CroppedTable, **kwargs):
-    # import gmft_pymupdf
-    import pymupdf
-
-    page = ct.page.page  # type: pymupdf.TextPage
-    blocks = page.get_text_blocks()
-
-    top_captions, bottom_captions = [], []
-    for block in blocks:
-        top_cap, bottom_cap = _detect_caption_with_mu(table_bbox=ct.bbox, block=block)
-        top_captions.append(top_cap)
-        bottom_captions.append(bottom_cap)
-
-    top_captions = "\n".join([c for c in top_captions if c])  # clear out empty captions
-    bottom_captions = "\n".join([c for c in bottom_captions if c])
-
-    whitespace_re = re.compile(r"\s*[\u202f\u2002\u2009\u00A0]\s*")  #  \u2002 \u2009
-    top_captions = re.sub(whitespace_re, " ", top_captions).replace("\n", "")
-    bottom_captions = re.sub(whitespace_re, " ", bottom_captions).replace("\n", "")
-    return (
-        top_captions,
-        bottom_captions,
-    )  # ('\n'.join(top_captions), '\n'.join(bottom_captions))
