@@ -14,91 +14,91 @@ class LegacyFctnResults:
     predictions: TablePredictions
 
     @property
-    @deprecated("Use self.predictions['tatr']")
+    @deprecated("Use self.predictions.tatr")
     def fctn_results(self) -> RawBboxPredictions:
-        return self.predictions["tatr"]
+        return self.predictions.tatr
 
     @fctn_results.setter
-    @deprecated("Use self.predictions['tatr']")
+    @deprecated("Use self.predictions.tatr")
     def fctn_results(self, value: RawBboxPredictions):
-        self.predictions["tatr"] = value
+        self.predictions.tatr = value
 
     @property
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_rows(self):
-        return self.predictions["effective"]["rows"]
+        return self.predictions.effective["rows"]
 
     @effective_rows.setter
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_rows(self, value):
-        self.predictions["effective"]["rows"] = value
+        self.predictions.effective["rows"] = value
 
     @property
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_columns(self):
-        return self.predictions["effective"]["columns"]
+        return self.predictions.effective["columns"]
 
     @effective_columns.setter
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_columns(self, value):
-        self.predictions["effective"]["columns"] = value
+        self.predictions.effective["columns"] = value
 
     @property
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_headers(self):
-        return self.predictions["effective"]["headers"]
+        return self.predictions.effective["headers"]
 
     @effective_headers.setter
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_headers(self, value):
-        self.predictions["effective"]["headers"] = value
+        self.predictions.effective["headers"] = value
 
     @property
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_projecting(self):
-        return self.predictions["effective"]["projecting"]
+        return self.predictions.effective["projecting"]
 
     @effective_projecting.setter
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_projecting(self, value):
-        self.predictions["effective"]["projecting"] = value
+        self.predictions.effective["projecting"] = value
 
     @property
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_spanning(self):
-        return self.predictions["effective"]["spanning"]
+        return self.predictions.effective["spanning"]
 
     @effective_spanning.setter
-    @deprecated("Use self.predictions['effective']")
+    @deprecated("Use self.predictions.effective")
     def effective_spanning(self, value):
-        self.predictions["effective"]["spanning"] = value
+        self.predictions.effective["spanning"] = value
 
     @property
-    @deprecated("Use self.predictions['indices']['top_header']")
+    @deprecated("Use self.predictions.indices['top_header']")
     def _top_header_indices(self):
-        return self.predictions["indices"].get("top_header")
+        return self.predictions.indices.get("top_header")
 
     @_top_header_indices.setter
-    @deprecated("Use self.predictions['indices']['_top_header']")
+    @deprecated("Use self.predictions.indices['_top_header']")
     def _top_header_indices(self, value):
-        self.predictions["indices"]["_top_header"] = value
+        self.predictions.indices["_top_header"] = value
 
     @property
-    @deprecated("Use self.predictions['indices']['_projecting']")
+    @deprecated("Use self.predictions.indices['_projecting']")
     def _projecting_indices(self):
-        return self.predictions["indices"].get("_projecting")
+        return self.predictions.indices.get("_projecting")
 
     @_projecting_indices.setter
-    @deprecated("Use self.predictions['indices']['_projecting']")
+    @deprecated("Use self.predictions.indices['_projecting']")
     def _projecting_indices(self, value):
-        self.predictions["indices"]["_projecting"] = value
+        self.predictions.indices["_projecting"] = value
 
     @property
-    @deprecated("Use self.predictions['indices']['_hier_left']")
+    @deprecated("Use self.predictions.indices['_hier_left']")
     def _hier_left_indices(self):
-        return self.predictions["indices"].get("_hier_left")
+        return self.predictions.indices.get("_hier_left")
 
     @_hier_left_indices.setter
-    @deprecated("Use self.predictions['indices']['hier_left']")
+    @deprecated("Use self.predictions.indices['hier_left']")
     def _hier_left_indices(self, value):
-        self.predictions["indices"]["hier_left"] = value
+        self.predictions.indices["hier_left"] = value

@@ -15,7 +15,7 @@ from gmft.impl.tatr.config import TATRFormatConfig
 #             self._img_margin = (0, 0, 0, 0)
 #             self.angle = 0
 #             self._df = None
-#             self.predictions = {}
+#             self.predictions = TablePredictions(TODO)
 #             self.image_shape = (100, 100, 3)
 
 #         def image(self, dpi=None, padding=None, margin=None):

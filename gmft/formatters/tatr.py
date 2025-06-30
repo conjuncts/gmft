@@ -7,6 +7,7 @@ from gmft.core.legacy.fctn_results import LegacyFctnResults
 from gmft.core.ml import _resolve_device
 from gmft.core.ml.prediction import (
     BboxPrediction,
+    TablePredictions,
     _empty_effective_predictions,
     _empty_indices_predictions,
 )
@@ -58,11 +59,11 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
         config: TATRFormatConfig = None,
     ):
         super(TATRFormattedTable, self).__init__(cropped_table)
-        self.predictions = {
-            "tatr": fctn_results,
-            "effective": _empty_effective_predictions(),
-            "indices": _empty_indices_predictions(),
-        }
+        self.predictions = TablePredictions(
+            tatr=fctn_results,
+            effective=_empty_effective_predictions(),
+            indices=_empty_indices_predictions(),
+        )
 
         if config is None:
             config = TATRFormatConfig()
@@ -123,7 +124,7 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
                 self._df = self.df()
             vis: List[BboxPrediction] = [
                 item
-                for sublist in self.predictions["effective"].values()
+                for sublist in self.predictions.effective.values()
                 for item in sublist
             ]
             boxes = [x["bbox"] for x in vis]
@@ -136,13 +137,12 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
         else:
             # transform functionalized coordinates into image coordinates
             boxes = [
-                (x * scale_by for x in bbox)
-                for bbox in self.predictions["tatr"]["boxes"]
+                (x * scale_by for x in bbox) for bbox in self.predictions.tatr["boxes"]
             ]
 
             _to_visualize = {
-                "scores": self.predictions["tatr"]["scores"],
-                "labels": self.predictions["tatr"]["labels"],
+                "scores": self.predictions.tatr["scores"],
+                "labels": self.predictions.tatr["labels"],
                 "boxes": boxes,
             }
 
@@ -171,14 +171,14 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
         else:
             parent = CroppedTable.to_dict(self)
         optional = {}
-        if self.predictions["indices"]:
-            optional["predictions.indices"] = self.predictions["indices"]
+        if self.predictions.indices:
+            optional["predictions.indices"] = self.predictions.indices
         return {
             **parent,
             **{
                 "config": non_defaults_only(self.config),
                 "outliers": self.outliers,
-                "fctn_results": self.predictions["tatr"],
+                "fctn_results": self.predictions.tatr,
             },
             **optional,
         }
@@ -201,7 +201,7 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
             config=config,
         )
         table.outliers = d.get("outliers", None)
-        table.predictions["indices"] = _extract_indices(d)
+        table.predictions.indices = _extract_indices(d)
         return table
 
 

@@ -1,3 +1,18 @@
+## v0.4.2
+
+Bugfixes before the upcoming release.
+- Better imports and lazy loading
+- Default device is now 'auto', which resolves to cuda/cpu depending on availability
+- Rich text now available as `AutoPageFormatter`
+    - Fixed bug with permuted coordinates (e0c6dc52)
+- CroppedTable now directly has `angle` property
+- CI tests, Python 3.9 support
+- More type hints
+- Light restructuring (non-breaking)
+- Internal data structure tweaks
+    - (`fctn_results` → `predictions.tatr`)
+    - (`effective_*` → `predictions.effective`)
+
 ## v0.4.0
 
 Features: 3 new table structure recognition options!

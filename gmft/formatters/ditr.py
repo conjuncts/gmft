@@ -12,10 +12,15 @@ from gmft.algorithm.dividers import (
     _ioa,
     get_good_between_dividers,
 )
-from gmft.core.io.serial.dicts import _extract_fctn_results, _extract_indices
+from gmft.core.io.serial.dicts import (
+    _extract_effective,
+    _extract_fctn_results,
+    _extract_indices,
+)
 from gmft.core.legacy.fctn_results import LegacyFctnResults
 from gmft.core.ml import _resolve_device
 from gmft.core.ml.prediction import (
+    TablePredictions,
     _empty_effective_predictions,
     _empty_indices_predictions,
 )
@@ -70,11 +75,12 @@ class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
         super(DITRFormattedTable, self).__init__(
             cropped_table, None, irvl_results, config=config
         )
-        self.predictions = {
-            "tatr": fctn_results,
-            "effective": _empty_effective_predictions(),
-            "indices": _empty_indices_predictions(),
-        }
+        self.predictions = TablePredictions(
+            tatr=fctn_results,
+            effective=_empty_effective_predictions(),
+            indices=_empty_indices_predictions(),
+            status="unready",
+        )
 
         if config is None:
             config = DITRFormatConfig()
@@ -121,13 +127,13 @@ class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
         for y0, y1 in self.irvl_results["row_dividers"]:
             bboxes.append([0, y0, tbl_width, y1])
             labels.append(2)
-        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
+        for x0, y0, x1, y1 in self.predictions.effective["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(3)
-        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
+        for x0, y0, x1, y1 in self.predictions.effective["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(4)
-        for x0, y0, x1, y1 in self.predictions["effective"]["headers"]:
+        for x0, y0, x1, y1 in self.predictions.effective["headers"]:
             bboxes.append([x0, y0, x1, y1])
             labels.append(5)
         return plot_shaded_boxes(img, labels=labels, boxes=bboxes, **kwargs)
@@ -141,14 +147,15 @@ class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
         else:
             parent = CroppedTable.to_dict(self)
         optional = {}
-        if self.predictions["indices"]:
-            optional["predictions.indices"] = self.predictions["indices"]
+        if self.predictions.status == "ready":
+            optional["predictions.effective"] = self.predictions.effective
+            optional["predictions.indices"] = self.predictions.indices
         return {
             **parent,
             **{
                 "config": non_defaults_only(self.config),
                 "outliers": self.outliers,
-                "fctn_results": self.predictions["tatr"],
+                "fctn_results": self.predictions.tatr,
             },
             **optional,
         }
@@ -174,7 +181,10 @@ class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
         )
         table.recompute()
         table.outliers = d.get("outliers", None)
-        table.predictions["indices"] = _extract_indices(d)
+        table.predictions.indices = _extract_indices(d)
+        table.predictions.effective = _extract_effective(d)
+        if "predictions.effective" in d:
+            table.predictions.status = "ready"
         return table
 
 
@@ -434,7 +444,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
 
     outliers = {}  # store table-wide information about outliers or pecularities
 
-    results = table.predictions["tatr"]
+    results = table.predictions.tatr
     row_divider_boxes, col_divider_boxes, top_headers, projected, spanning_cells = (
         proportion_fctn_results(results, config)
     )
@@ -462,7 +472,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
         "row_dividers": row_divider_intervals,
         "col_dividers": col_divider_intervals,
     }
-    table.predictions["effective"] = {
+    table.predictions.effective = {
         "rows": [],
         "columns": [],
         "headers": top_headers,
@@ -599,7 +609,8 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
         # automatically makes is_projecting and header_indices mutually exclusive
         indices_preds["_projecting"] = [i for i, x in enumerate(is_projecting) if x]
 
-    table.predictions["indices"] = indices_preds
+    table.predictions.indices = indices_preds
+    table.predictions.status = "ready"
     # b. drop the former header rows always
     table._df.drop(index=header_indices, inplace=True)
 
