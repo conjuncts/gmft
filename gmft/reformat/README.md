@@ -101,9 +101,11 @@ GeneralPlan
 
 ## Changes:
 
+- Top-level imports are now available with lazy-loading, reducing import times. 
+    - Deprecation warnings are improved.
 - Default device is now 'auto', which just-in-time resolves to cuda/cpu depending on cuda availability.
     - This allows torch to be imported only when needed.
 - Many internal variables are now wrapped in `self.predictions`
-- CroppedTable now directly has `angle`
+- CroppedTable now directly has `angle`.
 
 

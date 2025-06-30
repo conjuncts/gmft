@@ -93,10 +93,10 @@ class TATRFormatConfig:
     total_overlap_warn_threshold: float = 0.1 # panic_when
     nms_warn_threshold: int = 5 # panic_when
 
-    iob_reject_threshold: float = 0.05
+    iob_reject_threshold: float = 0.05 # rename to iob_skip_threshold
     """Reject if iob between textbox and cell is < 5%."""
 
-    iob_warn_threshold: float = 0.5
+    iob_warn_threshold: float = 0.5 # panic_when
     """Warn if iob between textbox and cell is < 50%."""
 
     # ---- technical ----

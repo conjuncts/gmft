@@ -3,7 +3,7 @@ from gmft.reformat.strategy import StrategySettings
 
 
 @dataclass
-class LargeTableSettings(StrategySettings):
+class LTASettings(StrategySettings):
     """
     Settings for the large table assumption (LTA) strategy.
     """

@@ -7,12 +7,3 @@ class BaseInstruction(ABC):
     """
 
     pass
-
-
-class FormatInstruction(BaseInstruction):
-    """
-    A "FormatInstruction" is a format instruction.
-    """
-
-    def __init__(self, config: dict):
-        self.config = config

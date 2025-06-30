@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Union
 from gmft.reformat.strategy import StrategySettings
 
 

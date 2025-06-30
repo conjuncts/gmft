@@ -1,30 +1,23 @@
+from dataclasses import dataclass
 from typing import Literal
+from abc import ABC
 
 from gmft.reformat.instruction import BaseInstruction
 
 
+@dataclass(frozen=True)
 class EngineInstruction(BaseInstruction):
     """
-    Instruction to use a specific reformatting engine.
+    Reformat with a specific engine.
     """
 
-    def __init__(self, engine_type: Literal["standard"]):
-        self.engine_type = engine_type
+    engine_type: Literal["standard"]
 
 
-class StrategyInstruction(BaseInstruction):
-    """
-    Instruction to use a specific strategy.
-    """
-
-    def __init__(self, strategy: Literal["asis", "lta", "histogram"]):
-        self.strategy = strategy
-
-
+@dataclass(frozen=True)
 class VerbosityInstruction(BaseInstruction):
     """
-    Instruction to set the verbosity level.
+    Reformat with a specific verbosity level.
     """
 
-    def __init__(self, verbosity: int):
-        self.verbosity = verbosity
+    verbosity: int

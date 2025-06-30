@@ -1,16 +1,13 @@
+from dataclasses import dataclass, field
 from gmft.reformat.instruction import BaseInstruction
 
 
-class PredictionThresholdInstruction(BaseInstruction):
+@dataclass(frozen=True)
+class PredictionFilterInstruction(BaseInstruction):
     """
     Filter predictions based on a given threshold.
     """
 
-    def __init__(self, threshold: float):
-        """
-        Initialize the filter instruction with a threshold.
-
-        :param threshold: The threshold value for filtering predictions.
-        """
-        super().__init__()
-        self.threshold = threshold
+    formatter_base_threshold: float
+    cell_required_confidence: dict
+    _nms_overlap_threshold: float
