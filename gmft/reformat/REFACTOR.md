@@ -52,14 +52,14 @@ class TATRFormatConfig:
 
     # ---- options ----
 
-    remove_null_rows: bool = True # drop_null_rows
+    remove_null_rows: bool = True # drop_nulls
     """Remove rows with no text."""
 
-    enable_multi_header: bool = False # split_top_headers / merge_top_headers / normalize_top_headers
+    enable_multi_header: bool = False # max_headers / normalize_top_headers
     """Enable multi-indices in the dataframe.
     If false, then multiple headers will be merged vertically."""
 
-    semantic_spanning_cells: bool = False # merge_spans
+    semantic_spanning_cells: bool = False # merge_spans, normalize_spans, normalize_projecting
     """
     [Experimental] Enable semantic spanning cells, which often encode hierarchical multi-level indices.
     """
@@ -89,14 +89,14 @@ class TATRFormatConfig:
 
     # ---- rejection and warnings ----
 
-    total_overlap_reject_threshold: float = 0.9 # panic_when
-    total_overlap_warn_threshold: float = 0.1 # panic_when
-    nms_warn_threshold: int = 5 # panic_when
+    total_overlap_reject_threshold: float = 0.9 # raise_when
+    total_overlap_warn_threshold: float = 0.1 # raise_when
+    nms_warn_threshold: int = 5 # raise_when
 
     iob_reject_threshold: float = 0.05 # rename to iob_skip_threshold
     """Reject if iob between textbox and cell is < 5%."""
 
-    iob_warn_threshold: float = 0.5 # panic_when
+    iob_warn_threshold: float = 0.5 # raise_when
     """Warn if iob between textbox and cell is < 50%."""
 
     # ---- technical ----

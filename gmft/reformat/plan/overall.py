@@ -1,19 +1,41 @@
-from typing import Literal, Optional, Union, overload
+from typing import Callable, Literal, Optional, Union, overload
+from typing_extensions import Self
+from gmft.reformat.instruction import BaseInstruction
+from gmft.reformat.instruction.filter.do_when import (
+    ExcludeWhenInstruction,
+    RaiseWhenInstruction,
+)
 from gmft.reformat.instruction.filter.threshold_predictions import (
     PredictionFilterInstruction,
 )
-from gmft.reformat.instruction.standard import VerbosityInstruction
-from gmft.reformat.instruction.strategy import SettingsInstruction, StrategyInstruction
+from gmft.reformat.instruction.standard import ExecutorInstruction, VerbosityInstruction
+from gmft.reformat.instruction.strategy import StrategyInstruction
+from gmft.reformat.plan.base import BasePlan
 from gmft.reformat.plan.split_merge import SplitMergePlan
-from gmft.reformat.strategy import StrategySettings
 from gmft.reformat.strategy.asis import AsisSettings
 from gmft.reformat.strategy.hybrid import HybridSettings
 from gmft.reformat.strategy.lta import LTASettings
-from gmft.reformat.plan.strategy import AsisPlan, LTAPlan, HybridPlan
 
 
 class OverallPlan(SplitMergePlan):
-    def with_verbosity(self, verbosity: int) -> "OverallPlan":
+    def __init__(
+        self,
+        previous: Optional[BasePlan] = None,
+        instruction: Optional[BaseInstruction] = None,
+        SelfCls: Optional[Callable[..., "OverallPlan"]] = None,
+    ):
+        """
+        Constructs an OverallPlan instance.
+        """
+        if SelfCls is None:
+            SelfCls = OverallPlan
+        return super().__init__(
+            previous=previous,
+            instruction=instruction,
+            SelfCls=SelfCls,
+        )
+
+    def with_verbosity(self, verbosity: int) -> Self:
         """
         Set the verbosity level for the plan.
 
@@ -29,7 +51,7 @@ class OverallPlan(SplitMergePlan):
         formatter_base_threshold: float,
         cell_required_confidence: dict = None,
         _nms_overlap_threshold: float = 0.1,
-    ) -> "OverallPlan":
+    ) -> Self:
         """
         Filter predictions based on a given threshold.
 
@@ -68,66 +90,68 @@ class OverallPlan(SplitMergePlan):
             ),
         )
 
-    @overload
-    def with_strategy(
-        self, strategy: Union[Literal["asis"], AsisSettings] = None
-    ) -> "OverallPlan": ...
-
-    @overload
-    def with_strategy(
-        self, strategy: Union[Literal["lta"], LTASettings] = None
-    ) -> "OverallPlan": ...
-
-    @overload
-    def with_strategy(
-        self, strategy: Union[Literal["hybrid"], HybridSettings] = None
-    ) -> "OverallPlan": ...
-
     def with_strategy(
         self,
         strategy: Union[
             Literal["asis", "lta", "hybrid"], AsisSettings, LTASettings, HybridSettings
         ],
-    ) -> "OverallPlan":
+    ) -> Self:
         """
         Set strategy.
 
         :param strategy: The strategy to use. Can be one of "asis", "lta", or "hybrid".
         Alternatively, a strategy settings object can be provided directly.
         """
-        valid_strategies = {
-            "asis": AsisSettings,
-            "lta": LTASettings,
-            "hybrid": HybridSettings,
-        }
-        valid_plans = {
-            "asis": AsisPlan,
-            "lta": LTAPlan,
-            "hybrid": HybridPlan,
-        }
-        strat_type_instr = StrategyInstruction(strategy=strategy)
 
-        if settings is not None:
-            # Settings ARE available. Do both steps.
-            intermed = OverallPlan(previous=self, instruction=strat_type_instr)
-
-            settings_cls = valid_strategies[strategy]
-            assert isinstance(settings, settings_cls)
-            return OverallPlan(
-                previous=intermed,
-                instruction=SettingsInstruction(strategy=strategy, settings=settings),
-            )
-        else:
-            # No settings available.
-            # Need a two-step process. Only do the first step. (No settings provided)
-            # Pass OverallPlan to prevent circular import
-            if strategy not in valid_plans:
+        if isinstance(strategy, str):
+            strategy_type = strategy
+            if strategy_type not in [
+                "asis",
+                "lta",
+                "hybrid",
+            ]:
                 raise ValueError(
-                    f"Invalid strategy: {strategy}. Valid strategies are: {list(valid_plans.keys())}"
+                    f"Unrecognized strategy: {strategy_type}. "
+                    "Expected 'asis', 'lta', or 'hybrid'."
                 )
-
-            return valid_plans[strategy](
-                previous=self,
-                instruction=strat_type_instr,
-                overall_plan_cls=OverallPlan,
+            assert strategy_type in [
+                "asis",
+                "lta",
+                "hybrid",
+            ], (
+                f"Invalid strategy: {strategy_type}. Valid strategies are: ['asis', 'lta', 'hybrid']"
             )
+            settings = None
+        else:
+            if isinstance(strategy, AsisSettings):
+                strategy_type = "asis"
+            elif isinstance(strategy, LTASettings):
+                strategy_type = "lta"
+            elif isinstance(strategy, HybridSettings):
+                strategy_type = "hybrid"
+            else:
+                raise ValueError(
+                    f"Unrecognized strategy: {strategy_type}. "
+                    "Expected AsisSettings, LTASettings, or HybridSettings."
+                )
+            settings = strategy
+
+        return OverallPlan(
+            previous=self,
+            instruction=StrategyInstruction(strategy=strategy, settings=settings),
+        )
+
+    def with_executor(self, executor_type: Literal["standard"]) -> Self:
+        """
+        Set the executor type for the plan.
+
+        :param executor_type: The type of executor to use.
+        :return: The updated OverallPlan instance.
+        """
+        if executor_type != "standard":
+            raise ValueError(f"Invalid executor type: {executor_type}")
+
+        return OverallPlan(
+            previous=self,
+            instruction=ExecutorInstruction(executor_type=executor_type),
+        )
