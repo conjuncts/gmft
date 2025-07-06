@@ -8,7 +8,7 @@ from gmft.algorithm.dividers import (
 from gmft.algorithm.structure import (
     _iob,
 )
-from gmft.core.ml.prediction import Partitions, RawBboxPredictions
+from gmft.core.ml.prediction import RawBboxPredictions
 from gmft.detectors.base import CroppedTable
 from gmft.formatters.base import FormattedTable
 from gmft.impl.ditr.config import DITRFormatConfig

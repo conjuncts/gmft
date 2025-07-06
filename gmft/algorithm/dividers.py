@@ -78,6 +78,64 @@ def fill_using_true_partitions(
 
     return table_array
 
+def _to_table_bounds(row_dividers: list[float], column_dividers: list[float]) -> tuple[float, float, float, float]:
+    """
+    Convert row and column dividers to table bounds.
+    """
+    return (
+        column_dividers[0],
+        row_dividers[0],
+        column_dividers[-1],
+        row_dividers[-1],
+    )
+
+def _fill_using_true_partitions_include_endpoints(
+    text_positions: Generator[tuple[float, float, float, float, str], None, None],
+    row_dividers: list[float],
+    column_dividers: list[float],
+) -> list[list[str]]:
+    """
+    Given estimated positions of text positions,
+    row dividers, column dividers,
+    with the convention that the dividers include the endbounds,
+    fills the table array.
+
+    assumes dividers are sorted
+
+    :return: list of rows, each row is a list of strings
+    """
+
+    num_rows = len(row_dividers) - 1
+    num_columns = len(column_dividers) - 1
+    table_array = [[None for _ in range(num_columns)] for _ in range(num_rows)]
+    table_bounds = _to_table_bounds(row_dividers, column_dividers)
+
+    for xmin, ymin, xmax, ymax, text in text_positions:
+        # 5. let row_num be row with max iob
+        xtarget = (xmin + xmax) / 2
+        ytarget = (ymin + ymax) / 2
+
+        # if completely outside the bounds (no intersection), ignore
+        if not (
+            table_bounds[0] <= xtarget <= table_bounds[2]
+            and table_bounds[1] <= ytarget <= table_bounds[3]
+        ):
+            continue
+
+        # to find x, we need the first column divider (moving LTR) where xtarget < xdivider
+
+        column_num = find_column_for_target(column_dividers, xtarget) - 1
+        # then, it belongs to the xi-th column of the list (no off by 1 error)
+
+        row_num = find_row_for_target(row_dividers, ytarget) - 1
+
+        if table_array[row_num][column_num] is not None:
+            table_array[row_num][column_num] += " " + text
+        else:
+            table_array[row_num][column_num] = text
+
+    return table_array
+
 
 def _ioa(a: tuple[float, float], b: tuple[float, float]) -> float:
     """
