@@ -78,7 +78,10 @@ def fill_using_true_partitions(
 
     return table_array
 
-def _to_table_bounds(row_dividers: list[float], column_dividers: list[float]) -> tuple[float, float, float, float]:
+
+def _to_table_bounds(
+    row_dividers: list[float], column_dividers: list[float]
+) -> tuple[float, float, float, float]:
     """
     Convert row and column dividers to table bounds.
     """
@@ -88,6 +91,7 @@ def _to_table_bounds(row_dividers: list[float], column_dividers: list[float]) ->
         column_dividers[-1],
         row_dividers[-1],
     )
+
 
 def _fill_using_true_partitions_include_endpoints(
     text_positions: Generator[tuple[float, float, float, float, str], None, None],

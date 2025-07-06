@@ -27,7 +27,6 @@ class Partitions:
     "Regions with spanning cells"
 
 
-
 @dataclass
 class FormatState:
     """
@@ -44,4 +43,3 @@ class FormatState:
     empty_rows: List[int]
 
     partitions: Partitions
-

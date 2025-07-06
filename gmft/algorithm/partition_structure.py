@@ -14,12 +14,13 @@ def pairwise(iterable):
         yield a, b
         a = b
 
+
 def _separate_horizontals(
     *,
     row_dividers: list[float],
-    top_header_y: float, 
-    sorted_projecting, 
-    iob_threshold=0.7
+    top_header_y: float,
+    sorted_projecting,
+    iob_threshold=0.7,
 ):
     """
     Separates the sorted_horizontals into rows, headers, and projecting rows.
@@ -36,15 +37,13 @@ def _separate_horizontals(
     header_indices = []
     projecting_indices = []
 
-    
     # iterate through pairs of row dividers
     for i, row_y_interval in enumerate(pairwise(row_dividers)):
-        
         # Define a header to be one where >70% of row is in the header region
         if _ioa(row_y_interval, (0, top_header_y)) > iob_threshold:
             header_indices.append(i)
             continue
-        
+
         # Define a projecting row to be one where >70% of row is in the projecting region
         if any(
             _ioa(row_y_interval, (proj_y0, proj_y1)) > iob_threshold
