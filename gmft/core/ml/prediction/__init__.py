@@ -49,10 +49,13 @@ class IndicesPredictions(TypedDict):
 
 
 @dataclass
-class PartitionPredictions:
+class Partitions:
     """
     Most concise table definition.
     """
+
+    table_bbox: Tuple[float, float, float, float]
+    """Overall bbox of the table."""
 
     row_partitions: List[float]
     """y values where table gets partitioned into rows."""
@@ -84,7 +87,7 @@ class TablePredictions:
 
     status: Literal["unready", "ready"] = "unready"
 
-    partitions: Optional[PartitionPredictions] = None
+    partitions: Optional[Partitions] = None
 
     @property
     def tatr(self) -> RawBboxPredictions:
