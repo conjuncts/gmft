@@ -60,7 +60,7 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
     ):
         super(TATRFormattedTable, self).__init__(cropped_table)
         self.predictions = TablePredictions(
-            tatr=fctn_results,
+            bbox=fctn_results,
             effective=_empty_effective_predictions(),
             indices=_empty_indices_predictions(),
         )
@@ -137,12 +137,12 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
         else:
             # transform functionalized coordinates into image coordinates
             boxes = [
-                (x * scale_by for x in bbox) for bbox in self.predictions.tatr["boxes"]
+                (x * scale_by for x in bbox) for bbox in self.predictions.bbox["boxes"]
             ]
 
             _to_visualize = {
-                "scores": self.predictions.tatr["scores"],
-                "labels": self.predictions.tatr["labels"],
+                "scores": self.predictions.bbox["scores"],
+                "labels": self.predictions.bbox["labels"],
                 "boxes": boxes,
             }
 
@@ -178,7 +178,7 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
             **{
                 "config": non_defaults_only(self.config),
                 "outliers": self.outliers,
-                "fctn_results": self.predictions.tatr,
+                "fctn_results": self.predictions.bbox,
             },
             **optional,
         }

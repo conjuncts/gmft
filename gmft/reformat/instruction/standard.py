@@ -16,9 +16,9 @@ class ExecutorInstruction(BaseInstruction):
 
 @dataclass(frozen=True)
 class PassiveInstruction(BaseInstruction):
-
     key: Literal["verbosity", "executor"]
     value: Any
+
 
 @dataclass(frozen=True)
 class VerbosityInstruction(BaseInstruction):

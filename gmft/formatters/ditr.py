@@ -1,6 +1,7 @@
 import copy
+from dataclasses import dataclass
 import statistics
-from typing import Generator, Optional, Union
+from typing import Generator, Optional, TypedDict, Union
 
 import numpy as np
 import pandas as pd
@@ -20,6 +21,8 @@ from gmft.core.io.serial.dicts import (
 from gmft.core.legacy.fctn_results import LegacyFctnResults
 from gmft.core.ml import _resolve_device
 from gmft.core.ml.prediction import (
+    BboxPrediction,
+    RawBboxPredictions,
     TablePredictions,
     _empty_effective_predictions,
     _empty_indices_predictions,
@@ -76,7 +79,7 @@ class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
             cropped_table, None, irvl_results, config=config
         )
         self.predictions = TablePredictions(
-            tatr=fctn_results,
+            bbox=fctn_results,
             effective=_empty_effective_predictions(),
             indices=_empty_indices_predictions(),
             status="unready",
@@ -155,7 +158,7 @@ class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
             **{
                 "config": non_defaults_only(self.config),
                 "outliers": self.outliers,
-                "fctn_results": self.predictions.tatr,
+                "fctn_results": self.predictions.bbox,
             },
             **optional,
         }
@@ -433,18 +436,22 @@ def ditr_fctn_results_to_irvl(
     """
 
 
-def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = None):
-    """
-    Return the table as a pandas dataframe.
-    The code is adapted from the TATR authors' inference.py, with a few tweaks.
-    """
+@dataclass
+class DITRLocations:
+    row_dividers: list[float]
+    col_dividers: list[float]
+    row_divider_intervals: list[tuple[float, float]]
+    col_divider_intervals: list[tuple[float, float]]
 
-    if config is None:
-        config = table.config
+    top_headers: list[tuple[float, float, float, float]]
+    projected: list[tuple[float, float, float, float]]
+    spanning_cells: list[BboxPrediction]
 
-    outliers = {}  # store table-wide information about outliers or pecularities
 
-    results = table.predictions.tatr
+def _clean_predictions(
+    results: RawBboxPredictions,
+    config: DITRFormatConfig = None,
+):
     row_divider_boxes, col_divider_boxes, top_headers, projected, spanning_cells = (
         proportion_fctn_results(results, config)
     )
@@ -468,10 +475,43 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
 
     row_divider_intervals = [(y0, y1) for _, y0, _, y1, _ in row_divider_boxes]
     col_divider_intervals = [(x0, x1) for x0, _, x1, _, _ in col_divider_boxes]
+
+    return DITRLocations(
+        row_dividers=row_dividers,
+        col_dividers=col_dividers,
+        row_divider_intervals=row_divider_intervals,
+        col_divider_intervals=col_divider_intervals,
+        top_headers=top_headers,
+        projected=projected,
+        spanning_cells=spanning_cells,
+    )
+
+
+def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = None):
+    """
+    Return the table as a pandas dataframe.
+    The code is adapted from the TATR authors' inference.py, with a few tweaks.
+    """
+
+    if config is None:
+        config = table.config
+
+    outliers = {}  # store table-wide information about outliers or pecularities
+
+    locations = _clean_predictions(table.predictions.bbox, config)
+    row_dividers = locations.row_dividers
+    col_dividers = locations.col_dividers
+    row_divider_intervals = locations.row_divider_intervals
+    col_divider_intervals = locations.col_divider_intervals
+    top_headers = locations.top_headers
+    projected = locations.projected
+    spanning_cells = locations.spanning_cells
+
     table.irvl_results = {
         "row_dividers": row_divider_intervals,
         "col_dividers": col_divider_intervals,
     }
+
     table.predictions.effective = {
         "rows": [],
         "columns": [],

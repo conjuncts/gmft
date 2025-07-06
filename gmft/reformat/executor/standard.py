@@ -38,6 +38,7 @@ def _collect_instructions(plan):
         current_plan = current_plan.previous
     return instructions[::-1]  # Reverse to maintain order from first to last
 
+
 def _execute_plan(plan):
     instructions = _collect_instructions(plan)
 
@@ -47,7 +48,6 @@ def _execute_plan(plan):
     # 2. active (order matters)
 
     pass
-
 
 
 class _InitialPlan(OverallPlan):
@@ -66,4 +66,3 @@ def _reformat(ft) -> OverallPlan:
     Begin reformat chain.
     """
     return _InitialPlan(ft=ft)
-

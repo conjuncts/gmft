@@ -49,15 +49,50 @@ class IndicesPredictions(TypedDict):
 
 
 @dataclass
+class PartitionPredictions:
+    """
+    Most concise table definition.
+    """
+
+    row_partitions: List[float]
+    """y values where table gets partitioned into rows."""
+
+    col_partitions: List[float]
+    """x values where table gets partitioned into columns."""
+
+    top_header_y: float
+    """y value where the top header begins, if any. """
+
+    left_header_x: float
+    """x value where the left header begins, if any."""
+
+    projecting: List[BboxPrediction]
+    "Regions with projected rows"
+
+    spanning: List[BboxPrediction]
+    "Regions with spanning cells"
+
+
+@dataclass
 class TablePredictions:
     """Type definition for the complete predictions dictionary."""
 
-    tatr: RawBboxPredictions
+    bbox: RawBboxPredictions
 
     effective: EffectivePredictions
     indices: IndicesPredictions
 
     status: Literal["unready", "ready"] = "unready"
+
+    partitions: Optional[PartitionPredictions] = None
+
+    @property
+    def tatr(self) -> RawBboxPredictions:
+        return self.bbox
+
+    @tatr.setter
+    def tatr(self, value: RawBboxPredictions):
+        self.bbox = value
 
 
 def _empty_effective_predictions():

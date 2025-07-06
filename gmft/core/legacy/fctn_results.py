@@ -14,14 +14,14 @@ class LegacyFctnResults:
     predictions: TablePredictions
 
     @property
-    @deprecated("Use self.predictions.tatr")
+    @deprecated("Use self.predictions.bbox")
     def fctn_results(self) -> RawBboxPredictions:
-        return self.predictions.tatr
+        return self.predictions.bbox
 
     @fctn_results.setter
-    @deprecated("Use self.predictions.tatr")
+    @deprecated("Use self.predictions.bbox")
     def fctn_results(self, value: RawBboxPredictions):
-        self.predictions.tatr = value
+        self.predictions.bbox = value
 
     @property
     @deprecated("Use self.predictions.effective")

@@ -1,7 +1,10 @@
 from abc import ABC
 from typing import Literal
 from typing_extensions import Self
-from gmft.reformat.instruction.filter.do_when import ExcludeWhenInstruction, RaiseWhenInstruction
+from gmft.reformat.instruction.filter.do_when import (
+    ExcludeWhenInstruction,
+    RaiseWhenInstruction,
+)
 
 
 from typing import Callable, Optional
@@ -130,4 +133,3 @@ class BasePlan(ABC):
                 warn=True,
             ),
         )
-

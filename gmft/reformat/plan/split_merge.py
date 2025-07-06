@@ -1,7 +1,6 @@
 from typing import Callable, List, Literal, Optional, Union
 from typing_extensions import Self
 from gmft.reformat.instruction import BaseInstruction
-from gmft.reformat.instruction.filter.do_when import ExcludeWhenInstruction, RaiseWhenInstruction
 from gmft.reformat.instruction.split_merge.drop import DropNullsInstruction
 from gmft.reformat.instruction.split_merge.header import (
     LeftHeaderInstruction,
@@ -103,4 +102,3 @@ class SplitMergePlan(BasePlan):
         return SplitMergePlan(
             previous=self, instruction=LeftHeaderInstruction(action="normalize spans")
         )
-

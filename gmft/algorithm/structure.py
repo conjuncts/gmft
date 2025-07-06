@@ -8,6 +8,9 @@ from gmft.base import Rect
 from typing import TYPE_CHECKING
 
 from gmft.core.ml.prediction import (
+    BboxPrediction,
+    EffectivePredictions,
+    RawBboxPredictions,
     _empty_effective_predictions,
     _empty_indices_predictions,
 )
@@ -756,18 +759,17 @@ def _fill_using_partitions(
     return table_array
 
 
-def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
+def _clean_predictions(
+    table: TATRFormattedTable,
+    results: RawBboxPredictions,
+    *,
+    word_height: float,
+    outliers: dict[str, bool],
+    config: TATRFormatConfig = None,
+) -> EffectivePredictions:
     """
-    Return the table as a pandas dataframe.
-    The code is adapted from the TATR authors' inference.py, with a few tweaks.
+    Process and clean predictions (ie. remove duplicates, NMS, outliers, etc.)
     """
-
-    if config is None:
-        config = table.config
-
-    outliers = {}  # store table-wide information about outliers or pecularities
-
-    results = table.predictions.tatr
 
     # 1. collate identified boxes
     boxes = []
@@ -816,15 +818,133 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
 
     _widen_and_even_out_rows(sorted_rows, sorted_headers)
 
-    word_height = table.predicted_word_height(
-        smallest_supported_text_height=config._smallest_supported_text_height
-    )
-
     # fill in a header gap, if it exists (ie. if the header is not included in the rows)
     top_of_table = None
     if sorted_headers:
         top_of_table = sorted_headers[0]["bbox"][1]
     _fill_in_gaps(sorted_rows, word_height, top_of_table=top_of_table)
+    return {
+        "rows": sorted_rows,
+        "columns": sorted_columns,
+        "headers": sorted_headers,
+        "projecting": sorted_projecting,
+        "spanning": spanning_cells,
+        "num_removed": num_removed,
+    }
+
+
+def _lta(
+    table: TATRFormattedTable,
+    config: TATRFormatConfig,
+    *,
+    sorted_rows: list[BboxPrediction],
+    sorted_headers: list[BboxPrediction],
+    word_height: float,
+) -> tuple[list[BboxPrediction], float] | tuple[None, None]:
+    """
+    Large table assumption: if the table is large, we assume that it has a large number of rows.
+    This refines the rows by estimating constant.
+
+    :return: sorted_rows, a refinement of the sorted_rows (with LTA)
+    or None, if LTA failed.
+    """
+    sorted_rows = _guess_row_bboxes_for_large_tables(
+        table, config, sorted_rows, sorted_headers, row_height=word_height
+    )
+    left_corner = sorted_rows[0]["bbox"]
+    right_corner = sorted_rows[-1]["bbox"]
+    # (ymax - ymin) * (xmax - xmin)
+    total_row_area = (right_corner[3] - left_corner[1]) * (
+        right_corner[2] - left_corner[0]
+    )
+
+    # outline:
+    # 1. allot each of the text into its row, which we can actually calculate using
+    # (text-ymean / table_height) * num_rows is the index
+    # 2. --> this estimate usually does not merge, but it does _split_
+    # 2. for each row, calculate the mean of the y-values
+    # 3. purge empty rows
+    # 4. get a good estimate of the true row height by getting the (median) difference of means between rows
+    # 5. (use a centering method (ie. mean, median, etc.) to get the row height, with robustness to split rows)
+    # 6. re-estimate the rows
+    bins = [[] for _ in range(len(sorted_rows))]
+    top = left_corner[1]
+    bottom = right_corner[3]
+    for xmin, ymin, xmax, ymax, text in table.text_positions(remove_table_offset=True):
+        yavg = (ymin + ymax) / 2
+        i = int((yavg - top) / (bottom - top) * len(sorted_rows))
+        if 0 <= i < len(bins):
+            bins[i].append(yavg)
+    known_means = [float(np.mean(x)) for x in bins if len(x)]
+
+    if not known_means:
+        # no text was detected
+        return None, None
+
+    differences = [
+        known_means[i + 1] - known_means[i] for i in range(len(known_means) - 1)
+    ]
+    if len(differences):
+        known_height = float(np.median(differences))
+    else:
+        # if there is only one row, then we're stuck. set to table height.
+        known_height = bottom - top
+
+    # means are within 0.2 * known_height of each other, consolidate them
+    # actually no - use 0.6 * WORD_HEIGHT
+    i = 1
+    while i < len(known_means):
+        prev = known_means[i - 1]
+        cur = known_means[i]
+        if (
+            abs(cur - prev) < config._large_table_merge_distance * word_height
+        ):  # default: 0.2
+            # merge by averaging
+            known_means[i - 1] = (prev + cur) / 2
+            known_means.pop(i)
+
+            # don't allow double merging
+        i += 1
+
+    sorted_rows = _guess_row_bboxes_for_large_tables(
+        table,
+        config,
+        sorted_rows,
+        sorted_headers,
+        known_means=known_means,
+        row_height=known_height,
+    )
+    return sorted_rows, total_row_area
+
+
+def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
+    """
+    Return the table as a pandas dataframe.
+    The code is adapted from the TATR authors' inference.py, with a few tweaks.
+    """
+
+    if config is None:
+        config = table.config
+
+    outliers = {}  # store table-wide information about outliers or pecularities
+
+    word_height = table.predicted_word_height(
+        smallest_supported_text_height=config._smallest_supported_text_height
+    )
+
+    _cleaned = _clean_predictions(
+        table,
+        table.predictions.bbox,
+        outliers=outliers,
+        config=config,
+        word_height=word_height,
+    )
+    sorted_rows = _cleaned["rows"]
+    sorted_headers = _cleaned["headers"]
+    sorted_columns = _cleaned["columns"]
+    spanning_cells = _cleaned["spanning"]
+    sorted_projecting = _cleaned["projecting"]
+    num_removed: int = _cleaned["num_removed"]
 
     # 4a. calculate total row overlap. If higher than a threshold, invoke the large table assumption
     # also count headers
@@ -855,39 +975,14 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
                 "Invoking large table row guess! set TATRFormatConfig.force_large_table_assumption to False to disable this."
             )
 
-        sorted_rows = _guess_row_bboxes_for_large_tables(
-            table, config, sorted_rows, sorted_headers, row_height=word_height
+        sorted_rows, total_row_area = _lta(
+            table,
+            config,
+            sorted_rows=sorted_rows,
+            sorted_headers=sorted_headers,
+            word_height=word_height,
         )
-        left_corner = sorted_rows[0]["bbox"]
-        right_corner = sorted_rows[-1]["bbox"]
-        # (ymax - ymin) * (xmax - xmin)
-        total_row_area = (right_corner[3] - left_corner[1]) * (
-            right_corner[2] - left_corner[0]
-        )
-
-        # outline:
-        # 1. allot each of the text into its row, which we can actually calculate using
-        # (text-ymean / table_height) * num_rows is the index
-        # 2. --> this estimate usually does not merge, but it does _split_
-        # 2. for each row, calculate the mean of the y-values
-        # 3. purge empty rows
-        # 4. get a good estimate of the true row height by getting the (median) difference of means between rows
-        # 5. (use a centering method (ie. mean, median, etc.) to get the row height, with robustness to split rows)
-        # 6. re-estimate the rows
-        bins = [[] for _ in range(len(sorted_rows))]
-        top = left_corner[1]
-        bottom = right_corner[3]
-        for xmin, ymin, xmax, ymax, text in table.text_positions(
-            remove_table_offset=True
-        ):
-            yavg = (ymin + ymax) / 2
-            i = int((yavg - top) / (bottom - top) * len(sorted_rows))
-            if 0 <= i < len(bins):
-                bins[i].append(yavg)
-        known_means = [float(np.mean(x)) for x in bins if len(x)]
-
-        if not known_means:
-            # no text was detected
+        if sorted_rows is None:
             outliers["no text"] = True
             table.predictions.effective = _empty_effective_predictions()
             table.predictions.indices = _empty_indices_predictions()
@@ -895,40 +990,6 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
             table._df = pd.DataFrame()
             table.outliers = outliers
             return table._df
-
-        differences = [
-            known_means[i + 1] - known_means[i] for i in range(len(known_means) - 1)
-        ]
-        if len(differences):
-            known_height = float(np.median(differences))
-        else:
-            # if there is only one row, then we're stuck. set to table height.
-            known_height = bottom - top
-
-        # means are within 0.2 * known_height of each other, consolidate them
-        # actually no - use 0.6 * WORD_HEIGHT
-        i = 1
-        while i < len(known_means):
-            prev = known_means[i - 1]
-            cur = known_means[i]
-            if (
-                abs(cur - prev) < config._large_table_merge_distance * word_height
-            ):  # default: 0.2
-                # merge by averaging
-                known_means[i - 1] = (prev + cur) / 2
-                known_means.pop(i)
-
-                # don't allow double merging
-            i += 1
-
-        sorted_rows = _guess_row_bboxes_for_large_tables(
-            table,
-            config,
-            sorted_rows,
-            sorted_headers,
-            known_means=known_means,
-            row_height=known_height,
-        )
 
     # nms takes care of deduplication
     table.predictions.effective = {
@@ -952,7 +1013,9 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
     if total_area > (1 + config.total_overlap_reject_threshold) * table_area:
         # this shouldn't really happen anymore with NMS
         raise ValueError(
-            f"The identified boxes have significant overlap: {total_area / table_area - 1:.2%} of area is overlapping (Max is {config.total_overlap_reject_threshold:.2%})"
+            f"The identified boxes have significant overlap: "
+            "{total_area / table_area - 1:.2%} of area is overlapping "
+            "(Max is {config.total_overlap_reject_threshold:.2%})"
         )
 
     elif total_area > (1 + config.total_overlap_warn_threshold) * table_area:
