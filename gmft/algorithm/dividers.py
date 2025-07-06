@@ -1,10 +1,10 @@
 import bisect
-from typing import Generator
+from typing import Generator, List
 
 import numpy as np
 
 
-def find_row_for_target(row_dividers, ytarget):
+def find_row_for_target(row_dividers: List[float], ytarget: float):
     """
     Find the row that a box belongs to, according to the row dividers.
     The row_dividers do not include endbounds.
@@ -12,7 +12,7 @@ def find_row_for_target(row_dividers, ytarget):
     return bisect.bisect_left(row_dividers, ytarget)
 
 
-def find_column_for_target(column_dividers, xtarget):
+def find_column_for_target(column_dividers: List[float], xtarget: float):
     """
     Find the column that a box belongs to, according to the column dividers.
     The column_dividers do not include endbounds.
@@ -36,8 +36,8 @@ def _find_all_intervals_for_interval(sorted_intervals, interval, threshold=0):
 
 def fill_using_true_partitions(
     text_positions: Generator[tuple[float, float, float, float, str], None, None],
-    row_dividers: list[dict],
-    column_dividers: list[dict],
+    row_dividers: list[float],
+    column_dividers: list[float],
     table_bounds: tuple[float, float, float, float],
 ):
     """

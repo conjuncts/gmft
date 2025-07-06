@@ -57,22 +57,22 @@ class Partitions:
     table_bbox: Tuple[float, float, float, float]
     """Overall bbox of the table."""
 
-    row_partitions: List[float]
+    row_dividers: List[float]
     """y values where table gets partitioned into rows."""
 
-    col_partitions: List[float]
+    col_dividers: List[float]
     """x values where table gets partitioned into columns."""
 
     top_header_y: float
-    """y value where the top header begins, if any. """
+    """y value which separates the top header from the rest of the table."""
 
     left_header_x: float
-    """x value where the left header begins, if any."""
+    """x value which separates the left header from the rest of the table."""
 
-    projecting: List[BboxPrediction]
+    projecting: List[tuple[float, float, float, float]]
     "Regions with projected rows"
 
-    spanning: List[BboxPrediction]
+    spanning: List[tuple[float, float, float, float]]
     "Regions with spanning cells"
 
 

@@ -25,4 +25,4 @@ class DITRLocations:
 
     top_headers: list[tuple[float, float, float, float]]
     projected: list[tuple[float, float, float, float]]
-    spanning_cells: list[BboxPrediction]
+    spanning: list[BboxPrediction]

@@ -3,13 +3,17 @@ from typing import TYPE_CHECKING
 import numpy as np
 from gmft.algorithm.dividers import (
     _ioa,
+    fill_using_true_partitions,
 )
 from gmft.algorithm.structure import (
     _iob,
 )
-from gmft.core.ml.prediction import RawBboxPredictions
+from gmft.core.ml.prediction import Partitions, RawBboxPredictions
+from gmft.detectors.base import CroppedTable
+from gmft.formatters.base import FormattedTable
 from gmft.impl.ditr.config import DITRFormatConfig
 from gmft.impl.ditr.label import DITRLabel, DITRLocations
+from gmft.impl.tatr.config import TATRFormatConfig
 
 if TYPE_CHECKING:
     from gmft.formatters.ditr import DITRFormattedTable
@@ -181,5 +185,6 @@ def _clean_predictions(
         col_divider_intervals=col_divider_intervals,
         top_headers=top_headers,
         projected=projected,
-        spanning_cells=spanning_cells,
+        spanning=spanning_cells,
     )
+

@@ -3,7 +3,7 @@ import copy
 import pandas as pd
 
 
-from gmft.algorithm.partition_rewrite import (
+from gmft.algorithm.ditr_structure import (
     _clean_predictions,
     _determine_headers_and_projecting,
 )
@@ -274,7 +274,7 @@ class DITRFormatter(TableFormatter):
 def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = None):
     """
     Return the table as a pandas dataframe.
-    The code is adapted from the TATR authors' inference.py, with a few tweaks.
+    The code is adapted from the gmft.algorithm.structure.extract_to_df()
     """
 
     if config is None:
@@ -289,7 +289,7 @@ def ditr_extract_to_df(table: DITRFormattedTable, config: DITRFormatConfig = Non
     col_divider_intervals = locations.col_divider_intervals
     top_headers = locations.top_headers
     projected = locations.projected
-    spanning_cells = locations.spanning_cells
+    spanning_cells = locations.spanning
 
     table.irvl_results = {
         "row_dividers": row_divider_intervals,
