@@ -14,6 +14,7 @@ from gmft.core.ml.prediction import (
     _empty_effective_predictions,
     _empty_indices_predictions,
 )
+from gmft.impl.tatr.label import TATRLabel
 
 if TYPE_CHECKING:
     from gmft.impl.tatr.config import TATRFormatConfig
@@ -759,16 +760,13 @@ def _fill_using_partitions(
     return table_array
 
 
-def _clean_predictions(
-    table: TATRFormattedTable,
+def _simple_clean_tatr_predictions(
     results: RawBboxPredictions,
     *,
-    word_height: float,
-    outliers: dict[str, bool],
     config: TATRFormatConfig = None,
 ) -> EffectivePredictions:
     """
-    Process and clean predictions (ie. remove duplicates, NMS, outliers, etc.)
+    Process and clean predictions (ie. remove duplicates, NMS, etc.)
     """
 
     # 1. collate identified boxes
@@ -776,7 +774,9 @@ def _clean_predictions(
     for a, b, c in zip(results["scores"], results["labels"], results["boxes"]):
         bbox = c  # .tolist()
         if a >= config.cell_required_confidence[b]:
-            boxes.append({"confidence": a, "label": table.id2label[b], "bbox": bbox})
+            boxes.append(
+                {"confidence": a, "label": TATRLabel.id2label[b], "bbox": bbox}
+            )
 
     sorted_horizontals = []
     sorted_columns = []
@@ -785,9 +785,12 @@ def _clean_predictions(
         label = box["label"]
         if label == "table spanning cell":
             spanning_cells.append(box)
-        elif label in table._POSSIBLE_COLUMN_HEADERS or label in table._POSSIBLE_ROWS:
+        elif (
+            label in TATRLabel._POSSIBLE_COLUMN_HEADERS
+            or label in TATRLabel._POSSIBLE_ROWS
+        ):
             sorted_horizontals.append(box)
-        elif label in table._POSSIBLE_COLUMNS:
+        elif label in TATRLabel._POSSIBLE_COLUMNS:
             sorted_columns.append(box)
     # 2a. sort by ymax
     sorted_horizontals.sort(key=lambda x: x["bbox"][3])
@@ -809,6 +812,35 @@ def _clean_predictions(
     num_removed = _non_maxima_suppression(
         sorted_rows, overlap_threshold=config._nms_overlap_threshold
     )
+    return {
+        "rows": sorted_rows,
+        "columns": sorted_columns,
+        "headers": sorted_headers,
+        "projecting": sorted_projecting,
+        "spanning": spanning_cells,
+        "num_removed": num_removed,
+    }
+
+
+def _clean_tatr_predictions(
+    results: RawBboxPredictions,
+    *,
+    word_height: float,
+    outliers: dict[str, bool],
+    config: TATRFormatConfig = None,
+) -> EffectivePredictions:
+    """
+    Process and clean predictions (ie. remove duplicates, NMS, etc.)
+
+    Also does some additional processing such as log outliers and fill in header gap.
+    """
+
+    intermediate = _simple_clean_tatr_predictions(results, config=config)
+
+    sorted_rows = intermediate["rows"]
+    sorted_headers = intermediate["headers"]
+    num_removed = intermediate["num_removed"]
+
     if num_removed > 0 and config.verbosity >= 2:
         print(f"Removed {num_removed} overlapping rows")
     if num_removed > config.nms_warn_threshold:
@@ -823,12 +855,13 @@ def _clean_predictions(
     if sorted_headers:
         top_of_table = sorted_headers[0]["bbox"][1]
     _fill_in_gaps(sorted_rows, word_height, top_of_table=top_of_table)
+
     return {
         "rows": sorted_rows,
-        "columns": sorted_columns,
+        "columns": intermediate["columns"],
         "headers": sorted_headers,
-        "projecting": sorted_projecting,
-        "spanning": spanning_cells,
+        "projecting": intermediate["projecting"],
+        "spanning": intermediate["spanning"],
         "num_removed": num_removed,
     }
 
@@ -932,8 +965,7 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         smallest_supported_text_height=config._smallest_supported_text_height
     )
 
-    _cleaned = _clean_predictions(
-        table,
+    _cleaned = _clean_tatr_predictions(
         table.predictions.bbox,
         outliers=outliers,
         config=config,

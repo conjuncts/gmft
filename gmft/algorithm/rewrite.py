@@ -3,12 +3,17 @@ from gmft.algorithm.dividers import (
     _to_table_bounds,
     fill_using_true_partitions,
 )
-from gmft.algorithm.partition_structure import _separate_horizontals
+from gmft.algorithm.partition_structure import _separate_horizontals, pairwise
+from gmft.algorithm.structure import (
+    _clean_tatr_predictions,
+    _simple_clean_tatr_predictions,
+)
 from gmft.core.ml.prediction import RawBboxPredictions
 from gmft.formatters.base import FormattedTable
 from gmft.impl.ditr.label import DITRLocations
 from gmft.impl.tatr.config import TATRFormatConfig
 from gmft.reformat.state import FormatState, Partitions
+from gmft.reformat.step.polaric import _table_to_words_df
 
 
 def _ditr_locations_to_partitions(
@@ -32,12 +37,40 @@ def _ditr_locations_to_partitions(
 
 def _tatr_predictions_to_partitions(
     tatr: RawBboxPredictions,
-    table_bbox: tuple[float, float, float, float],
     config: TATRFormatConfig,
+    table_width: float = None,
+    table_height: float = None,
 ) -> Partitions:
     """
     Converts TATR predictions to Partitions.
     """
+
+    fixed = _simple_clean_tatr_predictions(tatr, config=config)
+
+    # simplest conversion from tatr bboxes to dividers:
+    # take pairwise
+    # TODO: consider the caveats of this algorithm.
+
+    row_dividers = [0]
+    col_dividers = [0]
+    for prev, curr in pairwise(fixed["rows"]):
+        # take average of the bottom of the previous and top of the current row
+        row_dividers.append((prev["bbox"][3] + curr["bbox"][1]) / 2)
+    row_dividers.append(table_height)
+
+    for prev, curr in pairwise(fixed["columns"]):
+        # take average of the right of the previous and left of the current column
+        col_dividers.append((prev["bbox"][2] + curr["bbox"][0]) / 2)
+    col_dividers.append(table_width)
+
+    return Partitions(
+        row_dividers=row_dividers,
+        col_dividers=col_dividers,
+        top_header_y=max([x["bbox"][3] for x in fixed["headers"]], default=0),
+        left_header_x=0,
+        projected=fixed["projecting"],
+        spanning=fixed["spanning"],
+    )
 
 
 def partition_extract_to_state(
@@ -92,7 +125,8 @@ def partition_extract_to_state(
     # TODO: top header logic needs to be reinstated
 
     return FormatState(
-        table_array=table_array,
+        words=_table_to_words_df(table),
+        # table_array=table_array,
         header_rows=header_indices,
         projected_rows=projecting_indices,
         empty_rows=empty_rows,

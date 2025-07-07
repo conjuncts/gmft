@@ -74,6 +74,12 @@ _num_tables = {
 REDETECT_TABLES = False
 
 
+def _nonfixture_load_tatr_tables():
+    with open("data/test/references/tatr_tables.json", "r") as f:
+        tatr_tables = json.load(f)
+    return tatr_tables
+
+
 def get_tables_for_pdf(
     docs_bulk,
     detector: AutoTableDetector,
@@ -82,6 +88,9 @@ def get_tables_for_pdf(
     n,
     REDETECT_TABLES=REDETECT_TABLES,
 ):
+    if tatr_tables is None:
+        tatr_tables = _nonfixture_load_tatr_tables()
+
     print("Making tables for pdf", n)
     doc = docs_bulk[n - 1]
 
@@ -128,8 +137,7 @@ def cropped_tables():
 
 @pytest.fixture(scope="session")
 def tatr_tables():
-    with open("data/test/references/tatr_tables.json", "r") as f:
-        yield json.load(f)
+    yield _nonfixture_load_tatr_tables()
 
 
 @pytest.fixture(scope="session")

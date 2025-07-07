@@ -1,7 +1,11 @@
+from typing import Iterable, Iterator, Tuple, TypeVar
 from gmft.algorithm.dividers import _ioa
 
 
-def pairwise(iterable):
+T = TypeVar("T")
+
+
+def pairwise(iterable: Iterable[T]) -> Iterator[Tuple[T, T]]:
     """
     Drop-in replacement for itertools.pairwise.
 
@@ -19,7 +23,7 @@ def _separate_horizontals(
     *,
     row_dividers: list[float],
     top_header_y: float,
-    sorted_projecting,
+    projected,
     iob_threshold=0.7,
 ):
     """
@@ -30,7 +34,7 @@ def _separate_horizontals(
 
     :param row_intervals: list of dividers, including endbounds
     :param top_header_y: y value which separates the top header from the rest of the table
-    :param sorted_projecting: list of bboxes (x0, y0, x1, y1) of projecting rows
+    :param projected: list of bboxes (x0, y0, x1, y1) of projecting rows
     """
 
     # determine which rows overlap (> 0.9) with headers
@@ -47,7 +51,7 @@ def _separate_horizontals(
         # Define a projecting row to be one where >70% of row is in the projecting region
         if any(
             _ioa(row_y_interval, (proj_y0, proj_y1)) > iob_threshold
-            for _, proj_y0, _, proj_y1 in sorted_projecting
+            for _, proj_y0, _, proj_y1 in projected
         ):
             projecting_indices.append(i)
             continue

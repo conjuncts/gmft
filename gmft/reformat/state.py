@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+import polars as pl
+
 
 @dataclass
 class Partitions:
@@ -35,7 +37,12 @@ class FormatState:
     [Experimental] Subject to change without notice.
     """
 
-    table_array: List[List[Optional[str]]]
+    words: pl.DataFrame
+    """DataFrame with words in the table.
+    Columns: xmin, ymin, xmax, ymax, text, row_num, col_num
+    """
+
+    # table_array: List[List[Optional[str]]]
 
     # indices of special rows
     header_rows: List[int]

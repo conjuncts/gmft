@@ -27,3 +27,12 @@ So (with endpoints included) the row at index $i$ is described by the partitions
 
 The new partitions code has the convention where dividers do indeed include endpoints. But the previous DITR does not have this convention.
 When in doubt, if table_bbox is passed in, then it follows the old convention.
+
+## normalize
+
+We call "Normalize" 
+
+- In pandas and polars, json_normalize is used to convert heterogenous data into a flat table. 
+
+In the same way, normalize_x creates a flat table by taking merged cells and reduplicating values to create a flat, homogenous table.
+The behavior is most similar to `explode()`, where a hierarchical 
