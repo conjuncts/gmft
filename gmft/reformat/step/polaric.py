@@ -48,14 +48,14 @@ def _set_row_col_numbers(
             labels=column_labels,
         )
         .cast(pl.Int64, strict=False) # strict=False turns "None" -> None
-        .alias("col_num"),
+        .alias("col_idx"),
         ((pl.col("ymin") + pl.col("ymax")) / 2)
         .cut(
             breaks=row_dividers,
             labels=row_labels,
         )
         .cast(pl.Int64, strict=False) # strict=False turns "None" -> None
-        .alias("row_num"),
+        .alias("row_idx"),
     )
     return df
 
@@ -74,8 +74,8 @@ def _words_to_table_array(
 
     aggregated = (
         words.lazy()
-        .filter(pl.col("row_num").is_not_null() & pl.col("col_num").is_not_null())
-        .group_by([pl.col("row_num"), pl.col("col_num")])
+        .filter(pl.col("row_idx").is_not_null() & pl.col("col_idx").is_not_null())
+        .group_by([pl.col("row_idx"), pl.col("col_idx")])
         .agg(pl.col("text"))
         .with_columns(pl.col("text").list.join(" ").alias("text"))
         .collect()
@@ -83,11 +83,11 @@ def _words_to_table_array(
 
     # pivot() requires eager
     return aggregated.pivot(
-        index="row_num",
-        on="col_num",
+        index="row_idx",
+        on="col_idx",
         values="text",
         aggregate_function="first",
-    ).sort("row_num")
+    ).sort("row_idx")
 
 
 
@@ -101,14 +101,14 @@ def _words_to_table_array_polars(
     I suspect because the polars "pivot()" must generalize to arbitrary number of rows/columns
     while we have a special case where we can exactly allocate the table size
 
-    :param words: DataFrame with columns xmin, ymin, xmax, ymax, text, row_num, col_num.
+    :param words: DataFrame with columns xmin, ymin, xmax, ymax, text, row_idx, col_idx.
     :return: 2D list of strings representing the table.
     """
 
     aggregated = (
         words.lazy()
-        .filter(pl.col("row_num").is_not_null() & pl.col("col_num").is_not_null())
-        .group_by([pl.col("row_num"), pl.col("col_num")])
+        .filter(pl.col("row_idx").is_not_null() & pl.col("col_idx").is_not_null())
+        .group_by([pl.col("row_idx"), pl.col("col_idx")])
         .agg(pl.col("text"))
         .with_columns(pl.col("text").list.join(" ").alias("text"))
         .collect()
@@ -116,16 +116,16 @@ def _words_to_table_array_polars(
 
     # pivot() requires eager
     df = aggregated.pivot(
-        index="row_num",
-        on="col_num",
+        index="row_idx",
+        on="col_idx",
         values="text",
         aggregate_function="first",
-    ).sort("row_num")
+    ).sort("row_idx")
 
     # rearrange columns
-    has_columns = df.columns[1:]  # skip row_num
+    has_columns = df.columns[1:]  # skip row_idx
     sorted_columns = sorted(has_columns, key=lambda x: int(x) if x.isdigit() else float('inf'))
-    df = df.select([pl.col("row_num")] + [pl.col(c) for c in sorted_columns])
+    df = df.select([pl.col("row_idx")] + [pl.col(c) for c in sorted_columns])
     return df
 
 def _words_to_table_array(
@@ -136,24 +136,24 @@ def _words_to_table_array(
 
     Uses non-parallel for loop for benchmarking purposes.
 
-    :param words: DataFrame with columns xmin, ymin, xmax, ymax, text, row_num, col_num.
+    :param words: DataFrame with columns xmin, ymin, xmax, ymax, text, row_idx, col_idx.
     :return: 2D list of strings representing the table.
     """
 
-    row_count = words["row_num"].max() + 1
-    col_count = words["col_num"].max() + 1
+    row_count = words["row_idx"].max() + 1
+    col_count = words["col_idx"].max() + 1
 
     table = [[None] * col_count for _ in range(row_count)]
 
-    for text, row_num, col_num in words.select(["text", "row_num", "col_num"]).iter_rows():
-        if row_num is not None and col_num is not None:
-            if table[row_num][col_num] is None:
-                table[row_num][col_num] = text
+    for text, row_idx, col_idx in words.select(["text", "row_idx", "col_idx"]).iter_rows():
+        if row_idx is not None and col_idx is not None:
+            if table[row_idx][col_idx] is None:
+                table[row_idx][col_idx] = text
             else:
-                table[row_num][col_num] += " " + text
+                table[row_idx][col_idx] += " " + text
     
     # Convert to DataFrame
     return (
         pl.DataFrame(table, schema={f"{i}": pl.Utf8 for i in range(col_count)}, orient="row")
-        .with_row_index("row_num")
+        .with_row_index("row_idx")
     )

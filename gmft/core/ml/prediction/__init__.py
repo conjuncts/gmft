@@ -82,6 +82,20 @@ def _empty_indices_predictions():
     return {}
 
 
+class TextBbox(TypedDict):
+    """
+    Type definition for a word dictionary, which is a mapping of word IDs to their
+    corresponding bounding boxes and text.
+    """
+
+    xmin: float
+    ymin: float
+    xmax: float
+    ymax: float
+    text: str
+    row_idx: int
+    col_idx: int
+
 # predictions: Predictions = {
 #     "tatr": {
 #         "scores": [

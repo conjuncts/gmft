@@ -1,14 +1,17 @@
+from typing import List
 from gmft.algorithm.dividers import (
     _fill_using_true_partitions_include_endpoints,
     _to_table_bounds,
     fill_using_true_partitions,
+    find_column_for_target,
+    find_row_for_target,
 )
 from gmft.algorithm.partition_structure import _separate_horizontals, pairwise
 from gmft.algorithm.structure import (
     _clean_tatr_predictions,
     _simple_clean_tatr_predictions,
 )
-from gmft.core.ml.prediction import RawBboxPredictions
+from gmft.core.ml.prediction import RawBboxPredictions, TextBbox
 from gmft.formatters.base import FormattedTable
 from gmft.impl.ditr.label import DITRLocations
 from gmft.impl.tatr.config import TATRFormatConfig
@@ -132,3 +135,29 @@ def partition_extract_to_state(
         empty_rows=empty_rows,
         partitions=locations,
     )
+
+
+def to_textbbox_list(ft: FormattedTable, row_dividers, col_dividers) -> List[TextBbox]:
+        # Step 1: Get the words as a list of dicts
+    words = []
+    for xmin, ymin, xmax, ymax, text in ft.text_positions(remove_table_offset=True):
+        x_center = (xmin + xmax) / 2
+        y_center = (ymin + ymax) / 2
+
+        # Find which bin the center falls into
+        col_idx = find_column_for_target(col_dividers, x_center) - 1
+        # then, it belongs to the xi-th column of the np array (no off by 1 error)
+
+        row_idx = find_row_for_target(row_dividers, y_center) - 1
+
+        words.append({
+            "xmin": xmin,
+            "ymin": ymin,
+            "xmax": xmax,
+            "ymax": ymax,
+            "text": text,
+            "row_idx": row_idx,
+            "col_idx": col_idx,
+        })
+
+    return words

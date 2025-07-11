@@ -1,7 +1,10 @@
+from typing import List
+from gmft.algorithm.dividers import find_column_for_target, find_row_for_target
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.formatters.base import FormattedTable
 from gmft.impl.tatr.config import TATRFormatConfig
-from gmft.algorithm.rewrite import _tatr_predictions_to_partitions
+from gmft.algorithm.rewrite import _tatr_predictions_to_partitions, to_textbbox_list
+from gmft.reformat.step.estimate import _estimate_row_height_kmeans_all
 from gmft.reformat.step.polaric import (
     _set_row_col_numbers,
     _table_to_words_df,
@@ -9,6 +12,8 @@ from gmft.reformat.step.polaric import (
     _words_to_table_array_polars,
 )
 import timeit
+
+import polars as pl
 
 # Import for testing/script usage
 try:
@@ -27,19 +32,25 @@ def prepare_df2(ft: FormattedTable):
     df2 = _set_row_col_numbers(df, partitions.row_dividers, partitions.col_dividers)
     return df2
 
-def prepare_ft() -> FormattedTable:
-    pdf1_tables = get_tables_for_pdf(
-        docs_bulk=[PyPDFium2Document("data/pdfs/1.pdf")],
-        n=1,
+from gmft_pymupdf import PyMuPDFDocument
+def prepare_tables(pdf_n=1) -> List[FormattedTable]:
+    docs_bulk = [None] * (pdf_n)
+    # docs_bulk[-1] = PyPDFium2Document(f"data/pdfs/{pdf_n}.pdf")
+    
+    docs_bulk[-1] = PyMuPDFDocument(f"data/pdfs/{pdf_n}.pdf")
+    return get_tables_for_pdf(
+        docs_bulk=docs_bulk,
+        n=pdf_n,
         detector=None,
         formatter=None,
         tatr_tables=None,
     )
-    ft: FormattedTable = pdf1_tables[1]
-    return ft
+
+def prepare_ft(pdf_n=1, n=1) -> FormattedTable:
+    return prepare_tables(pdf_n=pdf_n)[n]
 
 def benchmark_words_to_table_array():
-    ft = prepare_ft()
+    ft = prepare_ft(n=2)
     df2 = prepare_df2(ft)
     num_runs = 1000
     
@@ -69,16 +80,16 @@ def for_loop_words_with_row_col(ft, row_dividers, col_dividers):
         y_center = (ymin + ymax) / 2
 
         # Find which bin the center falls into
-        col_num = None
+        col_idx = None
         for i in range(len(col_dividers) - 1):
             if col_dividers[i] <= x_center < col_dividers[i + 1]:
-                col_num = i
+                col_idx = i
                 break
 
-        row_num = None
+        row_idx = None
         for i in range(len(row_dividers) - 1):
             if row_dividers[i] <= y_center < row_dividers[i + 1]:
-                row_num = i
+                row_idx = i
                 break
 
         words.append({
@@ -87,21 +98,26 @@ def for_loop_words_with_row_col(ft, row_dividers, col_dividers):
             "xmax": xmax,
             "ymax": ymax,
             "text": text,
-            "row_num": row_num,
-            "col_num": col_num,
+            "row_idx": row_idx,
+            "col_idx": col_idx,
         })
 
     return words
 
+def for_loop_words_with_row_col_binsearch(ft, row_dividers, col_dividers):
+    return to_textbbox_list(ft, row_dividers, col_dividers)
+
 def benchmark_for_loop_words_with_row_col():
     
-    # for loop: 0.000516 seconds per run
-    # polars: 0.000838 seconds per run
+    # for loop binsearch: 0.000492 seconds per run
+    # for loop: 0.000503 seconds per run
+    # polars: 0.000763 seconds per run
+
+    # Even for a pretty small table, binsearch is still comparable to better
+    # Data is too small for polars to be faster
     
-    # for loop is faster, even with polars parallelization
-    
-    ft = prepare_ft()
-    num_runs = 10000
+    ft = prepare_ft(n=0)
+    num_runs = 1000
     
     partitions = _tatr_predictions_to_partitions(
         ft.predictions.bbox, TATRFormatConfig(), ft.width, ft.height
@@ -114,12 +130,53 @@ def benchmark_for_loop_words_with_row_col():
     def run_for_loop():
         for_loop_words_with_row_col(ft, partitions.row_dividers, partitions.col_dividers)
 
+    def run_for_loop_binsearch():
+        for_loop_words_with_row_col_binsearch(ft, partitions.row_dividers, partitions.col_dividers)
+
+    time_polars = timeit.timeit(run_polars, number=1)
+
     time_polars = timeit.timeit(run_polars, number=num_runs)
     time_for_loop = timeit.timeit(run_for_loop, number=num_runs)
+    time_for_loop_binsearch = timeit.timeit(run_for_loop_binsearch, number=num_runs)
 
 
     print(f"for loop: {time_for_loop/num_runs:.6f} seconds per run")
     print(f"polars: {time_polars/num_runs:.6f} seconds per run")
+    print(f"for loop binsearch: {time_for_loop_binsearch/num_runs:.6f} seconds per run")
+
+def benchmark_table_row_line_heights():
+    
+    config = TATRFormatConfig()
+    dfs = []
+    collector = []
+    # for pdf_i in range(1, 9):
+    for pdf_i in [2]:
+        tables = prepare_tables(pdf_i)
+        for table_i, ft in enumerate(tables):
+            partitions = _tatr_predictions_to_partitions(
+                ft.predictions.bbox, config, ft.width, ft.height
+            )
+            words_list = to_textbbox_list(ft, partitions.row_dividers, partitions.col_dividers)
+            
+            results = _estimate_row_height_kmeans_all(words_list)
+            # for row_i, row_h in results.items():
+            #     collector.append({
+            #         'pdf': pdf_i,
+            #         'table_i': table_i,
+            #         'row_i': row_i,
+            #         'row_height': row_h
+            #     })
+            collector.append({
+                'pdf': pdf_i,
+                'table_i': table_i,
+                'row_heights': results.values()
+            })
+            dfs.append(ft.df())
+    
+    df = pl.DataFrame(collector)
+    print(df)
+    
 
 if __name__ == "__main__":
-    benchmark_for_loop_words_with_row_col() 
+    # benchmark_for_loop_words_with_row_col() 
+    benchmark_table_row_line_heights()
