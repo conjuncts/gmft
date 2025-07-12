@@ -3,7 +3,7 @@ from gmft.algorithm.dividers import find_column_for_target, find_row_for_target
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.formatters.base import FormattedTable
 from gmft.impl.tatr.config import TATRFormatConfig
-from gmft.algorithm.rewrite import _tatr_predictions_to_partitions, to_textbbox_list
+from gmft.algorithm.rewrite import _tatr_predictions_to_partitions, table_to_textbbox_list
 from gmft.reformat.step.estimate import _estimate_row_height_kmeans_all
 from gmft.reformat.step.polaric import (
     _set_row_col_numbers,
@@ -117,7 +117,7 @@ def for_loop_words_with_row_col(ft, row_dividers, col_dividers):
 
 
 def for_loop_words_with_row_col_binsearch(ft, row_dividers, col_dividers):
-    return to_textbbox_list(ft, row_dividers, col_dividers)
+    return table_to_textbbox_list(ft, row_dividers, col_dividers)
 
 
 def benchmark_for_loop_words_with_row_col():
@@ -179,7 +179,7 @@ def benchmark_table_row_line_heights():
                 ft.height,
                 word_height=ft.predicted_word_height(),
             )
-            words_list = to_textbbox_list(
+            words_list = table_to_textbbox_list(
                 ft, partitions.row_dividers, partitions.col_dividers
             )
 

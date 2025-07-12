@@ -1,5 +1,5 @@
 """
-Sadly, dataclasses do not allow a distinction between set and unset values. That is, there is no way
+Dataclasses do not allow a distinction between set and unset values. That is, there is no way
 to distinguish between an unset value and a user-set value that happens to coincide with the default value.
 
 See: https://github.com/pydantic/pydantic/discussions/5716

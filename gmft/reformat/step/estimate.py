@@ -1,12 +1,12 @@
 from typing import List
 import numpy as np
 
-from gmft.core.ml.prediction import TextBbox
+from gmft.core.schema import TableTextBbox, TextBbox
 from gmft.formatters.base import FormattedTable
 
 
-def _estimate_row_height_kmeans(
-    words: List[TextBbox], row_idx: int, _merge_hyperparam=0.6
+def _estimate_count_lines_kmeans(
+    words: List[TextBbox], _merge_hyperparam=0.6
 ) -> int:
     """
     Estimate the height of a row (in lines) using k-means clustering.
@@ -24,7 +24,6 @@ def _estimate_row_height_kmeans(
     if not words:
         return 0.0
 
-    words = [word for word in words if word["row_idx"] == row_idx]
     # Step 1: Take y_avg for each word
     y_avgs = [(word["ymin"] + word["ymax"]) / 2 for word in words]
 
@@ -100,11 +99,11 @@ def _estimate_row_height_kmeans(
 
 
 def _estimate_row_height_kmeans_all(
-    words: List[TextBbox], _merge_hyperparam=0.6
+    words: List[TableTextBbox], _merge_hyperparam=0.6
 ) -> float:
     row_indices = set(x["row_idx"] for x in words)
     collector = {}
     for idx in row_indices:
         subset = [w for w in words if w["row_idx"] == idx]
-        collector[idx] = _estimate_row_height_kmeans(subset, idx, _merge_hyperparam)
+        collector[idx] = _estimate_count_lines_kmeans(subset, _merge_hyperparam)
     return collector

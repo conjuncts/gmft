@@ -10,7 +10,8 @@ from gmft.algorithm.partition_structure import _separate_horizontals, pairwise
 from gmft.algorithm.structure import (
     _clean_tatr_predictions,
 )
-from gmft.core.ml.prediction import RawBboxPredictions, TextBbox
+from gmft.core.ml.prediction import RawBboxPredictions
+from gmft.core.schema import TableTextBbox
 from gmft.formatters.base import FormattedTable
 from gmft.impl.ditr.label import DITRLocations
 from gmft.impl.tatr.config import TATRFormatConfig
@@ -139,7 +140,7 @@ def partition_extract_to_state(
     )
 
 
-def to_textbbox_list(ft: FormattedTable, row_dividers, col_dividers) -> List[TextBbox]:
+def table_to_textbbox_list(ft: FormattedTable, row_dividers, col_dividers) -> List[TableTextBbox]:
     # Step 1: Get the words as a list of dicts
     words = []
     for xmin, ymin, xmax, ymax, text in ft.text_positions(remove_table_offset=True):
