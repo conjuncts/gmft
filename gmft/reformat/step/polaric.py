@@ -47,14 +47,14 @@ def _set_row_col_numbers(
             breaks=col_dividers,
             labels=column_labels,
         )
-        .cast(pl.Int64, strict=False) # strict=False turns "None" -> None
+        .cast(pl.Int64, strict=False)  # strict=False turns "None" -> None
         .alias("col_idx"),
         ((pl.col("ymin") + pl.col("ymax")) / 2)
         .cut(
             breaks=row_dividers,
             labels=row_labels,
         )
-        .cast(pl.Int64, strict=False) # strict=False turns "None" -> None
+        .cast(pl.Int64, strict=False)  # strict=False turns "None" -> None
         .alias("row_idx"),
     )
     return df
@@ -90,13 +90,12 @@ def _words_to_table_array(
     ).sort("row_idx")
 
 
-
 def _words_to_table_array_polars(
     words: pl.DataFrame,
 ) -> pl.DataFrame:
     """
     Convert words DataFrame to a 2D array of strings.
-    
+
     Below is a polars-only version, but it's slower than for loop.
     I suspect because the polars "pivot()" must generalize to arbitrary number of rows/columns
     while we have a special case where we can exactly allocate the table size
@@ -124,9 +123,12 @@ def _words_to_table_array_polars(
 
     # rearrange columns
     has_columns = df.columns[1:]  # skip row_idx
-    sorted_columns = sorted(has_columns, key=lambda x: int(x) if x.isdigit() else float('inf'))
+    sorted_columns = sorted(
+        has_columns, key=lambda x: int(x) if x.isdigit() else float("inf")
+    )
     df = df.select([pl.col("row_idx")] + [pl.col(c) for c in sorted_columns])
     return df
+
 
 def _words_to_table_array(
     words: pl.DataFrame,
@@ -145,15 +147,16 @@ def _words_to_table_array(
 
     table = [[None] * col_count for _ in range(row_count)]
 
-    for text, row_idx, col_idx in words.select(["text", "row_idx", "col_idx"]).iter_rows():
+    for text, row_idx, col_idx in words.select(
+        ["text", "row_idx", "col_idx"]
+    ).iter_rows():
         if row_idx is not None and col_idx is not None:
             if table[row_idx][col_idx] is None:
                 table[row_idx][col_idx] = text
             else:
                 table[row_idx][col_idx] += " " + text
-    
+
     # Convert to DataFrame
-    return (
-        pl.DataFrame(table, schema={f"{i}": pl.Utf8 for i in range(col_count)}, orient="row")
-        .with_row_index("row_idx")
-    )
+    return pl.DataFrame(
+        table, schema={f"{i}": pl.Utf8 for i in range(col_count)}, orient="row"
+    ).with_row_index("row_idx")

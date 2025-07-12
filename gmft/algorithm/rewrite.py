@@ -9,7 +9,6 @@ from gmft.algorithm.dividers import (
 from gmft.algorithm.partition_structure import _separate_horizontals, pairwise
 from gmft.algorithm.structure import (
     _clean_tatr_predictions,
-    _simple_clean_tatr_predictions,
 )
 from gmft.core.ml.prediction import RawBboxPredictions, TextBbox
 from gmft.formatters.base import FormattedTable
@@ -43,12 +42,15 @@ def _tatr_predictions_to_partitions(
     config: TATRFormatConfig,
     table_width: float = None,
     table_height: float = None,
+    word_height: float = 10,
 ) -> Partitions:
     """
     Converts TATR predictions to Partitions.
     """
 
-    fixed = _simple_clean_tatr_predictions(tatr, config=config)
+    fixed = _clean_tatr_predictions(
+        tatr, word_height=word_height, outliers={}, config=config
+    )
 
     # simplest conversion from tatr bboxes to dividers:
     # take pairwise
@@ -138,7 +140,7 @@ def partition_extract_to_state(
 
 
 def to_textbbox_list(ft: FormattedTable, row_dividers, col_dividers) -> List[TextBbox]:
-        # Step 1: Get the words as a list of dicts
+    # Step 1: Get the words as a list of dicts
     words = []
     for xmin, ymin, xmax, ymax, text in ft.text_positions(remove_table_offset=True):
         x_center = (xmin + xmax) / 2
@@ -150,14 +152,16 @@ def to_textbbox_list(ft: FormattedTable, row_dividers, col_dividers) -> List[Tex
 
         row_idx = find_row_for_target(row_dividers, y_center) - 1
 
-        words.append({
-            "xmin": xmin,
-            "ymin": ymin,
-            "xmax": xmax,
-            "ymax": ymax,
-            "text": text,
-            "row_idx": row_idx,
-            "col_idx": col_idx,
-        })
+        words.append(
+            {
+                "text": text,
+                "row_idx": row_idx,
+                "col_idx": col_idx,
+                "xmin": xmin,
+                "ymin": ymin,
+                "xmax": xmax,
+                "ymax": ymax,
+            }
+        )
 
     return words

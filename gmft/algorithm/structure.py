@@ -760,13 +760,17 @@ def _fill_using_partitions(
     return table_array
 
 
-def _simple_clean_tatr_predictions(
+def _clean_tatr_predictions(
     results: RawBboxPredictions,
     *,
+    word_height: float,
+    outliers: dict[str, bool],
     config: TATRFormatConfig = None,
 ) -> EffectivePredictions:
     """
     Process and clean predictions (ie. remove duplicates, NMS, etc.)
+
+    Also does some additional processing such as log outliers and fill in header gap.
     """
 
     # 1. collate identified boxes
@@ -812,34 +816,8 @@ def _simple_clean_tatr_predictions(
     num_removed = _non_maxima_suppression(
         sorted_rows, overlap_threshold=config._nms_overlap_threshold
     )
-    return {
-        "rows": sorted_rows,
-        "columns": sorted_columns,
-        "headers": sorted_headers,
-        "projecting": sorted_projecting,
-        "spanning": spanning_cells,
-        "num_removed": num_removed,
-    }
 
-
-def _clean_tatr_predictions(
-    results: RawBboxPredictions,
-    *,
-    word_height: float,
-    outliers: dict[str, bool],
-    config: TATRFormatConfig = None,
-) -> EffectivePredictions:
-    """
-    Process and clean predictions (ie. remove duplicates, NMS, etc.)
-
-    Also does some additional processing such as log outliers and fill in header gap.
-    """
-
-    intermediate = _simple_clean_tatr_predictions(results, config=config)
-
-    sorted_rows = intermediate["rows"]
-    sorted_headers = intermediate["headers"]
-    num_removed = intermediate["num_removed"]
+    # Above = simple stuff. Below = more complex stuff.
 
     if num_removed > 0 and config.verbosity >= 2:
         print(f"Removed {num_removed} overlapping rows")
@@ -858,10 +836,10 @@ def _clean_tatr_predictions(
 
     return {
         "rows": sorted_rows,
-        "columns": intermediate["columns"],
+        "columns": sorted_columns,
         "headers": sorted_headers,
-        "projecting": intermediate["projecting"],
-        "spanning": intermediate["spanning"],
+        "projecting": sorted_projecting,
+        "spanning": spanning_cells,
         "num_removed": num_removed,
     }
 

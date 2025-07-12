@@ -96,6 +96,7 @@ class TextBbox(TypedDict):
     row_idx: int
     col_idx: int
 
+
 # predictions: Predictions = {
 #     "tatr": {
 #         "scores": [

@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     pdf1_tables = get_tables_for_pdf(
         docs_bulk=[PyPDFium2Document(f"data/pdfs/1.pdf")],
-        n=1, # for 1.pdf, parametrized between [0, 8]
+        n=1,  # for 1.pdf, parametrized between [0, 8]
         # the rest unneeded
         detector=None,
         formatter=None,
@@ -46,7 +46,9 @@ if __name__ == "__main__":
     # TODO: temporarily broken
 
     df = _table_to_words_df(ft)
-    df2 = _set_row_col_numbers(df, partitions.row_dividers, partitions.col_dividers) # produces the warnings
+    df2 = _set_row_col_numbers(
+        df, partitions.row_dividers, partitions.col_dividers
+    )  # produces the warnings
     df3 = _words_to_table_array(df2)
 
     df4 = _words_to_table_array(df2)
