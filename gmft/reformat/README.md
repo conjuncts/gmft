@@ -107,5 +107,6 @@ GeneralPlan
     - This allows torch to be imported only when needed.
 - Many internal variables are now wrapped in `self.predictions`
 - CroppedTable now directly has `angle`.
+- PyPDFium2 bindings now breaks on hyphenated words, producing cleaner bboxes (?)
 
 

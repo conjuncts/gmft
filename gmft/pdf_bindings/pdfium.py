@@ -108,7 +108,7 @@ class PyPDFium2Page(BasePage):
         """
         return self.page is None or self.parent._is_closed()
 
-    def _initialize_word_bboxes(self):
+    def _initialize_word_bboxes(self, _do_hyphenation=False):
         if self._positions_and_text_and_breaks is not None:
             return  # nothing to do
 
@@ -118,37 +118,62 @@ class PyPDFium2Page(BasePage):
         result = []
         text_page = self.page.get_textpage()
 
-        # "char" seems to not actually be a char, but a string-like token
-        # for index in range(text_page.count_chars()):
-        #     bbox = text_page.get_charbox(index)
-        #     char = text_page.get_text_range(index, 1)
-        #     yield *bbox, char
+        # Directionality for rudimentary hyphenation detection
+        direction = {"ltr": 0, "rtl": 0}
 
         # Aggregate chars into words
         current_word = ""
         current_bbox = None
+
+        def _push_and_restart_word():
+            nonlocal current_word, current_bbox, result, direction
+            # perform negation
+            current_bbox = (
+                current_bbox[0],
+                self.height - current_bbox[3],
+                current_bbox[2],
+                self.height - current_bbox[1],
+            )
+            result.append((*current_bbox, current_word))
+            # reset
+            current_word = ""
+            current_bbox = None
+            direction = {"ltr": 0, "rtl": 0}
+
         for index in range(text_page.count_chars()):
             bbox = text_page.get_charbox(index)
             char = text_page.get_text_range(index, 1)
             # if is whitespace
             if char.isspace():
                 if current_word:
-                    # perform negation
-                    current_bbox = (
-                        current_bbox[0],
-                        self.height - current_bbox[3],
-                        current_bbox[2],
-                        self.height - current_bbox[1],
-                    )
-                    result.append((*current_bbox, current_word))
-                    # cache, because it is slow
-                    current_word = ""
-                    current_bbox = None
+                    _push_and_restart_word()
             else:
-                current_word += char
                 if current_bbox is None:
+                    current_word += char
                     current_bbox = bbox
                 else:
+                    if _do_hyphenation:
+                        if bbox[0] < current_bbox[0]:
+                            # candidate for hyphenation. employ relatively strict checks
+                            if (
+                                direction["ltr"] >= 3
+                                and direction["rtl"] == 0
+                                and not current_word[-1].isalnum()
+                            ):
+                                # is LTR and is hyphen-like (not alphanumeric)
+                                _push_and_restart_word()
+                                current_word += char
+                                current_bbox = bbox
+                                continue
+
+                        # update standard LTR reading (only when checking for hyphenation)
+                        if current_bbox[0] <= bbox[0] and current_bbox[2] <= bbox[2]:
+                            direction["ltr"] += 1
+                        else:
+                            direction["rtl"] += 1
+
+                    # must update current after hyphenation checks
+                    current_word += char
                     # for the bbox, simply get the min/max
                     current_bbox = (
                         min(current_bbox[0], bbox[0]),
@@ -158,13 +183,7 @@ class PyPDFium2Page(BasePage):
                     )
         # Add the last word
         if current_word:
-            current_bbox = (
-                current_bbox[0],
-                self.height - current_bbox[3],
-                current_bbox[2],
-                self.height - current_bbox[1],
-            )
-            result.append((*current_bbox, current_word))
+            _push_and_restart_word()
         words = list(_infer_line_breaks(result))
         self._positions_and_text_and_breaks = words
 
