@@ -140,7 +140,9 @@ def partition_extract_to_state(
     )
 
 
-def table_to_textbbox_list(ft: FormattedTable, row_dividers, col_dividers) -> List[TableTextBbox]:
+def table_to_textbbox_list(
+    ft: FormattedTable, row_dividers, col_dividers
+) -> List[TableTextBbox]:
     # Step 1: Get the words as a list of dicts
     words = []
     for xmin, ymin, xmax, ymax, text in ft.text_positions(remove_table_offset=True):

@@ -91,7 +91,7 @@ class TestPdf4:
 
 
 class TestPdf5:
-    def test_bulk_pdf5_t0(self, pdf5_tables):
+    def test_bulk_pdf5_t0(self):
         pass  # this one just doesn't work very well
         # TODO make it work based on minima
         # try_jth_table(pdf5_tables, 5, 0)

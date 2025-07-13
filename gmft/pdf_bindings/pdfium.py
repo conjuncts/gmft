@@ -66,8 +66,8 @@ class PyPDFium2Page(BasePage):
             self._initialize_word_bboxes()
             assert self._positions_and_text_and_breaks is not None
 
-        for x0, y0, x1, y1, text, _, _, _ in self._positions_and_text_and_breaks:
-            yield x0, y0, x1, y1, text
+        for tup in self._positions_and_text_and_breaks:
+            yield tup[:5]
 
     def get_filename(self) -> str:
         return self.filename
@@ -109,7 +109,7 @@ class PyPDFium2Page(BasePage):
         """
         return self.page is None or self.parent._is_closed()
 
-    def _initialize_word_bboxes(self, _do_hyphenation=False):
+    def _initialize_word_bboxes(self, _split_hyphens=False):
         if self._positions_and_text_and_breaks is not None:
             return  # nothing to do
 
@@ -126,18 +126,27 @@ class PyPDFium2Page(BasePage):
         current_word = ""
         current_bbox = None
 
-        def _produce_metadata(*, metadata=None, metadata_updates: TextBboxMetadata=None):
-            nonlocal direction
+        current_hyphenation = False
+
+        def _produce_metadata(
+            *, metadata=None, metadata_updates: TextBboxMetadata = None
+        ):
+            nonlocal direction, current_hyphenation
             if metadata is None:
                 metadata = {
-                    "direction": "ltr" if direction["ltr"] and not direction["unk"] else None,
-                    "is_hyphenated": False,
+                    "direction": "ltr"
+                    if not direction["unk"]
+                    else None,  # 0: unknown, 1: ltr
+                    "is_hyphenated": current_hyphenation,
                 }
             if metadata_updates is not None:
                 return metadata | metadata_updates
             return metadata
-        def _push_and_restart_word(*, metadata=None, metadata_updates: TextBboxMetadata=None):
-            nonlocal current_word, current_bbox, result, direction
+
+        def _push_and_restart_word(
+            *, metadata=None, metadata_updates: TextBboxMetadata = None
+        ):
+            nonlocal current_word, current_bbox, result, direction, current_hyphenation
             # perform negation
             current_bbox = (
                 current_bbox[0],
@@ -145,12 +154,15 @@ class PyPDFium2Page(BasePage):
                 current_bbox[2],
                 self.height - current_bbox[1],
             )
-            metadata = _produce_metadata(metadata=metadata, metadata_updates=metadata_updates)
+            metadata = _produce_metadata(
+                metadata=metadata, metadata_updates=metadata_updates
+            )
             result.append((*current_bbox, current_word, metadata))
             # reset
             current_word = ""
             current_bbox = None
             direction = {"ltr": 0, "unk": 0}
+            current_hyphenation = False
 
         for index in range(text_page.count_chars()):
             bbox = text_page.get_charbox(index)
@@ -172,14 +184,12 @@ class PyPDFium2Page(BasePage):
                             and not current_word[-1].isalnum()
                         ):
                             # is LTR and is hyphen-like (not alphanumeric)
-                            _push_and_restart_word(
-                                metadata_updates={
-                                    "is_hyphenated": True,
-                                }
-                            )
-                            current_word += char
-                            current_bbox = bbox
-                            continue
+                            current_hyphenation = True
+                            if _split_hyphens:
+                                _push_and_restart_word()
+                                current_word += char
+                                current_bbox = bbox
+                                continue
 
                     # update standard LTR reading
                     if current_bbox[0] <= bbox[0] and current_bbox[2] <= bbox[2]:
@@ -203,9 +213,7 @@ class PyPDFium2Page(BasePage):
         no_meta = [x[:5] for x in result]
         meta = [x[5] for x in result]
         words = list(_infer_line_breaks(no_meta))
-        self._positions_and_text_and_breaks = [
-            (*a, b) for a, b in zip(words, meta)
-        ]
+        self._positions_and_text_and_breaks = [(*a, b) for a, b in zip(words, meta)]
 
     def _get_positions_and_text_and_breaks(self):
         """
@@ -217,7 +225,7 @@ class PyPDFium2Page(BasePage):
 
         for item in self._positions_and_text_and_breaks:
             yield item[:8]
-    
+
     def _get_text_with_metadata(self) -> List[FineTextBbox]:
         if self._positions_and_text_and_breaks is None:
             self._initialize_word_bboxes()

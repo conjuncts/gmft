@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Generator, List
 import pytest
 
 import matplotlib
@@ -8,6 +9,7 @@ from gmft.formatters.tatr import TATRFormattedTable
 
 matplotlib.use("Agg")
 
+from gmft.pdf_bindings.base import BasePDFDocument
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.detectors.tatr import TATRDetector, TATRDetectorConfig
 from gmft.auto import AutoTableDetector, AutoTableFormatter
@@ -46,7 +48,7 @@ def doc_tiny():
 
 
 @pytest.fixture(scope="session")
-def docs_bulk():
+def docs_bulk() -> Generator[List[BasePDFDocument], None, None]:
     docs = []
     for i in range(1, 9):
         doc = PyPDFium2Document(f"data/pdfs/{i}.pdf")
@@ -203,3 +205,4 @@ def pytest_sessionstart(session):
 
     os.makedirs("data/test/outputs/actual", exist_ok=True)
     os.makedirs("data/test/outputs/ditr", exist_ok=True)
+    os.makedirs("data/test/outputs/df", exist_ok=True)

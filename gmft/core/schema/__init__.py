@@ -9,6 +9,7 @@ class TextBbox(NamedTuple):
 
     where x0 = xmin, y0 = ymin, x1 = xmax, y1 = ymax.
     """
+
     x0: float
     y0: float
     x1: float
@@ -16,10 +17,12 @@ class TextBbox(NamedTuple):
 
     text: str
 
+
 class TableTextBbox(TypedDict):
     """
     TypedDict for a text bounding box that lives in a table.
     """
+
     text: str
 
     xmin: float
@@ -29,6 +32,7 @@ class TableTextBbox(TypedDict):
 
     row_idx: int
     col_idx: int
+
 
 class TextBboxMetadata(TypedDict):
     """
@@ -43,6 +47,7 @@ class TextBboxMetadata(TypedDict):
     If hyphenated, 
     """
 
+
 class FineTextBbox(NamedTuple):
     """
     NamedTuple for a text bounding box with more fine-grained metadata.
@@ -51,6 +56,7 @@ class FineTextBbox(NamedTuple):
 
     where x0 = xmin, y0 = ymin, x1 = xmax, y1 = ymax.
     """
+
     x0: float
     y0: float
     x1: float
