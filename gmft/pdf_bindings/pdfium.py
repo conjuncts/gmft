@@ -1,11 +1,12 @@
 from __future__ import annotations  # 3.7
 
 # PyPDFium2 bindings
-from typing import Generator, Tuple
+from typing import Generator, List, Tuple
 import pypdfium2 as pdfium
 
 from gmft.base import Rect
 from gmft.core.exception import DocumentClosedException
+from gmft.core.schema import FineTextBbox, TextBboxMetadata
 from gmft.pdf_bindings.base import BasePDFDocument, BasePage, _infer_line_breaks
 
 from PIL.Image import Image as PILImage
@@ -119,13 +120,23 @@ class PyPDFium2Page(BasePage):
         text_page = self.page.get_textpage()
 
         # Directionality for rudimentary hyphenation detection
-        direction = {"ltr": 0, "rtl": 0}
+        direction = {"ltr": 0, "unk": 0}
 
         # Aggregate chars into words
         current_word = ""
         current_bbox = None
 
-        def _push_and_restart_word():
+        def _produce_metadata(*, metadata=None, metadata_updates: TextBboxMetadata=None):
+            nonlocal direction
+            if metadata is None:
+                metadata = {
+                    "direction": "ltr" if direction["ltr"] and not direction["unk"] else None,
+                    "is_hyphenated": False,
+                }
+            if metadata_updates is not None:
+                return metadata | metadata_updates
+            return metadata
+        def _push_and_restart_word(*, metadata=None, metadata_updates: TextBboxMetadata=None):
             nonlocal current_word, current_bbox, result, direction
             # perform negation
             current_bbox = (
@@ -134,11 +145,12 @@ class PyPDFium2Page(BasePage):
                 current_bbox[2],
                 self.height - current_bbox[1],
             )
-            result.append((*current_bbox, current_word))
+            metadata = _produce_metadata(metadata=metadata, metadata_updates=metadata_updates)
+            result.append((*current_bbox, current_word, metadata))
             # reset
             current_word = ""
             current_bbox = None
-            direction = {"ltr": 0, "rtl": 0}
+            direction = {"ltr": 0, "unk": 0}
 
         for index in range(text_page.count_chars()):
             bbox = text_page.get_charbox(index)
@@ -152,25 +164,28 @@ class PyPDFium2Page(BasePage):
                     current_word += char
                     current_bbox = bbox
                 else:
-                    if _do_hyphenation:
-                        if bbox[0] < current_bbox[0]:
-                            # candidate for hyphenation. employ relatively strict checks
-                            if (
-                                direction["ltr"] >= 3
-                                and direction["rtl"] == 0
-                                and not current_word[-1].isalnum()
-                            ):
-                                # is LTR and is hyphen-like (not alphanumeric)
-                                _push_and_restart_word()
-                                current_word += char
-                                current_bbox = bbox
-                                continue
+                    if bbox[0] < current_bbox[0]:
+                        # candidate for hyphenation. employ relatively strict checks
+                        if (
+                            direction["ltr"] >= 3
+                            and direction["unk"] == 0
+                            and not current_word[-1].isalnum()
+                        ):
+                            # is LTR and is hyphen-like (not alphanumeric)
+                            _push_and_restart_word(
+                                metadata_updates={
+                                    "is_hyphenated": True,
+                                }
+                            )
+                            current_word += char
+                            current_bbox = bbox
+                            continue
 
-                        # update standard LTR reading (only when checking for hyphenation)
-                        if current_bbox[0] <= bbox[0] and current_bbox[2] <= bbox[2]:
-                            direction["ltr"] += 1
-                        else:
-                            direction["rtl"] += 1
+                    # update standard LTR reading
+                    if current_bbox[0] <= bbox[0] and current_bbox[2] <= bbox[2]:
+                        direction["ltr"] += 1
+                    else:
+                        direction["unk"] += 1
 
                     # must update current after hyphenation checks
                     current_word += char
@@ -184,8 +199,13 @@ class PyPDFium2Page(BasePage):
         # Add the last word
         if current_word:
             _push_and_restart_word()
-        words = list(_infer_line_breaks(result))
-        self._positions_and_text_and_breaks = words
+
+        no_meta = [x[:5] for x in result]
+        meta = [x[5] for x in result]
+        words = list(_infer_line_breaks(no_meta))
+        self._positions_and_text_and_breaks = [
+            (*a, b) for a, b in zip(words, meta)
+        ]
 
     def _get_positions_and_text_and_breaks(self):
         """
@@ -196,7 +216,12 @@ class PyPDFium2Page(BasePage):
             self._initialize_word_bboxes()
 
         for item in self._positions_and_text_and_breaks:
-            yield item
+            yield item[:8]
+    
+    def _get_text_with_metadata(self) -> List[FineTextBbox]:
+        if self._positions_and_text_and_breaks is None:
+            self._initialize_word_bboxes()
+        return self._positions_and_text_and_breaks
 
 
 class PyPDFium2Document(BasePDFDocument):

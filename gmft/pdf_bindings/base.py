@@ -8,6 +8,8 @@ import numpy as np
 from gmft.base import Rect
 from PIL.Image import Image as PILImage
 
+from gmft.core.schema import FineTextBbox, TextBboxMetadata
+
 
 class BasePage(ABC):
     width: float
@@ -67,6 +69,13 @@ class BasePage(ABC):
                 result += " "
             result += text
         return result.lstrip()
+    
+    def _get_text_with_metadata(self) -> Generator[tuple[FineTextBbox], None, None]:
+        """
+        warning: experimental, subject to change
+        """
+        for tup in self._get_positions_and_text_and_breaks():
+            yield FineTextBbox(*tup, None)
 
     @property
     def page_no(self):

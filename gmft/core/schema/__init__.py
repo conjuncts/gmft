@@ -1,10 +1,25 @@
-from typing import List, Literal, Optional, TypedDict
+from typing import List, Literal, NamedTuple, Optional, TypedDict
 
-class TextBbox(TypedDict):
-    """
-    TypedDict for a text bounding box.
-    """
 
+class TextBbox(NamedTuple):
+    """
+    NamedTuple for a text bounding box.
+
+    (x0, y0, x1, y1, text)
+
+    where x0 = xmin, y0 = ymin, x1 = xmax, y1 = ymax.
+    """
+    x0: float
+    y0: float
+    x1: float
+    y1: float
+
+    text: str
+
+class TableTextBbox(TypedDict):
+    """
+    TypedDict for a text bounding box that lives in a table.
+    """
     text: str
 
     xmin: float
@@ -12,26 +27,38 @@ class TextBbox(TypedDict):
     xmax: float
     ymax: float
 
-class TableTextBbox(TextBbox):
-    """
-    TypedDict for a text bounding box that lives in a table.
-    """
-
     row_idx: int
     col_idx: int
 
-class FineTextBbox(TextBbox):
+class TextBboxMetadata(TypedDict):
     """
-    Text bounding box with more fine-grained properties.
+    Metadata for a certain text bbox.
+
+    Text itself is not included.
     """
 
-    block_idx: int
-    line_idx: int
-    word_idx: int
+    direction: Literal["ltr", "unk", None]
+    is_hyphenated: bool
+    """
+    If hyphenated, 
+    """
 
-    direction: Literal["ltr", None]
-    hyphen_parts: Optional[List["FineTextBbox"]]
+class FineTextBbox(NamedTuple):
     """
-    If text is hyphenated, this will contain bboxes of individual
-    hyphenated parts. Otherwise, it will be None.
+    NamedTuple for a text bounding box with more fine-grained metadata.
+
+    (x0, y0, x1, y1, text, direction, is_hyphenated)
+
+    where x0 = xmin, y0 = ymin, x1 = xmax, y1 = ymax.
     """
+    x0: float
+    y0: float
+    x1: float
+    y1: float
+
+    text: str
+    block_idx: Optional[int]
+    line_idx: Optional[int]
+    word_idx: Optional[int]
+
+    metadata: Optional[TextBboxMetadata]

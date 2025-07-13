@@ -1,12 +1,12 @@
 from typing import List
 import numpy as np
 
-from gmft.core.schema import TableTextBbox, TextBbox
+from gmft.core.schema import TableTextBbox
 from gmft.formatters.base import FormattedTable
 
 
 def _estimate_count_lines_kmeans(
-    words: List[TextBbox], _merge_hyperparam=0.6
+    words: List[TableTextBbox], _merge_hyperparam=0.6
 ) -> int:
     """
     Estimate the height of a row (in lines) using k-means clustering.
