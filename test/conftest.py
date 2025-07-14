@@ -1,10 +1,12 @@
 import json
 import os
+import re
 from typing import Generator, List
 import pytest
 
 import matplotlib
 
+from gmft.formatters.ditr import DITRFormattedTable
 from gmft.formatters.tatr import TATRFormattedTable
 
 matplotlib.use("Agg")
@@ -118,6 +120,28 @@ def get_tables_for_pdf(
     return tables
 
 
+def get_ditr_tables_for_pdf(
+    docs_bulk,
+    ditr_tables,
+):
+    collector = {}
+    for name, obj in ditr_tables.items():
+        n = re.match(r"pdf(\d+)_", name)
+        if n is None:
+            continue
+        n = int(n.group(1))
+
+        if not 1 <= n <= 8:
+            continue
+
+        doc = docs_bulk[n - 1]
+
+        page = doc[obj["page_no"]]
+        collector[name] = DITRFormattedTable.from_dict(obj, page)
+
+    return collector
+
+
 def dump_text(string: str, filename: str):
     """
     Helper function to dump text to a file.
@@ -149,9 +173,10 @@ def tatr_csvs():
 
 
 @pytest.fixture(scope="session")
-def ditr_tables():
+def ditr_tables(docs_bulk):
     with open("data/test/references/ditr_tables.json", "r") as f:
-        yield json.load(f)
+        obj = json.load(f)
+        yield get_ditr_tables_for_pdf(docs_bulk, obj)
 
 
 @pytest.fixture(scope="session")
