@@ -99,13 +99,9 @@ class DITRFormattedTable(HistogramFormattedTable, LegacyFctnResults):
             self.recompute(config=config_overrides)
         return self._df
 
-    def recompute(self, config: DITRFormatConfig = None):
-        """
-        Recompute the internal dataframe.
-        """
+    def to_pandas(self, config: DITRFormatConfig = None):
         config = with_config(self.config, config)
-        self._df = ditr_extract_to_df(self, config=config)
-        return self._df
+        return ditr_extract_to_df(self, config=config)
 
     def visualize(self, **kwargs):
         """

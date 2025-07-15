@@ -73,10 +73,7 @@ class HistogramFormattedTable(FormattedTable):
             labels.append(2)
         return plot_shaded_boxes(img, labels=labels, boxes=bboxes, **kwargs)
 
-    def recompute(self):
-        """
-        Recalculate the table, based on irvl_results and config.
-        """
+    def to_pandas(self, config: None = None) -> pd.DataFrame:
         tbl_width = self.table.bbox[2] - self.table.bbox[0]
         tbl_height = self.table.bbox[3] - self.table.bbox[1]
 
@@ -91,7 +88,6 @@ class HistogramFormattedTable(FormattedTable):
 
         # simple np array
         df = pd.DataFrame(nparr[1:], columns=nparr[0])
-        self._df = df
         return df
 
 

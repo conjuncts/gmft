@@ -171,8 +171,8 @@ def benchmark_table_row_line_heights():
     )
     dfs = []
     collector = []
-    # for pdf_i in range(1, 9):
-    for pdf_i in [1]:
+    for pdf_i in range(1, 9):
+        # for pdf_i in [1]:
         tables = prepare_tables(pdf_i)
         for table_i, ft in enumerate(tables):
             partitions = _tatr_predictions_to_partitions(
@@ -209,7 +209,17 @@ def benchmark_table_row_line_heights():
     df = pl.DataFrame(collector)
     print(df)
 
-    df.write_parquet("data/test/references/bulk_row_heights.parquet")
+    # df.write_parquet("data/test/references/bulk_row_heights.parquet")
+
+    df = df.with_columns(
+        [
+            pl.col("row_heights")
+            .list.eval(pl.element().cast(pl.Utf8))
+            .list.join(" ")
+            .alias("row_heights"),
+        ]
+    )
+    df.write_csv("data/test/references/bulk_row_heights.csv")
 
 
 if __name__ == "__main__":

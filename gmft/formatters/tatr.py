@@ -85,12 +85,8 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
 
         return self.recompute(config=config)
 
-    def recompute(self, config: TATRFormatConfig):
-        """
-        Recompute the internal dataframe.
-        """
-        self._df = extract_to_df(self, config=config)
-        return self._df
+    def to_pandas(self, config: TATRFormatConfig = None):
+        return extract_to_df(self, config=config)
 
     def visualize(
         self,

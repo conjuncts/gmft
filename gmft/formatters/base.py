@@ -56,15 +56,27 @@ class FormattedTable(RotatedCroppedTable):
 
     def df(self, recalculate=False, config_overrides=None) -> pd.DataFrame:
         """
-        Return the table as a pandas dataframe.
-        :param recalculate: By default, a cached dataframe is returned.
-            Note that it is preferred to explicitly call recompute().
+        Return the table as a pandas dataframe (cached).
+
+        :param recalculate:
+            Force a recompute.
+            It is preferred to explicitly call recompute().
         """
         return self._df
 
     def recompute(self, config=None) -> pd.DataFrame:
         """
         Recompute the internal dataframe.
+        This WILL modify internal state/cache.
+        """
+        self._df = self.to_pandas(config=config)
+        return self._df
+
+    def to_pandas(self, config=None) -> pd.DataFrame:
+        """
+        Return the table as a pandas dataframe (uncached).
+
+        This will NOT modify internal state/cache.
         """
         return self._df
 
