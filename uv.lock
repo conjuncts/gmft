@@ -507,7 +507,6 @@ dependencies = [
     { name = "matplotlib", version = "3.10.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pandas" },
     { name = "pillow" },
-    { name = "polars" },
     { name = "pypdfium2" },
     { name = "tabulate" },
     { name = "torch" },
@@ -522,6 +521,7 @@ img2table = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "polars" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -539,7 +539,6 @@ requires-dist = [
     { name = "matplotlib" },
     { name = "pandas" },
     { name = "pillow" },
-    { name = "polars", specifier = ">=1.30.0" },
     { name = "pypdfium2", specifier = ">=4.30.0" },
     { name = "tabulate", specifier = ">=0.9.0" },
     { name = "torch", specifier = ">=2.5.0" },
@@ -550,6 +549,7 @@ provides-extras = ["img2table"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "polars", specifier = ">=1.30.0" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
     { name = "ruff", specifier = ">=0.11.11" },
