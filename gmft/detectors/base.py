@@ -8,7 +8,7 @@ Example:
 
 from abc import ABC, abstractmethod
 
-from typing import Generator, Generic, Literal, TypeVar, Union
+from typing import Generator, Generic, Literal, TypeVar, Union, overload
 import PIL.Image
 from PIL.Image import Image as PILImage
 from PIL import ImageOps  # necessary to call PIL.ImageOps later
@@ -156,8 +156,13 @@ class CroppedTable:
         return self._img
 
     def text_positions(
-        self, remove_table_offset: bool = False, outside: bool = False
-    ) -> Generator[tuple[int, int, int, int, str], None, None]:
+        self,
+        remove_table_offset: bool = False,
+        outside: bool = False,
+        *,
+        indices: bool = False,
+        _split_hyphens: bool = False,
+    ) -> Generator[tuple[float, float, float, float, str], None, None]:
         """
         Return the text positions of the cropped table.
 
@@ -167,15 +172,30 @@ class CroppedTable:
             If False, transforms (including rotation) are ignored and original coordinates are returned.
         :param outside: if True, returns the **complement** of the table: all the text positions outside the table.
             (default: False)
+        :param indices: if True, the index is added to the end of the tuple.
         :return: list of text positions, which is a tuple
             ``(x0, y0, x1, y1, "string")``
         """
 
+        # for some applications, it may be desirable to re-split
+        # hyphenated words
+        if _split_hyphens:
+
+            def _page_generator():
+                for tup in self.page._get_text_with_metadata():
+                    met = tup[-1]
+                    if met and met["is_hyphenated"]:
+                        yield from met["hyphen_parts"]
+                    else:
+                        yield tup[:5]
+        else:
+            _page_generator = self.page.get_positions_and_text
+
         def _old_generator(remove_table_offset, outside):
-            for w in self.page.get_positions_and_text():
+            for i, w in enumerate(_page_generator()):
                 if Rect(w[:4]).is_intersecting(self.rect) != outside:
                     if remove_table_offset:
-                        yield (
+                        out = (
                             w[0] - self.rect.xmin,
                             w[1] - self.rect.ymin,
                             w[2] - self.rect.xmin,
@@ -183,7 +203,11 @@ class CroppedTable:
                             w[4],
                         )
                     else:
-                        yield w
+                        out = w
+                    if indices:
+                        yield (*out, i)
+                    else:
+                        yield out
 
         if self.angle == 0 or remove_table_offset == False:
             yield from _old_generator(
@@ -191,24 +215,24 @@ class CroppedTable:
             )
         elif self.angle == 90:
             for w in _old_generator(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1, text = w[:5]
                 x0, y0, x1, y1 = self.rect.height - y1, x0, self.rect.height - y0, x1
-                yield (x0, y0, x1, y1, text)
+                yield (x0, y0, x1, y1, text, *w[5:])
         elif self.angle == 180:
             for w in _old_generator(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1, text = w[:5]
                 x0, y0, x1, y1 = (
                     self.rect.width - x1,
                     self.rect.height - y1,
                     self.rect.width - x0,
                     self.rect.height - y0,
                 )
-                yield (x0, y0, x1, y1, text)
+                yield (x0, y0, x1, y1, text, *w[5:])
         elif self.angle == 270:
             for w in _old_generator(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w
+                x0, y0, x1, y1, text = w[:5]
                 x0, y0, x1, y1 = y0, self.rect.width - x1, y1, self.rect.width - x0
-                yield (x0, y0, x1, y1, text)
+                yield (x0, y0, x1, y1, text, *w[5:])
 
     def text(self):
         """

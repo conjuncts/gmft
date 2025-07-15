@@ -145,7 +145,9 @@ def table_to_textbbox_list(
 ) -> List[TableTextBbox]:
     # Step 1: Get the words as a list of dicts
     words = []
-    for xmin, ymin, xmax, ymax, text in ft.text_positions(remove_table_offset=True):
+    for xmin, ymin, xmax, ymax, text in ft.text_positions(
+        remove_table_offset=True, _split_hyphens=True
+    ):
         x_center = (xmin + xmax) / 2
         y_center = (ymin + ymax) / 2
 

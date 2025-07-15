@@ -101,15 +101,14 @@ def _estimate_count_lines_kmeans(
 def _estimate_row_height_kmeans_all(
     words: List[TableTextBbox], _merge_hyperparam=0.6
 ) -> float:
-    
     # words stratified by row_idx
-    subsets = {} 
+    subsets = {}
     for x in words:
         row_idx = x["row_idx"]
         if row_idx not in subsets:
             subsets[row_idx] = []
         subsets[row_idx].append(x)
-    
+
     collector = {}
     for idx, subset in subsets.items():
         collector[idx] = _estimate_count_lines_kmeans(subset, _merge_hyperparam)

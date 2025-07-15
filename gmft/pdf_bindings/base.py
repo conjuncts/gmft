@@ -70,7 +70,7 @@ class BasePage(ABC):
             result += text
         return result.lstrip()
 
-    def _get_text_with_metadata(self) -> Generator[tuple[FineTextBbox], None, None]:
+    def _get_text_with_metadata(self) -> Generator[FineTextBbox, None, None]:
         """
         warning: experimental, subject to change
         """

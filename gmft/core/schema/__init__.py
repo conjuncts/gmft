@@ -1,4 +1,4 @@
-from typing import List, Literal, NamedTuple, Optional, TypedDict
+from typing import List, Literal, NamedTuple, NotRequired, Optional, Tuple, TypedDict
 
 
 class TextBbox(NamedTuple):
@@ -46,6 +46,8 @@ class TextBboxMetadata(TypedDict):
     """
     If hyphenated, 
     """
+
+    hyphen_parts: NotRequired[List[Tuple[float, float, float, float, str]]]
 
 
 class FineTextBbox(NamedTuple):

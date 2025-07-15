@@ -109,7 +109,7 @@ class PyPDFium2Page(BasePage):
         """
         return self.page is None or self.parent._is_closed()
 
-    def _initialize_word_bboxes(self, _split_hyphens=False):
+    def _initialize_word_bboxes(self):
         if self._positions_and_text_and_breaks is not None:
             return  # nothing to do
 
@@ -120,49 +120,57 @@ class PyPDFium2Page(BasePage):
         text_page = self.page.get_textpage()
 
         # Directionality for rudimentary hyphenation detection
-        direction = {"ltr": 0, "unk": 0}
+        current_direction = {"ltr": 0, "unk": 0}
 
         # Aggregate chars into words
         current_word = ""
         current_bbox = None
 
-        current_hyphenation = False
+        current_hyphen_parts = []
 
-        def _produce_metadata(
-            *, metadata=None, metadata_updates: TextBboxMetadata = None
-        ):
-            nonlocal direction, current_hyphenation
-            if metadata is None:
-                metadata = {
-                    "direction": "ltr"
-                    if not direction["unk"]
-                    else None,  # 0: unknown, 1: ltr
-                    "is_hyphenated": current_hyphenation,
-                }
-            if metadata_updates is not None:
-                return metadata | metadata_updates
-            return metadata
+        def _push_and_restart_word():
+            nonlocal \
+                current_word, \
+                current_bbox, \
+                current_hyphen_parts, \
+                result, \
+                current_direction
+            components = [*current_hyphen_parts, (*current_bbox, current_word)]
 
-        def _push_and_restart_word(
-            *, metadata=None, metadata_updates: TextBboxMetadata = None
-        ):
-            nonlocal current_word, current_bbox, result, direction, current_hyphenation
-            # perform negation
+            # transform pypdfium coords to standard
+            for i, comp in enumerate(components):
+                components[i] = (
+                    comp[0],
+                    self.height - comp[3],
+                    comp[2],
+                    self.height - comp[1],
+                    comp[4],
+                )
+
+            # get overall bbox
             current_bbox = (
-                current_bbox[0],
-                self.height - current_bbox[3],
-                current_bbox[2],
-                self.height - current_bbox[1],
+                min(x[0] for x in components),
+                min(x[1] for x in components),
+                max(x[2] for x in components),
+                max(x[3] for x in components),
             )
-            metadata = _produce_metadata(
-                metadata=metadata, metadata_updates=metadata_updates
-            )
+            current_word = "".join(x[4] for x in components)
+
+            # produce metadata
+            metadata = {
+                "direction": "ltr" if not current_direction["unk"] else None,
+                "is_hyphenated": bool(current_hyphen_parts),
+                "hyphen_parts": None,
+            }
+            if len(components) > 1:
+                metadata["hyphen_parts"] = components[1:]
+
             result.append((*current_bbox, current_word, metadata))
             # reset
             current_word = ""
             current_bbox = None
-            direction = {"ltr": 0, "unk": 0}
-            current_hyphenation = False
+            current_direction = {"ltr": 0, "unk": 0}
+            current_hyphen_parts = []
 
         for index in range(text_page.count_chars()):
             bbox = text_page.get_charbox(index)
@@ -177,29 +185,27 @@ class PyPDFium2Page(BasePage):
                     current_bbox = bbox
                 else:
                     if bbox[0] < current_bbox[0]:
-                        # candidate for hyphenation. employ relatively strict checks
+                        # candidate for hyphenation (effectively a carriage return)
                         if (
-                            direction["ltr"] >= 3
-                            and direction["unk"] == 0
+                            current_direction["ltr"] >= 3
+                            and current_direction["unk"] == 0
                             and not current_word[-1].isalnum()
                         ):
                             # is LTR and is hyphen-like (not alphanumeric)
-                            current_hyphenation = True
-                            if _split_hyphens:
-                                _push_and_restart_word()
-                                current_word += char
-                                current_bbox = bbox
-                                continue
+                            current_hyphen_parts.append((*current_bbox, current_word))
+                            current_word = char
+                            current_bbox = bbox
+                            continue
 
                     # update standard LTR reading
                     if current_bbox[0] <= bbox[0] and current_bbox[2] <= bbox[2]:
-                        direction["ltr"] += 1
+                        current_direction["ltr"] += 1
                     else:
-                        direction["unk"] += 1
+                        current_direction["unk"] += 1
 
                     # must update current after hyphenation checks
                     current_word += char
-                    # for the bbox, simply get the min/max
+                    # for the bbox, take the union
                     current_bbox = (
                         min(current_bbox[0], bbox[0]),
                         min(current_bbox[1], bbox[1]),
