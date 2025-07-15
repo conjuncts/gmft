@@ -224,6 +224,27 @@ def pdf7_tables(docs_bulk, detector, formatter, tatr_tables):
 def pdf8_tables(docs_bulk, detector, formatter, tatr_tables):
     yield get_tables_for_pdf(docs_bulk, detector, formatter, tatr_tables, 8)
 
+@pytest.fixture(scope="session")
+def pdf_tables(
+    pdf1_tables,
+    pdf2_tables,
+    pdf3_tables,
+    pdf4_tables,
+    pdf5_tables,
+    pdf6_tables,
+    pdf7_tables,
+    pdf8_tables,
+):
+    yield [
+        pdf1_tables,
+        pdf2_tables,
+        pdf3_tables,
+        pdf4_tables,
+        pdf5_tables,
+        pdf6_tables,
+        pdf7_tables,
+        pdf8_tables,
+    ]
 
 def pytest_sessionstart(session):
     import os

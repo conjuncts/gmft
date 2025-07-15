@@ -11,7 +11,6 @@ plans
 docs/build
 notebooks
 support_arena/*
-data/test/outputs
 experiments
 TODO.md
 .coverage

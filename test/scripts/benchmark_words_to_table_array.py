@@ -196,12 +196,12 @@ def benchmark_table_row_line_heights():
             #     })
 
             # disable large table assumption
-            my_df = ft.recompute(config=config)
+            my_df = ft.to_pandas(config=config)
             collector.append(
                 {
                     "pdf": pdf_i,
                     "table_i": table_i,
-                    "row_heights": list(results.values()),
+                    "row_heights": " ".join([str(x) for x in results.values()]),
                 }
             )
             dfs.append(my_df)
@@ -209,16 +209,6 @@ def benchmark_table_row_line_heights():
     df = pl.DataFrame(collector)
     print(df)
 
-    # df.write_parquet("data/test/references/bulk_row_heights.parquet")
-
-    df = df.with_columns(
-        [
-            pl.col("row_heights")
-            .list.eval(pl.element().cast(pl.Utf8))
-            .list.join(" ")
-            .alias("row_heights"),
-        ]
-    )
     df.write_csv("data/test/references/bulk_row_heights.csv")
 
 
