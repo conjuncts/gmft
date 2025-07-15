@@ -132,10 +132,11 @@ make html
 
 # Acknowledgements
 
-This project would not be possible without:
+- I gratefully acknowledge the support of Vanderbilt Data Science Institute and the [Zhongyue Yang Lab](https://lab.vanderbilt.edu/zyang-lab/) at Vanderbilt.
+- The library builds upon work by:
+    - Smock, Brandon, Rohith Pesala, and Robin Abraham. "[PubTables-1M](https://arxiv.org/abs/2110.00061): Towards comprehensive table extraction from unstructured documents." Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.
+    - Niels Rogge from huggingface.
 
-- PubTables1M authors: Brandon Smock, Rohith Pesala, and Robin Abraham. 
-- Niels Rogge: porting TATR to huggingface.
 
 ## License
 
