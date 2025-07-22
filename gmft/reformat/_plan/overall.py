@@ -1,20 +1,20 @@
 from typing import Callable, Literal, Optional, Union, overload
 from typing_extensions import Self
-from gmft.reformat.instruction import BaseInstruction
-from gmft.reformat.instruction.filter.do_when import (
+from gmft.reformat._instruction import BaseInstruction
+from gmft.reformat._instruction.filter.do_when import (
     ExcludeWhenInstruction,
     RaiseWhenInstruction,
 )
-from gmft.reformat.instruction.filter.threshold_predictions import (
+from gmft.reformat._instruction.filter.threshold_predictions import (
     PredictionFilterInstruction,
 )
-from gmft.reformat.instruction.standard import ExecutorInstruction, VerbosityInstruction
-from gmft.reformat.instruction.strategy import StrategyInstruction
-from gmft.reformat.plan.base import BasePlan
-from gmft.reformat.plan.split_merge import SplitMergePlan
-from gmft.reformat.strategy.asis import AsisSettings
-from gmft.reformat.strategy.hybrid import HybridSettings
-from gmft.reformat.strategy.lta import LTASettings
+from gmft.reformat._instruction.standard import ExecutorInstruction, VerbosityInstruction
+from gmft.reformat._instruction.strategy import StrategyInstruction
+from gmft.reformat._plan.base import BasePlan
+from gmft.reformat._plan.split_merge import SplitMergePlan
+from gmft.reformat._strategy.asis import AsisSettings
+from gmft.reformat._strategy.hybrid import HybridSettings
+from gmft.reformat._strategy.lta import LTASettings
 
 
 class OverallPlan(SplitMergePlan):

@@ -15,8 +15,8 @@ from gmft.core.schema import TableTextBbox
 from gmft.formatters.base import FormattedTable
 from gmft.impl.ditr.label import DITRLocations
 from gmft.impl.tatr.config import TATRFormatConfig
-from gmft.reformat.state import FormatState, Partitions
-from gmft.reformat.step.polaric import _table_to_words_df
+from gmft.reformat.schema import FormatState, Partitions
+from gmft.reformat._calc.polaric import _table_to_words_df
 
 
 def _ditr_locations_to_partitions(

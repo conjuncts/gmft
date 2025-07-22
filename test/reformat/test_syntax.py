@@ -1,4 +1,4 @@
-from gmft.reformat.executor.standard import _execute_plan, _reformat
+from gmft.reformat._executor.standard import _execute_plan, _reformat
 
 
 if __name__ == "__main__":
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     # print(f"Collected {len(instructions)} instructions from the plan.")
 
     # --- Comprehensive example: all settings from REFACTOR.md ---
-    from gmft.reformat.strategy.hybrid import HybridSettings
+    from gmft.reformat._strategy.hybrid import HybridSettings
 
     # Settings from REFACTOR.md
 

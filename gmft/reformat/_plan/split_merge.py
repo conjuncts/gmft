@@ -1,12 +1,12 @@
 from typing import Callable, List, Literal, Optional, Union
 from typing_extensions import Self
-from gmft.reformat.instruction import BaseInstruction
-from gmft.reformat.instruction.split_merge.drop import DropNullsInstruction
-from gmft.reformat.instruction.split_merge.header import (
+from gmft.reformat._instruction import BaseInstruction
+from gmft.reformat._instruction.split_merge.drop import DropNullsInstruction
+from gmft.reformat._instruction.split_merge.header import (
     LeftHeaderInstruction,
     TopHeaderInstruction,
 )
-from gmft.reformat.plan.base import BasePlan
+from gmft.reformat._plan.base import BasePlan
 
 
 class SplitMergePlan(BasePlan):

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import ClassVar
 
-from gmft.reformat.strategy import StrategySettings
+from gmft.reformat._strategy import StrategySettings
 
 
 @dataclass

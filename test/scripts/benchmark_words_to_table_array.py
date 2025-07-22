@@ -3,12 +3,12 @@ from gmft.algorithm.dividers import find_column_for_target, find_row_for_target
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.formatters.base import FormattedTable
 from gmft.impl.tatr.config import TATRFormatConfig
-from gmft.algorithm.rewrite import (
+from gmft.algorithm.structure_rewrite import (
     _tatr_predictions_to_partitions,
     table_to_textbbox_list,
 )
-from gmft.reformat.step.estimate import _estimate_row_height_kmeans_all
-from gmft.reformat.step.polaric import (
+from gmft.reformat._calc.estimate import _estimate_row_height_kmeans_all
+from gmft.reformat._calc.polaric import (
     _set_row_col_numbers,
     _table_to_words_df,
     _words_to_table_array,

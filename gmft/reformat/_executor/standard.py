@@ -1,5 +1,5 @@
 from gmft.formatters.base import FormattedTable
-from gmft.reformat.plan.overall import OverallPlan
+from gmft.reformat._plan.overall import OverallPlan
 
 
 class StandardReformatExecutor:

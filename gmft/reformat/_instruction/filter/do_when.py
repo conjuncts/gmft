@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal
-from gmft.reformat.instruction import BaseInstruction
+from gmft.reformat._instruction import BaseInstruction
 
 
 @dataclass

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from gmft.reformat.instruction import BaseInstruction
+from gmft.reformat._instruction import BaseInstruction
 
 
 @dataclass(frozen=True)

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from gmft.reformat.instruction import BaseInstruction
+from gmft.reformat._instruction import BaseInstruction
 from gmft.impl.tatr.config import TATRFormatConfig
 
 

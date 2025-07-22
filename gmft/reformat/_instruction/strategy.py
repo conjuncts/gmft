@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Literal, Optional, Union
 
-from gmft.reformat.instruction import BaseInstruction
-from gmft.reformat.strategy.asis import AsisSettings
-from gmft.reformat.strategy.hybrid import HybridSettings
-from gmft.reformat.strategy.lta import LTASettings
+from gmft.reformat._instruction import BaseInstruction
+from gmft.reformat._strategy.asis import AsisSettings
+from gmft.reformat._strategy.hybrid import HybridSettings
+from gmft.reformat._strategy.lta import LTASettings
 
 
 @dataclass(frozen=True)

@@ -1,10 +1,10 @@
-from gmft.algorithm.rewrite import (
+from gmft.algorithm.structure_rewrite import (
     _tatr_predictions_to_partitions,
     partition_extract_to_state,
 )
 from gmft.formatters.base import FormattedTable
 from gmft.impl.tatr.config import TATRFormatConfig
-from gmft.reformat.step.polaric import (
+from gmft.reformat._calc.polaric import (
     _set_row_col_numbers,
     _table_to_words_df,
     _words_to_table_array,

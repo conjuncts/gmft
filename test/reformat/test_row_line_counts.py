@@ -1,12 +1,12 @@
 import polars as pl
 from polars.testing import assert_frame_equal
 
-from gmft.algorithm.rewrite import (
+from gmft.algorithm.structure_rewrite import (
     _tatr_predictions_to_partitions,
     table_to_textbbox_list,
 )
 from gmft.impl.tatr.config import TATRFormatConfig
-from gmft.reformat.step.estimate import _estimate_row_height_kmeans_all
+from gmft.reformat._calc.estimate import _estimate_row_height_kmeans_all
 
 
 def test_table_row_line_heights(pdf_tables):

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 from abc import ABC
 
-from gmft.reformat.instruction import BaseInstruction
+from gmft.reformat._instruction import BaseInstruction
 
 
 @dataclass(frozen=True)

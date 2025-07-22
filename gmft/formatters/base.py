@@ -9,8 +9,8 @@ from gmft.detectors.base import CroppedTable, RotatedCroppedTable
 
 class FormattedTable(RotatedCroppedTable):
     """
-    This is a table that is "formatted", which is to say it is functionalized with header and data information through structural analysis.
-    Therefore, it can be converted into df, csv, etc.
+    A table with header and data information.
+    Can be converted into df, csv, etc.
 
     Warning: This class is not meant to be instantiated directly. Use a :class:`.TableFormatter` to convert a :class:`.CroppedTable` to a :class:`.FormattedTable`.
     """

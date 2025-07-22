@@ -1,14 +1,14 @@
 from abc import ABC
 from typing import Literal
 from typing_extensions import Self
-from gmft.reformat.instruction.filter.do_when import (
+from gmft.reformat._instruction.filter.do_when import (
     ExcludeWhenInstruction,
     RaiseWhenInstruction,
 )
 
 
 from typing import Callable, Optional
-from gmft.reformat.instruction import BaseInstruction
+from gmft.reformat._instruction import BaseInstruction
 from typing_extensions import Self
 
 

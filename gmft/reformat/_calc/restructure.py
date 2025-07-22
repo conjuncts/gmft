@@ -1,5 +1,5 @@
 import copy
-from gmft.reformat.state import FormatState
+from gmft.reformat.schema import FormatState
 
 
 def adjust_indices(sorted_indices, sorted_to_remove):
