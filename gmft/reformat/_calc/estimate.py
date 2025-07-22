@@ -1,12 +1,11 @@
 from typing import List
 import numpy as np
 
-from gmft.core.schema import TableTextBbox
-from gmft.formatters.base import FormattedTable
+from gmft.core.words_list import WordsList
 
 
 def _estimate_count_lines_kmeans(
-    words: List[TableTextBbox], _merge_hyperparam=0.6
+    words: List[tuple[float, float, float, float]], _merge_hyperparam=0.6
 ) -> int:
     """
     Estimate the height of a row (in lines) using k-means clustering.
@@ -25,10 +24,10 @@ def _estimate_count_lines_kmeans(
         return 0.0
 
     # Step 1: Take y_avg for each word
-    y_avgs = [(word["ymin"] + word["ymax"]) / 2 for word in words]
+    y_avgs = [(w[1] + w[3]) / 2 for w in words]
 
     # Step 2: Take avg_y_height
-    y_heights = [word["ymax"] - word["ymin"] for word in words]
+    y_heights = [w[3] - w[1] for w in words]
     avg_y_height = np.mean(y_heights) if y_heights else 1.0
 
     # Step 3: Initialize centroids with y values spaced evenly between min and max y values
@@ -99,15 +98,20 @@ def _estimate_count_lines_kmeans(
 
 
 def _estimate_row_height_kmeans_all(
-    words: List[TableTextBbox], _merge_hyperparam=0.6
+    words_list: WordsList, cuts: List[tuple[float, float]] = None, _merge_hyperparam=0.6
 ) -> float:
+    """
+    cuts: List[tuple[float, float]] = None
+        Contains assignments of words into rows and columns.
+    """
     # words stratified by row_idx
-    subsets = {}
-    for x in words:
-        row_idx = x["row_idx"]
+    subsets = {}  # dict of row_idx -> list[tuple of 4 floats]
+
+    for w, cut in zip(words_list.iter_words(), cuts):
+        row_idx = cut[0]
         if row_idx not in subsets:
             subsets[row_idx] = []
-        subsets[row_idx].append(x)
+        subsets[row_idx].append(w[:4])  # take only bbox
 
     collector = {}
     for idx, subset in subsets.items():

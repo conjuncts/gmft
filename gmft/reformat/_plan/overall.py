@@ -8,7 +8,10 @@ from gmft.reformat._instruction.filter.do_when import (
 from gmft.reformat._instruction.filter.threshold_predictions import (
     PredictionFilterInstruction,
 )
-from gmft.reformat._instruction.standard import ExecutorInstruction, VerbosityInstruction
+from gmft.reformat._instruction.standard import (
+    ExecutorInstruction,
+    VerbosityInstruction,
+)
 from gmft.reformat._instruction.strategy import StrategyInstruction
 from gmft.reformat._plan.base import BasePlan
 from gmft.reformat._plan.split_merge import SplitMergePlan

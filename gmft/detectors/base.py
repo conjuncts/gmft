@@ -15,6 +15,7 @@ from PIL import ImageOps  # necessary to call PIL.ImageOps later
 
 import numpy as np
 from gmft.base import Rect
+from gmft.core._utils.transforms import _rotate_generator
 from gmft.pdf_bindings.base import BasePage, ImageOnlyPage
 from gmft.algorithm.captions import _find_captions
 from gmft.table_visualization import plot_results_unwr
@@ -160,8 +161,7 @@ class CroppedTable:
         remove_table_offset: bool = False,
         outside: bool = False,
         *,
-        indices: bool = False,
-        _split_hyphens: bool = False,
+        _extra_info: bool = False,
     ) -> Generator[tuple[float, float, float, float, str], None, None]:
         """
         Return the text positions of the cropped table.
@@ -172,67 +172,69 @@ class CroppedTable:
             If False, transforms (including rotation) are ignored and original coordinates are returned.
         :param outside: if True, returns the **complement** of the table: all the text positions outside the table.
             (default: False)
-        :param indices: if True, the index is added to the end of the tuple.
+        :param _extra_info: [experimental, internal]
+            Also yielded are block/line/row no, extra metadata, and the index.
         :return: list of text positions, which is a tuple
             ``(x0, y0, x1, y1, "string")``
         """
 
         # for some applications, it may be desirable to re-split
         # hyphenated words
-        if _split_hyphens:
+        if _extra_info:
+            if remove_table_offset:
+                # could need to remove table offset from hyphen_parts as well
+                def _page_generator():
+                    for i, tup in enumerate(self.page._get_text_with_metadata()):
+                        meta = tup[8]
+                        if meta and meta.get("hyphen_parts"):
+                            meta = meta.copy()
+                            meta["hyphen_parts"] = [
+                                (
+                                    w[0] - self.rect.xmin,
+                                    w[1] - self.rect.ymin,
+                                    w[2] - self.rect.xmin,
+                                    w[3] - self.rect.ymin,
+                                    w[4],
+                                    *w[5:],
+                                )
+                                for w in _rotate_generator(
+                                    meta["hyphen_parts"],
+                                    self.angle,
+                                    self.rect,
+                                )
+                            ]
+                        yield tup[:8] + (meta, i)
+            else:
 
-            def _page_generator():
-                for tup in self.page._get_text_with_metadata():
-                    met = tup[-1]
-                    if met and met["is_hyphenated"]:
-                        yield from met["hyphen_parts"]
-                    else:
-                        yield tup[:5]
+                def _page_generator():
+                    for i, tup in enumerate(self.page._get_text_with_metadata()):
+                        yield tup + (i,)
         else:
             _page_generator = self.page.get_positions_and_text
 
         def _old_generator(remove_table_offset, outside):
-            for i, w in enumerate(_page_generator()):
+            for w in _page_generator():
                 if Rect(w[:4]).is_intersecting(self.rect) != outside:
                     if remove_table_offset:
-                        out = (
+                        yield (
                             w[0] - self.rect.xmin,
                             w[1] - self.rect.ymin,
                             w[2] - self.rect.xmin,
                             w[3] - self.rect.ymin,
                             w[4],
+                            *w[5:],
                         )
                     else:
-                        out = w
-                    if indices:
-                        yield (*out, i)
-                    else:
-                        yield out
+                        yield w
 
-        if self.angle == 0 or remove_table_offset == False:
-            yield from _old_generator(
-                remove_table_offset=remove_table_offset, outside=outside
+        if remove_table_offset is False:
+            yield from _old_generator(remove_table_offset=False, outside=outside)
+        else:
+            yield from _rotate_generator(
+                _old_generator(remove_table_offset=True, outside=outside),
+                self.angle,
+                self.rect,
             )
-        elif self.angle == 90:
-            for w in _old_generator(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w[:5]
-                x0, y0, x1, y1 = self.rect.height - y1, x0, self.rect.height - y0, x1
-                yield (x0, y0, x1, y1, text, *w[5:])
-        elif self.angle == 180:
-            for w in _old_generator(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w[:5]
-                x0, y0, x1, y1 = (
-                    self.rect.width - x1,
-                    self.rect.height - y1,
-                    self.rect.width - x0,
-                    self.rect.height - y0,
-                )
-                yield (x0, y0, x1, y1, text, *w[5:])
-        elif self.angle == 270:
-            for w in _old_generator(remove_table_offset=True, outside=outside):
-                x0, y0, x1, y1, text = w[:5]
-                x0, y0, x1, y1 = y0, self.rect.width - x1, y1, self.rect.width - x0
-                yield (x0, y0, x1, y1, text, *w[5:])
 
     def text(self):
         """

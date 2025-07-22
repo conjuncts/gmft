@@ -11,12 +11,11 @@ from gmft.algorithm.structure import (
     _clean_tatr_predictions,
 )
 from gmft.core.ml.prediction import RawBboxPredictions
-from gmft.core.schema import TableTextBbox
+from gmft.core.words_list import WordsList
 from gmft.formatters.base import FormattedTable
 from gmft.impl.ditr.label import DITRLocations
 from gmft.impl.tatr.config import TATRFormatConfig
 from gmft.reformat.schema import FormatState, Partitions
-from gmft.reformat._calc.polaric import _table_to_words_df
 
 
 def _ditr_locations_to_partitions(
@@ -131,42 +130,10 @@ def partition_extract_to_state(
     # TODO: top header logic needs to be reinstated
 
     return FormatState(
-        words=_table_to_words_df(table),
+        words=WordsList.from_table(table),
         # table_array=table_array,
         header_rows=header_indices,
         projected_rows=projecting_indices,
         empty_rows=empty_rows,
         partitions=locations,
     )
-
-
-def table_to_textbbox_list(
-    ft: FormattedTable, row_dividers, col_dividers
-) -> List[TableTextBbox]:
-    # Step 1: Get the words as a list of dicts
-    words = []
-    for xmin, ymin, xmax, ymax, text in ft.text_positions(
-        remove_table_offset=True, _split_hyphens=True
-    ):
-        x_center = (xmin + xmax) / 2
-        y_center = (ymin + ymax) / 2
-
-        # Find which bin the center falls into
-        col_idx = find_column_for_target(col_dividers, x_center) - 1
-        # then, it belongs to the xi-th column of the np array (no off by 1 error)
-
-        row_idx = find_row_for_target(row_dividers, y_center) - 1
-
-        words.append(
-            {
-                "text": text,
-                "row_idx": row_idx,
-                "col_idx": col_idx,
-                "xmin": xmin,
-                "ymin": ymin,
-                "xmax": xmax,
-                "ymax": ymax,
-            }
-        )
-
-    return words

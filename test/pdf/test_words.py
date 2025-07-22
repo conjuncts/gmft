@@ -21,6 +21,7 @@ def _to_df(tuples) -> pl.DataFrame:
         collector.append(obj)
     return pl.DataFrame(collector)
 
+
 def _assert_frames_equal(
     df1: pl.DataFrame,
     df2: pl.DataFrame,
@@ -28,16 +29,8 @@ def _assert_frames_equal(
     # assert_frame_equal for debug
 
     common_columns = list(set(df1.columns) & set(df2.columns))
-    left_only = df1.join(
-        df2,
-        on=common_columns,
-        how='anti'
-    )
-    right_only = df2.join(
-        df1,
-        on=common_columns,
-        how='anti'
-    )
+    left_only = df1.join(df2, on=common_columns, how="anti")
+    right_only = df2.join(df1, on=common_columns, how="anti")
     if left_only.height > 0:
         print("Left only (actual):")
         print(left_only)

@@ -6,7 +6,7 @@ import pypdfium2 as pdfium
 
 from gmft.base import Rect
 from gmft.core.exception import DocumentClosedException
-from gmft.core.schema import FineTextBbox, TextBboxMetadata
+from gmft.core.schema import FancyWord
 from gmft.pdf_bindings.base import BasePDFDocument, BasePage, _infer_line_breaks
 
 from PIL.Image import Image as PILImage
@@ -232,7 +232,7 @@ class PyPDFium2Page(BasePage):
         for item in self._positions_and_text_and_breaks:
             yield item[:8]
 
-    def _get_text_with_metadata(self) -> List[FineTextBbox]:
+    def _get_text_with_metadata(self) -> List[FancyWord]:
         if self._positions_and_text_and_breaks is None:
             self._initialize_word_bboxes()
         return self._positions_and_text_and_breaks

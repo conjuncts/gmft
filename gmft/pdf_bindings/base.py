@@ -8,7 +8,7 @@ import numpy as np
 from gmft.base import Rect
 from PIL.Image import Image as PILImage
 
-from gmft.core.schema import FineTextBbox, TextBboxMetadata
+from gmft.core.schema import FancyWord
 
 
 class BasePage(ABC):
@@ -70,12 +70,12 @@ class BasePage(ABC):
             result += text
         return result.lstrip()
 
-    def _get_text_with_metadata(self) -> Generator[FineTextBbox, None, None]:
+    def _get_text_with_metadata(self) -> Generator[FancyWord, None, None]:
         """
         warning: experimental, subject to change
         """
         for tup in self._get_positions_and_text_and_breaks():
-            yield FineTextBbox(*tup, None)
+            yield FancyWord(*tup, None)
 
     @property
     def page_no(self):

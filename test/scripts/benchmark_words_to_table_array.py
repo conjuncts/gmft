@@ -1,11 +1,11 @@
 from typing import List
 from gmft.algorithm.dividers import find_column_for_target, find_row_for_target
+from gmft.core.words_list import WordsList
 from gmft.pdf_bindings.pdfium import PyPDFium2Document
 from gmft.formatters.base import FormattedTable
 from gmft.impl.tatr.config import TATRFormatConfig
 from gmft.algorithm.structure_rewrite import (
     _tatr_predictions_to_partitions,
-    table_to_textbbox_list,
 )
 from gmft.reformat._calc.estimate import _estimate_row_height_kmeans_all
 from gmft.reformat._calc.polaric import (
@@ -120,7 +120,9 @@ def for_loop_words_with_row_col(ft, row_dividers, col_dividers):
 
 
 def for_loop_words_with_row_col_binsearch(ft, row_dividers, col_dividers):
-    return table_to_textbbox_list(ft, row_dividers, col_dividers)
+    wl = WordsList.from_table(ft)
+    wl.cut(row_dividers, col_dividers)
+    return wl._to_records()
 
 
 def benchmark_for_loop_words_with_row_col():
@@ -182,18 +184,9 @@ def benchmark_table_row_line_heights():
                 ft.height,
                 word_height=ft.predicted_word_height(),
             )
-            words_list = table_to_textbbox_list(
-                ft, partitions.row_dividers, partitions.col_dividers
-            )
-
-            results = _estimate_row_height_kmeans_all(words_list)
-            # for row_i, row_h in results.items():
-            #     collector.append({
-            #         'pdf': pdf_i,
-            #         'table_i': table_i,
-            #         'row_i': row_i,
-            #         'row_height': row_h
-            #     })
+            words_list = WordsList.from_table(ft)
+            cuts = words_list.cut(partitions.row_dividers, partitions.col_dividers)
+            results = _estimate_row_height_kmeans_all(words_list, cuts=cuts)
 
             # disable large table assumption
             my_df = ft.to_pandas(config=config)
@@ -209,7 +202,7 @@ def benchmark_table_row_line_heights():
     df = pl.DataFrame(collector)
     print(df)
 
-    df.write_csv("data/test/references/bulk_row_heights.csv")
+    df.write_csv("data/test/references/df/bulk_row_heights.csv")
 
 
 if __name__ == "__main__":

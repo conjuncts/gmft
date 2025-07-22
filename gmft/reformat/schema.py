@@ -1,7 +1,14 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import polars as pl
+
+from gmft.algorithm.dividers import find_column_for_target, find_row_for_target
+from gmft.core.schema import WordMetadata
+from gmft.core.words_list import WordsList
+
+if TYPE_CHECKING:
+    from gmft.detectors.base import CroppedTable
 
 
 @dataclass
@@ -37,10 +44,9 @@ class FormatState:
     [Experimental] Subject to change without notice.
     """
 
-    words: pl.DataFrame
-    """DataFrame with words in the table.
-    Columns: xmin, ymin, xmax, ymax, text, row_num, col_num
-    """
+    partitions: Partitions
+
+    words: WordsList
 
     # table_array: List[List[Optional[str]]]
 
@@ -48,5 +54,3 @@ class FormatState:
     header_rows: List[int]
     projected_rows: List[int]
     empty_rows: List[int]
-
-    partitions: Partitions
