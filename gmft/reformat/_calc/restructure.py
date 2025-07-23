@@ -1,5 +1,5 @@
 import copy
-from gmft.reformat.schema import FormatState
+from gmft.reformat.schema import TableStructureWithArray
 
 
 def adjust_indices(sorted_indices, sorted_to_remove):
@@ -33,7 +33,7 @@ def adjust_indices(sorted_indices, sorted_to_remove):
 
 
 def _drop_empty_rows(
-    state: FormatState,
+    state: TableStructureWithArray,
     in_place=False,
 ):
     """

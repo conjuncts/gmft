@@ -1,12 +1,14 @@
-from typing import List
+from typing import List, Iterable, Iterator, Tuple, TypeVar
+
+from matplotlib import table
 from gmft.algorithm.dividers import (
     _fill_using_true_partitions_include_endpoints,
     _to_table_bounds,
     fill_using_true_partitions,
     find_column_for_target,
     find_row_for_target,
+    _ioa,
 )
-from gmft.algorithm.partition_structure import _separate_horizontals, pairwise
 from gmft.algorithm.structure import (
     _clean_tatr_predictions,
 )
@@ -15,7 +17,62 @@ from gmft.core.words_list import WordsList
 from gmft.formatters.base import FormattedTable
 from gmft.impl.ditr.label import DITRLocations
 from gmft.impl.tatr.config import TATRFormatConfig
-from gmft.reformat.schema import FormatState, Partitions
+from gmft.reformat.schema import TableStructureWithWords, Partitions
+
+
+T = TypeVar("T")
+def pairwise(iterable: Iterable[T]) -> Iterator[Tuple[T, T]]:
+    """
+    Drop-in replacement for itertools.pairwise.
+
+    pairwise('ABCDEFG') → AB BC CD DE EF FG
+    """
+    iterator = iter(iterable)
+    a = next(iterator, None)
+
+    for b in iterator:
+        yield a, b
+        a = b
+
+
+def _separate_horizontals(
+    *,
+    row_dividers: list[float],
+    top_header_y: float,
+    projected,
+    iob_threshold=0.7,
+):
+    """
+    Separates the sorted_horizontals into rows, headers, and projecting rows.
+    Then, identifies a list of indices of headers and projecting rows.
+
+    Formerly called _determine_headers_and_projecting
+
+    :param row_intervals: list of dividers, including endbounds
+    :param top_header_y: y value which separates the top header from the rest of the table
+    :param projected: list of bboxes (x0, y0, x1, y1) of projecting rows
+    """
+
+    # determine which rows overlap (> 0.9) with headers
+    header_indices = []
+    projecting_indices = []
+
+    # iterate through pairs of row dividers
+    for i, row_y_interval in enumerate(pairwise(row_dividers)):
+        # Define a header to be one where >70% of row is in the header region
+        if _ioa(row_y_interval, (0, top_header_y)) > iob_threshold:
+            header_indices.append(i)
+            continue
+
+        # Define a projecting row to be one where >70% of row is in the projecting region
+        if any(
+            _ioa(row_y_interval, (proj_y0, proj_y1)) > iob_threshold
+            for _, proj_y0, _, proj_y1 in projected
+        ):
+            projecting_indices.append(i)
+            continue
+
+    return header_indices, projecting_indices
 
 
 def _ditr_locations_to_partitions(
@@ -82,7 +139,7 @@ def partition_extract_to_state(
     locations: Partitions,
     *,
     table: FormattedTable,
-) -> FormatState:
+) -> TableStructureWithWords:
     """
     Return the table as a 2D numpy array with text.
     The code is adapted from ditr_extract_to_df().
@@ -103,6 +160,12 @@ def partition_extract_to_state(
     # NOTE: removed setting table.predictions.effective
 
     assert table_bbox == (0, 0, table.width, table.height), "Table bounds mismatch"
+
+    wl = WordsList.from_table(table)
+    words_struct = TableStructureWithWords(
+        words=wl,
+        locations=locations,
+    )
 
     table_array = _fill_using_true_partitions_include_endpoints(
         table.text_positions(remove_table_offset=True),
@@ -129,11 +192,4 @@ def partition_extract_to_state(
     # TODO semantic spanning cells (left header) logic needs to be reinstated
     # TODO: top header logic needs to be reinstated
 
-    return FormatState(
-        words=WordsList.from_table(table),
-        # table_array=table_array,
-        header_rows=header_indices,
-        projected_rows=projecting_indices,
-        empty_rows=empty_rows,
-        partitions=locations,
-    )
+    return 

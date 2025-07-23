@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, NamedTuple, Optional
 
 import polars as pl
 
@@ -37,7 +37,41 @@ class Partitions:
 
 
 @dataclass
-class FormatState:
+class TableStructureWithWords:
+    """
+    Describes the formatting of a table.
+
+    [Experimental] Subject to change without notice.
+    """
+
+    locations: Partitions
+
+    words: WordsList
+
+
+class CellMergerMetadata:
+    pass
+
+class CellMerger(NamedTuple):
+    """
+    Describes how multiple cells can be merged.
+    The rectangular selection defined by row_min, col_min, row_max, col_max
+    will be merged.
+    """
+
+    row_min: int
+    col_min: int
+    row_max: int
+    col_max: int
+    dtype: int
+    """The nature of the cell merge. 0=(no ), 1=hierarchical"""
+
+    meta: Optional[CellMergerMetadata] = None
+    """Additional metadata, can be extended in the future."""
+
+
+@dataclass
+class TableStructureWithArray:
     """
     Describes the formatting of a table.
 
@@ -48,7 +82,7 @@ class FormatState:
 
     words: WordsList
 
-    # table_array: List[List[Optional[str]]]
+    table_array: List[List[Optional[str]]]
 
     # indices of special rows
     header_rows: List[int]
