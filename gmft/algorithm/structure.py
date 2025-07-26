@@ -224,6 +224,47 @@ def _non_maxima_suppression(sorted_rows: list[dict], overlap_threshold=0.1):
     return num_removed
 
 
+def _nms_indices(sorted_rows: list[BboxPrediction], overlap_threshold=0.1):
+    """
+    See _non_maxima_suppression, but returns indices instead.
+
+    Returns the indices of rows that would be removed by non-maxima suppression,
+    without modifying the input list. Uses a two-pointer approach for efficiency.
+
+    Args:
+        sorted_rows: List of BboxPrediction objects sorted by some criteria
+        overlap_threshold: Overlap threshold for suppression (default 0.1)
+
+    Returns:
+        List of indices of rows that should be removed
+    """
+    if len(sorted_rows) <= 1:
+        return []
+
+    indices_to_remove = []
+    prev_idx = 0  # last valid (kept) bbox prediction
+    curr_idx = 1  # current bbox to compare with
+
+    while curr_idx < len(sorted_rows):
+        prev = sorted_rows[prev_idx]
+        curr = sorted_rows[curr_idx]
+
+        if _iob(prev["bbox"], curr["bbox"]) > overlap_threshold:
+            # Overlap detected - remove the one with lower confidence
+            if prev["confidence"] > curr["confidence"]:
+                indices_to_remove.append(curr_idx)
+                curr_idx += 1
+            else:
+                indices_to_remove.append(prev_idx)
+                prev_idx = curr_idx
+                curr_idx += 1
+        else:
+            prev_idx = curr_idx
+            curr_idx += 1
+
+    return indices_to_remove
+
+
 def _is_within_header(bbox, sorted_headers, _iob=_iob_for_rows, header_threshold=0.5):
     """
     check if bbox is in any of the bboxes specified in sorted_headers
@@ -517,10 +558,7 @@ def _split_spanning_cells(
                     **x,
                 }
                 sorted_monosemantic_top_headers.append(copy_x)
-            # else:
-            # sorted_hier_top_headers.append(x)
         else:
-            # if calculate_semantic_row_headers:
             all_valid_cols = _find_all_columns_for_box(
                 sorted_columns, x["bbox"], threshold=0.2
             )
@@ -534,8 +572,6 @@ def _split_spanning_cells(
                 )
                 copy_x = {"col_idx": col_idx, "row_indices": all_valid_rows, **x}
                 sorted_hier_left_headers.append(copy_x)
-            # else:
-            #     sorted_hier_left_headers.append(x)
 
     # sort hier_left_headers by ascending y0
     # which is advantageous becauseit makes it closer to algo fill

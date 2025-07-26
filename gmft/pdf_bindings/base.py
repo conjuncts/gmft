@@ -17,6 +17,7 @@ class BasePage(ABC):
 
     def __init__(self, page_number: int):
         self.page_number = page_number
+        """A 0-indexed page number."""
 
     @abstractmethod
     def get_positions_and_text(

@@ -1,6 +1,5 @@
 from gmft.algorithm.structure_rewrite import (
     _tatr_predictions_to_partitions,
-    partition_extract_to_state,
 )
 from gmft.formatters.base import FormattedTable
 from gmft.impl.tatr.config import TATRFormatConfig

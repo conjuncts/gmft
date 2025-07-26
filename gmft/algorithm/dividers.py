@@ -157,6 +157,29 @@ def _ioa(a: tuple[float, float], b: tuple[float, float]) -> float:
     return (min(a1, b1) - max(a0, b0)) / (a1 - a0)
 
 
+def _symmetric_ioa(a: tuple[float, float], b: tuple[float, float]) -> float:
+    """
+    Calculate the intersection of (closed) intervals, divided by the smaller interval.
+    Is symmetric.
+
+    If a is a single point [x, x], then return 1 if x is in the interior of b, 0 otherwise.
+    Generalizes _symmetric_iob_for_{rows,columns}.
+
+    :return: float in [0, 1]
+    """
+    a0, a1 = a
+    b0, b1 = b
+    if a0 > b1 or a1 < b0:
+        # this later guarantees intersection >= 0
+        return 0
+    if a0 == a1:
+        return 1 if b0 < a0 < b1 else 0
+    elif b0 == b1:
+        return 1 if a0 < b0 < a1 else 0
+
+    return (min(a1, b1) - max(a0, b0)) / min(a1 - a0, b1 - b0)
+
+
 def get_good_between_dividers(
     dividers: list[tuple[float, float]],
     min_val: float,

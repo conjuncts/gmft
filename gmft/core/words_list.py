@@ -59,6 +59,19 @@ class WordsList:
         wl._cuts = None
         return wl
 
+    @staticmethod
+    def _from_text_positions(
+        words: list[tuple[float, float, float, float, str]],
+    ) -> "WordsList":
+        myrange = list(range(len(words)))
+
+        return WordsList._from_state(
+            words=words,
+            hierarchy=[(0, 0, i) for i in myrange],
+            meta=[None] * len(words),
+            indices=myrange,
+        )
+
     def cut(
         self,
         row_dividers: List[float],
