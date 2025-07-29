@@ -17,7 +17,7 @@ class OCRPage(BasePage):
         height: float,
         filename: str = None,
         page_number: int = 0,
-        image = None,
+        image=None,
     ):
         self.page_number = page_number
         self._positions_and_text = positions_and_text

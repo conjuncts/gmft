@@ -22,7 +22,7 @@ def typeset_words(words: list[list[str]], top_n_header=1) -> TableStructureWithW
 
     for i, row in enumerate(words):
         # number of lines in each cell
-        row_char_heights[i] = max((cell or "").count('\n') for cell in row) + 1
+        row_char_heights[i] = max((cell or "").count("\n") for cell in row) + 1
 
     HORIZ_UNIT = 5  # Width of each character in the grid
     VERT_UNIT = 10  # Height of each character in the grid
@@ -33,7 +33,7 @@ def typeset_words(words: list[list[str]], top_n_header=1) -> TableStructureWithW
     for i in range(width):
         x_values.append(x_cursor)
         x_cursor += HORIZ_UNIT * (column_char_widths[i] + 1)
-    
+
     y_values = []
     y_cursor = 0
     for i in range(height):
@@ -41,7 +41,7 @@ def typeset_words(words: list[list[str]], top_n_header=1) -> TableStructureWithW
         y_cursor += VERT_UNIT * (row_char_heights[i] + 1)
 
     # The bboxes are separated by, at minimum, HORIZ_UNIT or VERT_UNIT.
-    
+
     bboxes = []
     h_splits = [0]
     v_splits = [0]
@@ -54,21 +54,20 @@ def typeset_words(words: list[list[str]], top_n_header=1) -> TableStructureWithW
 
             # cell-wise width/height
             w = HORIZ_UNIT * len(cell or "")
-            h = VERT_UNIT * ((cell or "").count('\n') + 1)
+            h = VERT_UNIT * ((cell or "").count("\n") + 1)
             bboxes.append((x, y, x + w, y + h, cell))
-    
-    x_padding = HORIZ_UNIT // 2 # aim to split the extra
+
+    x_padding = HORIZ_UNIT // 2  # aim to split the extra
     for i, x in enumerate(x_values):
         # find the maximum width
         w = HORIZ_UNIT * column_char_widths[i]
 
         v_splits.append(x + w + x_padding)
-    
+
     y_padding = VERT_UNIT // 2
     for i, y in enumerate(y_values):
         h = VERT_UNIT * row_char_heights[i]
         h_splits.append(y + h + y_padding)
-
 
     if top_n_header < len(h_splits):
         top_header_y = h_splits[top_n_header]
@@ -83,7 +82,7 @@ def typeset_words(words: list[list[str]], top_n_header=1) -> TableStructureWithW
             top_header_y=top_header_y,
             left_header_x=0,
             projected=[],
-            spanning=[]  # No spanning cells in this mock
+            spanning=[],  # No spanning cells in this mock
         ),
     )
     return result

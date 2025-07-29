@@ -108,10 +108,6 @@ class CellMerger(NamedTuple):
     col_max: int
     dtype: int
     """The nature of the cell merge. See CellMergerType"""
-    confidence: float
-    """
-    Confidence of this merge.
-    """
     debug: Optional[dict] = None
     """
     Debug information (optional)"""

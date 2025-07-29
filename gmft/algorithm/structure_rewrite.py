@@ -297,13 +297,17 @@ def _calculate_local_merges(
         if yavg < header_top_y:
             # good - it is located in the header
             all_valid_rows = _find_all_indices_for_interval(
-                pairwise_rows, vert_interval, threshold=0.2
+                pairwise_rows,
+                vert_interval,
+                threshold=0.5,
+                _ioa=_symmetric_ioa,
+                # NOTE: tweaked to _symmetric_ioa and 0.5
             )
 
             all_valid_cols = _find_all_indices_for_interval(
                 pairwise_cols,
                 horiz_interval,
-                threshold=0.2,
+                threshold=0.5,
                 _ioa=_symmetric_ioa,
             )
 
@@ -331,13 +335,17 @@ def _calculate_local_merges(
             all_valid_cols = _find_all_indices_for_interval(
                 pairwise_cols,
                 horiz_interval,
-                threshold=0.2,
-                # TODO: consider _symmetric_ioa
+                threshold=0.5,
+                _ioa=_symmetric_ioa,
+                # wider threshold for left headers
+                # we want them to solidly be in the spanning region
+                # NOTE: tweaked to _symmetric_ioa and 0.5
+                # TODO: different standard for 1st vs second
             )
 
             # bbox may be taller than each row, so use symmetric ioa
             all_valid_rows = _find_all_indices_for_interval(
-                pairwise_rows, vert_interval, threshold=0.2, _ioa=_symmetric_ioa
+                pairwise_rows, vert_interval, threshold=0.5, _ioa=_symmetric_ioa
             )
 
             if len(all_valid_cols) == 1:
@@ -359,8 +367,8 @@ def _calculate_local_merges(
         # in both cases, cell merger looks the same
         merger = CellMerger(
             row_min=all_valid_rows[0],
-            col_min=all_valid_cols[-1],
-            row_max=all_valid_rows[0],
+            col_min=all_valid_cols[0],
+            row_max=all_valid_rows[-1],
             col_max=all_valid_cols[-1],
             dtype=dtype,
             debug=(all_valid_cols, all_valid_rows),
@@ -419,29 +427,28 @@ def generate_mergers(
     sorted_top_hier = []
     sorted_top_nonhier = []
     sorted_left_hier: list[SpanningPrediction] = []
+    uncls = []
 
     for merge in merges:
-        if (merge.dtype & CellMergerType.TOP_HIER) != 0:
+        if (merge["merger"].dtype & CellMergerType.TOP_HIER) != 0:
             sorted_top_hier.append(merge)
-        elif (merge.dtype & CellMergerType.TOP_NONHIER) != 0:
+        elif (merge["merger"].dtype & CellMergerType.TOP_NONHIER) != 0:
             sorted_top_nonhier.append(merge)
-        elif (merge.dtype & CellMergerType.LEFT_HIER) != 0:
+        elif (merge["merger"].dtype & CellMergerType.LEFT_HIER) != 0:
             sorted_left_hier.append(merge)
+        else:
+            uncls.append(merge)
 
     # sort hier_left by ascending y0
     sorted_left_hier.sort(key=lambda x: x["bbox"][1])
 
     # do some NMS (deduplication)
-    sorted_top_hier = _non_maxima_suppression(
-        sorted_top_hier, overlap_threshold=_nms_overlap_threshold
-    )
-    sorted_top_nonhier = _non_maxima_suppression(
+    _non_maxima_suppression(sorted_top_hier, overlap_threshold=_nms_overlap_threshold)
+    _non_maxima_suppression(
         sorted_top_nonhier,
         overlap_threshold=_nms_overlap_threshold,
     )
-    sorted_left_hier = _non_maxima_suppression(
-        sorted_left_hier, overlap_threshold=_nms_overlap_threshold
-    )
+    _non_maxima_suppression(sorted_left_hier, overlap_threshold=_nms_overlap_threshold)
 
     # order matters - this is the order in which _semantic_spanning_fill originally acted
     array_struct = dataclasses.replace(
@@ -503,7 +510,7 @@ def _execute_cell_merges(
     # top_nonhier: list[SpanningPrediction],
     # left_hier: list[SpanningPrediction],
     # header_indices: list[int],
-    config,
+    # config,
 ):
     """
     Fill the table array according to spanning cells.
@@ -520,6 +527,9 @@ def _execute_cell_merges(
         REPEAT = (merge.dtype & CellMergerType.REPEAT) != 0
         AGGREGATE = (merge.dtype & CellMergerType.AGGREGATE) != 0
 
+        if merge.col_min is None or merge.row_min is None:
+            # empty row or column, skip
+            continue
         width = merge.col_max - merge.col_min + 1
         height = merge.row_max - merge.row_min + 1
 
@@ -543,10 +553,10 @@ def _execute_cell_merges(
 
         # determine a traversal direction
         traversal = rect_iter(
-            merge.col_min,
             merge.row_min,
-            merge.col_max,
+            merge.col_min,
             merge.row_max,
+            merge.col_max,
             x_step=traverse_dir,
             y_step=traverse_dir,
             column_major=not row_major,
@@ -560,13 +570,13 @@ def _execute_cell_merges(
             collector = ""
             traversal = list(traversal)  # need to reuse
             for i, j in traversal:
-                cell_content = table_array[i, j]
+                cell_content = table_array[i][j]
                 if cell_content:
                     collector += cell_content + " "
 
             # repeat
             for i, j in traversal:
-                table_array[i, j] = collector.strip()
+                table_array[i][j] = collector.strip()
 
         elif push:
             # only defined when there is a single row or column
@@ -577,26 +587,30 @@ def _execute_cell_merges(
                 # aggregate the range, then push that to the first or last cell
                 collector = ""
                 for i, j in traversal:
-                    cell_content = table_array[i, j]
+                    cell_content = table_array[i][j]
                     if cell_content:
                         collector += cell_content + " "
-                        table_array[i, j] = None
+                        table_array[i][j] = None
                 if push == 1:
-                    table_array[first_cell] = collector.strip()
+                    table_array[last_cell[0]][last_cell[1]] = collector.strip()
                 else:
-                    table_array[last_cell] = collector.strip()
+                    table_array[first_cell[0]][first_cell[1]] = collector.strip()
 
             elif REPEAT:
                 # repeat the first cell's content to all cells in the traversal
-                fill_value = table_array[first_cell]
+                fill_value = table_array[first_cell[0]][first_cell[1]]
                 if fill_value is not None:
                     for i, j in traversal:
-                        cell_content = table_array[i, j]
+                        cell_content = table_array[i][j]
                         if cell_content is None:
-                            table_array[i, j] = fill_value
+                            table_array[i][j] = fill_value
                         else:
                             fill_value = cell_content
 
+    return dataclasses.replace(
+        array_struct,
+        table_array=table_array,
+    )
     _hier_left_indices = []
     if True:  # if left-hier strategy was "deep"
         perform_changes = []  # list of {col_num: int, content: str, row_nums: list[int]}

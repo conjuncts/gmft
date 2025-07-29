@@ -14,7 +14,19 @@ class RawBboxPredictions(TypedDict):
 
 class BboxPrediction(TypedDict):
     confidence: float
-    label: str
+    label: Union[
+        Literal[
+            "table",
+            "table column",
+            "table row",
+            "table column header",
+            "table projected row header",
+            "table spanning cell",
+            "no object",
+        ],
+        str,
+    ]
+
     bbox: Tuple[float, float, float, float]
 
 
