@@ -1,4 +1,5 @@
 from gmft._testing.mock import typeset_words
+from gmft._testing.toys import _large_span_example_table
 from gmft.algorithm.structure_rewrite import (
     _execute_cell_merges,
     fill_2d_array,
@@ -30,7 +31,8 @@ def test_span_operations():
     """
     Various actions on spans.
     """
-    grid = [
+    # Use example table with spans
+    [
         # x=[0,5] [10,15] [20,25] [30,35] [40,45]
         # x_cuts= 0 7 17 27 37 47
         ["a", None, None, "b", "+"],  # y=[0,10]
@@ -45,47 +47,11 @@ def test_span_operations():
         # y_cuts= 0 15 35 55 75 95 115
     ]
 
-    words_struct = typeset_words(grid, top_n_header=2)
-    words_struct.locations.spanning = [
-        {
-            "confidence": 0.9,
-            "label": "table spanning cell",
-            "bbox": (0.1, 0.1, 18, 5),  # top hier, "A"
-        },
-        {
-            "confidence": 0.9,
-            "label": "table spanning cell",
-            "bbox": (40, 0, 45, 30),  # top nonhier, "+g"
-        },
-        {
-            "confidence": 0.8,
-            "label": "table spanning cell",
-            "bbox": (0, 42, 10, 68),  # left hier, slightly shrunk
-        },
-        {
-            "confidence": 0.8,
-            "label": "table spanning cell",
-            "bbox": (0, 78, 10, 138),  # left hier, slightly expanded
-        },
-        {
-            "confidence": 0.8,
-            "label": "table spanning cell",
-            "bbox": (10, 35, 20, 150),  # left hier, fill
-        },
-        # NMS bboxes should be ignored
-        {
-            "confidence": 0.1,
-            "label": "table spanning cell",
-            "bbox": (0, 0, 400, 5),  # should be cls as top hier
-        },
-    ]
+    _, words_struct = _large_span_example_table()
 
     arranged = fill_2d_array(words_struct)
     arranged = generate_mergers(arranged, _nms_overlap_threshold=0.2)
-
     arranged = _execute_cell_merges(arranged)
-
-    print(arranged.table_array)
 
     expected = [
         ["a", "a", None, "b", None],

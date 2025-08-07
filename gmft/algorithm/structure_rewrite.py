@@ -403,7 +403,7 @@ def generate_mergers(
     _nms_overlap_threshold,
 ) -> TableStructureWithArray:
     """
-    Merges left headers into the table array.
+    Calculates mergers for a table structure based on spanning cells.
 
     :param array_struct: TableStructureWithArray object containing the table array and locations.
     :param _nms_overlap_threshold: Overlap threshold for non-maxima suppression.
@@ -511,10 +511,16 @@ def _execute_cell_merges(
     # left_hier: list[SpanningPrediction],
     # header_indices: list[int],
     # config,
+    *,
+    _dtype_override=None,
 ):
     """
     Fill the table array according to spanning cells.
     (Assumes that NMS has already been applied, and there are no conflicts)
+
+    _dtype_override: Optional[int] = None
+    If provided, overrides the dtype of all merges.
+    This is useful for testing or applying a specific merge technique.
     """
 
     table_array = copy.deepcopy(array_struct.table_array)
@@ -523,9 +529,12 @@ def _execute_cell_merges(
     header_indices = array_struct.header_rows
     for merge_pred in merge_preds:
         merge = merge_pred["merger"]
+        dtype = merge.dtype
+        if _dtype_override is not None and dtype != 0:
+            dtype = _dtype_override
 
-        REPEAT = (merge.dtype & CellMergerType.REPEAT) != 0
-        AGGREGATE = (merge.dtype & CellMergerType.AGGREGATE) != 0
+        REPEAT = (dtype & CellMergerType.REPEAT) != 0
+        AGGREGATE = (dtype & CellMergerType.AGGREGATE) != 0
 
         if merge.col_min is None or merge.row_min is None:
             # empty row or column, skip
@@ -538,9 +547,9 @@ def _execute_cell_merges(
         row_major = width > height
 
         push = 0
-        if (merge.dtype & CellMergerType.PUSH_FORWARD) != 0:
+        if (dtype & CellMergerType.PUSH_FORWARD) != 0:
             push = 1
-        elif (merge.dtype & CellMergerType.PUSH_BACKWARD) != 0:
+        elif (dtype & CellMergerType.PUSH_BACKWARD) != 0:
             push = -1
 
         # If aggregating, always aggregate LTR and top-bottom
@@ -613,7 +622,9 @@ def _execute_cell_merges(
     )
 
 
-def export_header(struct: TableStructureWithArray, *, enable_multi_header=False):
+def export_header(
+    struct: TableStructureWithArray, *, enable_multi_header=False, enable_pandas=False
+):
     """
     Exports headers for the table.
     """
@@ -629,17 +640,21 @@ def export_header(struct: TableStructureWithArray, *, enable_multi_header=False)
     header_rows = [table_array[i] for i in header_indices]
     # if config.enable_multi_header and len(header_rows) > 1:
     if enable_multi_header and len(header_rows) > 1:
-        import pandas as pd
-
         # Convert header rows to a list of tuples, where each tuple represents a column
         columns_tuples = list(zip(*header_rows))
+        if enable_pandas:
+            import pandas as pd
 
-        # Create a MultiIndex with these tuples
-        column_headers = pd.MultiIndex.from_tuples(
-            columns_tuples,
-            names=[f"Header {len(header_rows) - i}" for i in range(len(header_rows))],
-        )
-        # Level is descending from len(header_rows) to 1
+            # Create a MultiIndex with these tuples
+            column_headers = pd.MultiIndex.from_tuples(
+                columns_tuples,
+                names=[
+                    f"Header {len(header_rows) - i}" for i in range(len(header_rows))
+                ],
+            )
+            # Level is descending from len(header_rows) to 1
+        else:
+            return columns_tuples
 
     else:
         # join by '\n' if there are multiple lines
@@ -702,9 +717,3 @@ def _to_polars(struct: TableStructureWithArray, column_headers):
     # note: header rows will be taken out
     df = pl.DataFrame(data=table_array, schema=[(h, pl.Utf8) for h in column_headers])
     return df
-
-def _to_html(struct: TableStructureWithArray):
-    """
-    Produce the html version of the table
-    """
-    
