@@ -611,108 +611,100 @@ def _execute_cell_merges(
         array_struct,
         table_array=table_array,
     )
-    _hier_left_indices = []
-    if True:  # if left-hier strategy was "deep"
-        perform_changes = []  # list of {col_num: int, content: str, row_nums: list[int]}
-        for x in left_hier:
-            col_num = x["col_idx"]
-            last_found = None  # assume that there is a unique text
 
-            # CHANGES in 4.0:
-            # - make it more safe by fixing a bug where it would overwrite data
-            # - it handles overlapping cells better by
-            # only making changes at the end. This helps in the common case
-            # by sorting the list top to bottom,
-            # which gives similar behavior to the 'algorithm'
-            # downwards (no merging)
-            first_invalid_i = len(x["row_indices"])
-            for i, row_num in enumerate(x["row_indices"]):
-                cell_content = table_array[row_num, col_num]
-                if cell_content:
-                    # do not overwrite stuff - only allow one cell
-                    if last_found is None:
-                        last_found = cell_content
-                    else:
-                        # two cells with text
-                        first_invalid_i = i
-                        break
-            if last_found:
-                perform_changes.append(
-                    {
-                        "col_num": col_num,
-                        "content": last_found,
-                        "row_nums": x["row_indices"][:first_invalid_i],
-                    }
-                )
 
-        # now perform changes
-        for x in perform_changes:
-            col_num = x["col_num"]
-            content = x["content"]
-            for row_num in x["row_nums"]:
-                # to be safe, only fill in nones
-                if table_array[row_num, col_num] is None:
-                    table_array[row_num, col_num] = content
+def export_header(struct: TableStructureWithArray, *, enable_multi_header=False):
+    """
+    Exports headers for the table.
+    """
 
-    elif config.semantic_hierarchical_left_fill == "algorithm":
-        # TODO: run HIER_LEFT | REPEAT | PUSH_FORWARD
-        # over those columns most covered by left_hier
-        raise ValueError("Not ported yet")
-        # get counts of all column indices, then keep those >= 2
-        col_counts = {}
-        for x in left_hier:
-            col_num = x["col_idx"]
-            col_counts[col_num] = col_counts.get(col_num, 0) + 1
+    table_array = struct.table_array
+    header_indices = struct.header_rows
 
-        # only expect leftmost 3 columns and more than 2 such spanning items.
-        _hier_left_indices = [k for k, v in col_counts.items() if k < 3 and v >= 2]
+    if not len(table_array):
+        # empty; nothing to do
+        return []
+    num_columns = len(table_array[0])
+    # extract out the headers
+    header_rows = [table_array[i] for i in header_indices]
+    # if config.enable_multi_header and len(header_rows) > 1:
+    if enable_multi_header and len(header_rows) > 1:
+        import pandas as pd
 
-        first_row = max(header_indices, default=-1) + 1
+        # Convert header rows to a list of tuples, where each tuple represents a column
+        columns_tuples = list(zip(*header_rows))
 
-        content = None
-        for col_num in _hier_left_indices:
-            for row_num in range(first_row, table_array.shape[0]):
-                if table_array[row_num, col_num] is not None:
-                    content = table_array[row_num, col_num]
-                else:
-                    table_array[row_num, col_num] = content
+        # Create a MultiIndex with these tuples
+        column_headers = pd.MultiIndex.from_tuples(
+            columns_tuples,
+            names=[f"Header {len(header_rows) - i}" for i in range(len(header_rows))],
+        )
+        # Level is descending from len(header_rows) to 1
 
-    # Fill hierarchical top headers
-    # 1. This time, aggregate
-    # 2. then, copy among all cells
-    for x in top_hier:
-        row_num = x["row_idx"]
-        content = []  # this time, aggregate, and copy among all cells
-        for col_num in x["col_indices"]:
-            cell_content = table_array[row_num, col_num]
-            if cell_content:
-                content.append(cell_content)
-        if content:
-            content = " ".join(content)
-            for col_num in x["col_indices"]:
-                table_array[row_num, col_num] = content
+    else:
+        # join by '\n' if there are multiple lines
+        column_headers = [
+            " \\n".join([row[i] for row in header_rows if row[i]])
+            for i in range(num_columns)
+        ]
 
-    # Fill monosemantic top headers - so these are unhierarchical column headers that are all
-    # contained in one column
-    # 0. There is only something to do when text is in both these cells
-    # 1. This time, aggregate
-    # 2. Only write to the bottom-most cell
-    # for now, less useful
-    for x in top_nonhier:
-        col_num = x["col_idx"]
-        content = []  # this time, aggregate, and push it all to the bottom-most cell
-        for row_num in x["row_indices"]:
-            cell_content = table_array[row_num, col_num]
-            if cell_content:
-                content.append(cell_content)
-        if len(content) > 1:
-            # TODO config options for "repeat", "bottom"
-            # if not multi-header:
-            # write once, wipe the other cells
-            for row_num in x["row_indices"]:
-                table_array[row_num, col_num] = None
-            # push it all to the bottom-most cell
-            bottom_most_row = x["row_indices"][-1]
-            table_array[bottom_most_row, col_num] = " \\n".join(content)
+    return column_headers
+    # note: header rows will be taken out
+    # table._df = pd.DataFrame(data=table_array, columns=column_headers)
 
-    return _hier_left_indices
+
+def _to_pandas(struct: TableStructureWithArray, column_headers):
+    """
+    Produce the pandas df
+    """
+    import pandas as pd
+
+    header_indices = struct.header_rows
+    table_array = struct.table_array
+
+    # note: header rows will be taken out
+    df = pd.DataFrame(data=table_array, columns=column_headers)
+
+    # a. mark as projecting/non-projecting
+    # if projecting_indices:
+    #     is_projecting = [x in projecting_indices for x in range(num_rows)]
+    #     # remove the header_indices
+    #     # TODO this could be made O(n)
+    #     is_projecting = [
+    #         x for i, x in enumerate(is_projecting) if i not in header_indices
+    #     ]
+    #     indices_preds["_projecting"] = [i for i, x in enumerate(is_projecting) if x]
+
+    # table.predictions.indices = indices_preds
+    # table.predictions.status = "ready"
+
+    # if projecting_indices:
+    # insert at end
+
+    # b. drop the former header rows always
+    df.drop(index=header_indices, inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    return df
+
+
+def _to_polars(struct: TableStructureWithArray, column_headers):
+    """
+    Produce the polars df
+    """
+
+    import polars as pl
+
+    header_indices = struct.header_rows
+    table_array = [
+        row for i, row in enumerate(struct.table_array) if i not in header_indices
+    ]
+
+    # note: header rows will be taken out
+    df = pl.DataFrame(data=table_array, schema=[(h, pl.Utf8) for h in column_headers])
+    return df
+
+def _to_html(struct: TableStructureWithArray):
+    """
+    Produce the html version of the table
+    """
+    
