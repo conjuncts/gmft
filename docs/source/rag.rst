@@ -16,7 +16,7 @@ See the :ref:`mupdf` section for more information.
 
 .. code-block:: python
     
-    from gmft._rich_text.rich_page import embed_tables
+    from gmft.formatters.page.embed import embed_tables
 
     doc = PyMuPDFDocument("data/pdfs/7.pdf") # PyMuPDF is preferred
     
