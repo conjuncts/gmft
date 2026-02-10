@@ -179,6 +179,18 @@ class PyPDFium2Page(BasePage):
         for item in self._positions_and_text_and_breaks:
             yield item
 
+    def __getstate__(self):
+        return {
+            "filename": self.get_filename(),
+            "page_no": self.page_number,
+        }
+
+    def __setstate__(self, state):
+        copy = PyPDFium2Utils.load_page_from_dict(state)
+        # swap state
+        self.__dict__, copy.__dict__ = copy.__dict__, self.__dict__
+        # now copy has the old state, which will be garbage collected
+
 
 class PyPDFium2Document(BasePDFDocument):
     """
@@ -229,7 +241,7 @@ class PyPDFium2Utils:
     def load_page_from_dict(d: dict) -> BasePage:
         """
         Helper method to load a BasePage from a serialized CroppedTable or TATRFormattedTable.
-        This method reads a pdf from disk! You will need to close it manually!
+        This method reads a pdf from disk! You will need to close it manually! (through page.close_document())
 
         ie. `page.close_document()`
         """

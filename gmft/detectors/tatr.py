@@ -55,7 +55,10 @@ class TATRDetector(BaseDetector[TATRDetectorConfig]):
         self.config = config
 
     def extract(
-        self, page: BasePage, config_overrides: TATRDetectorConfig = None, rect: Rect = None
+        self,
+        page: BasePage,
+        config_overrides: TATRDetectorConfig = None,
+        rect: Rect = None,
     ) -> list[CroppedTable]:
         """
         Detect tables in a page.

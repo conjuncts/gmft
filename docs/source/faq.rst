@@ -29,6 +29,16 @@ See the :ref:`semantic_spanning_cells` section for more information.
 Likewise, tables with merged cells in the center are not supported.
 
 
+Is gmft thread-safe?
+---------------------
+
+Short answer: no. The default PDF backend (pypdfium2) is not thread-safe.
+
+If you need parallelism, use multiprocessing with a spawn context and pass
+serializable objects (like :class:`~gmft.detectors.base.CroppedTable`) across
+process boundaries. Do not share live page objects across threads.
+
+
 I need to tweak something (location/rotation) about a table. How do I do this?
 ---------------------------------------------------------------------------------
 
