@@ -73,20 +73,21 @@ class HistogramFormattedTable(FormattedTable):
             labels.append(2)
         return plot_shaded_boxes(img, labels=labels, boxes=bboxes, **kwargs)
 
-    def recompute(self):
+    def recompute(self, *, _words=None) -> pd.DataFrame:
         """
         Recalculate the table, based on irvl_results and config.
         """
-        tbl_width = self.table.bbox[2] - self.table.bbox[0]
-        tbl_height = self.table.bbox[3] - self.table.bbox[1]
 
         x_sep_bounds = self.irvl_results["col_dividers"]
         y_sep_bounds = self.irvl_results["row_dividers"]
         xavgs = [(x0 + x1) / 2 for x0, x1 in x_sep_bounds]
         yavgs = [(y0 + y1) / 2 for y0, y1 in y_sep_bounds]
 
-        fix_bbox = (0, 0, tbl_width, tbl_height)
-        words = list(self.table.text_positions(remove_table_offset=True))
+        fix_bbox = (0, 0, self.width, self.height)
+        if _words is not None:
+            words = _words
+        else:
+            words = list(self.text_positions(remove_table_offset=True))
         nparr = fill_using_true_partitions(words, yavgs, xavgs, fix_bbox)
 
         # simple np array
@@ -188,19 +189,10 @@ class HistogramFormatter(BaseFormatter):
             "col_dividers": x_sep_bounds,
         }
 
-        # compute for the first time
-        tbl_width = table.width
-        tbl_height = table.height
-        xavgs = [(x0 + x1) / 2 for x0, x1 in x_sep_bounds]
-        yavgs = [(y0 + y1) / 2 for y0, y1 in y_sep_bounds]
-        fix_bbox = (0, 0, tbl_width, tbl_height)
-
-        # simple np array
-        nparr = fill_using_true_partitions(words, yavgs, xavgs, fix_bbox)
-        df = pd.DataFrame(nparr[1:], columns=nparr[0])
         table = HistogramFormattedTable(
-            copy.copy(table), df, irvl_results, config=self.config
+            copy.copy(table), None, irvl_results, config=self.config
         )
+        table.recompute(_words=words)
         if _populate_histograms:
             table.x_histogram = x_histogram
             table.y_histogram = y_histogram
