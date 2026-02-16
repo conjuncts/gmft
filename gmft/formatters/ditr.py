@@ -33,11 +33,9 @@ from gmft.pdf_bindings.base import BasePage
 
 from gmft.algorithm.structure import (
     _iob,
-    _is_within_header,
     _non_maxima_suppression,
     _semantic_spanning_fill,
     _split_spanning_cells,
-    extract_to_df,
 )
 from gmft.table_visualization import plot_results_unwr, plot_shaded_boxes
 

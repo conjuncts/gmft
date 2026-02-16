@@ -1,4 +1,5 @@
 import copy
+import logging
 from typing import List, Union
 
 from gmft.core._dataclasses import non_defaults_only, with_config
@@ -89,6 +90,28 @@ class TATRFormattedTable(FormattedTable, LegacyFctnResults):
         """
         Recompute the internal dataframe.
         """
+        # Configure logging based on verbosity level
+        verbosity_to_level = {
+            -1: None,
+            0: logging.ERROR,
+            1: logging.WARNING,
+            2: logging.INFO,
+            3: logging.DEBUG,
+        }
+
+        log_level = verbosity_to_level.get(config.verbosity, logging.WARNING)
+        if log_level is not None:
+            gmft_logger = logging.getLogger("gmft")
+            gmft_logger.setLevel(log_level)
+
+            # Only add handler if none exists to avoid duplicate logs
+            if not gmft_logger.handlers:
+                handler = logging.StreamHandler()
+                handler.setLevel(log_level)
+                formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+                handler.setFormatter(formatter)
+                gmft_logger.addHandler(handler)
+
         self._df = extract_to_df(self, config=config)
         return self._df
 

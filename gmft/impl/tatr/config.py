@@ -60,6 +60,7 @@ class TATRFormatConfig(LegacyRemovedConfig):
 
     verbosity: int = 1
     """
+    -1: no logging\n
     0: errors only\n
     1: print warnings\n
     2: print warnings and info\n

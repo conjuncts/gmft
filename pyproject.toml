@@ -61,6 +61,7 @@ exclude = [
 line-length = 88
 
 [tool.ruff.lint]
+select = ["E", "F", "W", "I", "T201"]
 ignore = ["E712"]
 
 [dependency-groups]

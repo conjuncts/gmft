@@ -1,11 +1,13 @@
 from __future__ import annotations  # 3.7
 
-import bisect
+import logging
 from typing import Generator
 import numpy as np
 import pandas as pd
 from gmft.base import Rect
 from typing import TYPE_CHECKING
+
+logger = logging.getLogger("gmft")
 
 from gmft.core.ml.prediction import (
     _empty_effective_predictions,
@@ -161,7 +163,7 @@ def _fill_in_gaps(sorted_rows, gap_height, leave_gap=0.4, top_of_table=None):
     if top_of_table is not None and len(sorted_rows):
         if sorted_rows[0]["bbox"][1] - top_of_table > gap_height:
             # fill in the gap
-            print("Filling in gap at top of table")
+            logger.info("Filling in gap at top of table")
             sorted_rows.insert(
                 0,
                 {
@@ -279,8 +281,7 @@ def _guess_row_bboxes_for_large_tables(
     # fail-safe: if it predicts a very large table, raise
     est_num_rows = (table_ymax - y) / row_height
     if est_num_rows > config.large_table_maximum_rows:
-        if config.verbosity >= 1:
-            print(f"Estimated number of rows {est_num_rows} is too large")
+        logger.warning(f"Estimated number of rows {est_num_rows} is too large")
         table.outliers["excessive rows"] = max(
             table.outliers.get("excessive rows", 0), est_num_rows
         )
@@ -807,8 +808,8 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
     num_removed = _non_maxima_suppression(
         sorted_rows, overlap_threshold=config._nms_overlap_threshold
     )
-    if num_removed > 0 and config.verbosity >= 2:
-        print(f"Removed {num_removed} overlapping rows")
+    if num_removed > 0:
+        logger.info(f"Removed {num_removed} overlapping rows")
     if num_removed > config.nms_warn_threshold:
         outliers["nms removed rows"] = max(
             outliers.get("nms removed rows", 0), num_removed
@@ -850,10 +851,9 @@ def extract_to_df(table: TATRFormattedTable, config: TATRFormatConfig = None):
         large_table_guess = config.force_large_table_assumption
 
     if large_table_guess:
-        if config.verbosity >= 2:
-            print(
-                "Invoking large table row guess! set TATRFormatConfig.force_large_table_assumption to False to disable this."
-            )
+        logger.info(
+            "Invoking large table row guess! set TATRFormatConfig.force_large_table_assumption to False to disable this."
+        )
 
         sorted_rows = _guess_row_bboxes_for_large_tables(
             table, config, sorted_rows, sorted_headers, row_height=word_height
