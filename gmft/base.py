@@ -60,5 +60,8 @@ class Rect:
     def area(self):
         return (self.bbox[2] - self.bbox[0]) * (self.bbox[3] - self.bbox[1])
 
+    def __repr__(self):
+        return f"Rect({self.bbox})"
+
 
 Rect.EMPTY = Rect((0, 0, 0, 0))

@@ -1,6 +1,7 @@
 # Allow for different pdf extractors to be used
 
 from abc import ABC, abstractmethod
+import logging
 from typing import Generator
 
 import numpy as np
@@ -105,10 +106,30 @@ class ImageOnlyPage(BasePage):
     This is a dummy page that only contains an image.
     """
 
-    def __init__(self, img: PILImage):
+    def __init__(
+        self,
+        img: PILImage,
+        *,
+        words: list[tuple[float, float, float, float, str]] = None,
+        dpi: int = None,
+    ):
+        """
+        :param words: Assumes the words provided are in PDF units (dpi=72), *not* image units.
+        :param dpi: If provided, will assume the image is an upscaled version taken from the PDF.
+        """
         self.img = img
         self.width, self.height = img.size
+        self.words = words if words is not None else []
+        self.scale_factor = dpi / 72 if dpi is not None else 1.0
+
         super().__init__(0)
+
+    @classmethod
+    def from_page(cls, page: BasePage, dpi: int) -> "ImageOnlyPage":
+        """dpi is needed for upscaling"""
+        img = page.get_image(dpi=dpi)
+        words = list(page.get_positions_and_text())
+        return cls(img, words=words, dpi=dpi)
 
     def get_positions_and_text(
         self,
@@ -116,17 +137,32 @@ class ImageOnlyPage(BasePage):
         """
         This ImageOnlyPage has no text to extract.
         """
-        return
+        for word in self.words:
+            yield word
 
     def get_filename(self) -> str:
         return None
 
     def get_image(self, dpi: int = None, rect: Rect = None) -> PILImage:
-        # clip to rect
-        if rect is not None:
-            img = self.img.crop(rect.bbox)
+        """Gets image. Does downscaling as needed.
+
+        :param dpi: resolution. 72 is default. If dpi is not provided,
+            dpi=72 is assumed even if the intrinsic image is higher resolution.
+        :param rect: if provided, crops to the given rect (in PDF units).
+        """
+        target_factor = 1.0 if dpi is None else dpi / 72
+        if target_factor != self.scale_factor:
+            relative_scaling = target_factor / self.scale_factor
+            new_width = int(self.width * relative_scaling)
+            new_height = int(self.height * relative_scaling)
+            img = self.img.resize((new_width, new_height))
         else:
             img = self.img
+        # clip to rect
+        if rect is not None:
+            # Assume that rect is provided in PDF units (dpi=72, scale_factor=1.0)
+            # Need to convert to image untis (dpi=dpi, scale_factor=target_factor)
+            img = img.crop([x * target_factor for x in rect.bbox])
         return img
 
     def close(self):
