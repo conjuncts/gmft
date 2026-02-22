@@ -2,6 +2,7 @@ from __future__ import annotations  # 3.7
 
 # PyPDFium2 bindings
 from typing import Generator, Tuple
+import weakref
 import pypdfium2 as pdfium
 
 from gmft.base import Rect
@@ -15,6 +16,16 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gmft.formatters.base import CroppedTable
+
+
+def _close_document_quietly(doc: "PyPDFium2Document"):
+    """Best-effort close used by pickle cleanup finalizers."""
+    if doc is None:
+        return
+    try:
+        doc.close()
+    except Exception:
+        pass
 
 
 class PyPDFium2Page(BasePage):
@@ -37,6 +48,7 @@ class PyPDFium2Page(BasePage):
         self.width = page.get_width()
         self.height = page.get_height()
         self._positions_and_text_and_breaks = None
+        self._pickle_parent_close_finalizer = None
         super().__init__(page_no)
 
     def get_positions_and_text(
@@ -186,10 +198,15 @@ class PyPDFium2Page(BasePage):
         }
 
     def __setstate__(self, state):
-        copy = PyPDFium2Utils.load_page_from_dict(state)
-        # swap state
+        # copy-and-swap idiom
+        copy = PyPDFium2Utils.load_page_from_dict(state)  # this opens a new document!
         self.__dict__, copy.__dict__ = copy.__dict__, self.__dict__
-        # now copy has the old state, which will be garbage collected
+
+        # avoid pypdfium2 memory leak #55
+        if self.parent is not None:
+            self._pickle_parent_close_finalizer = weakref.finalize(
+                self, _close_document_quietly, self.parent
+            )  # best-effort close document
 
 
 class PyPDFium2Document(BasePDFDocument):
