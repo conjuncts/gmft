@@ -1,3 +1,18 @@
+## v0.4.4
+
+Bugfixes:
+- Pins transformers to <5.0.0 due to changes
+
+## v0.4.3
+
+Features:
+- Words can be passed to ImageOnlyPage.
+
+Bugfixes:
+- Improved multiprocessing support: [#55](https://github.com/conjuncts/gmft/issues/55)
+- Use logger: [#65](https://github.com/conjuncts/gmft/issues/65), [#68](https://github.com/conjuncts/gmft/issues/68)
+- Pass args through get_image(): [#66](https://github.com/conjuncts/gmft/issues/66)
+
 ## v0.4.2
 
 Bugfixes before the upcoming release.
