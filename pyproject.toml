@@ -17,7 +17,7 @@ classifiers = [
 
 dependencies = [
     "pypdfium2>=4.30.0",
-    "transformers>=4.35.2,<5.0.0", # need the no_timm revision
+    "transformers>=4.35.2,<5.4.0", # need the no_timm revision
     "torch>=2.5.0",
     "pillow>=11.3.0",
     "pandas",
@@ -30,11 +30,6 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/conjuncts/gmft"
 Issues = "https://github.com/conjuncts/gmft/issues"
-
-[project.optional-dependencies]
-img2table = [
-    "img2table>=1.4.1",
-]
 
 [build-system]
 build-backend = "flit_core.buildapi"
