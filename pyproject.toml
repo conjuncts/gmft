@@ -17,7 +17,7 @@ classifiers = [
 
 dependencies = [
     "pypdfium2>=4.30.0",
-    "transformers>=4.35.2,<5.4.0", # need the no_timm revision
+    "transformers>=4.35.2", # need the no_timm revision; dilation workaround handles 5.x configs
     "torch>=2.5.0",
     "pillow>=11.3.0",
     "pandas",

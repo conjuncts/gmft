@@ -28,7 +28,8 @@ class TATRDetector(BaseDetector[TATRDetectorConfig]):
         """
 
         import transformers
-        from transformers import AutoImageProcessor, TableTransformerForObjectDetection
+        from transformers import AutoImageProcessor
+        from gmft.core.ml._huggingface import _load_tatr_from_pretrained
 
         # future-proofing: allow subclasses for TableDetector to have different architectures
         if not default_implementation:
@@ -46,7 +47,7 @@ class TATRDetector(BaseDetector[TATRDetectorConfig]):
         )
 
         revision = "no_timm" if config.no_timm else None
-        self.detector = TableTransformerForObjectDetection.from_pretrained(
+        self.detector = _load_tatr_from_pretrained(
             config.detector_path, revision=revision
         ).to(_resolve_device(config.torch_device))
 

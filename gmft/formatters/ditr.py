@@ -195,7 +195,8 @@ class DITRFormatter(TableFormatter):
 
     def __init__(self, config: DITRFormatConfig = None):
         import transformers
-        from transformers import AutoImageProcessor, TableTransformerForObjectDetection
+        from transformers import AutoImageProcessor
+        from gmft.core.ml._huggingface import _load_tatr_from_pretrained
 
         if config is None:
             config = DITRFormatConfig()
@@ -210,9 +211,9 @@ class DITRFormatter(TableFormatter):
             config.image_processor_path
         )
         # might need revision: "no_timm"
-        self.structor = TableTransformerForObjectDetection.from_pretrained(
-            config.formatter_path
-        ).to(_resolve_device(config.torch_device))
+        self.structor = _load_tatr_from_pretrained(config.formatter_path).to(
+            _resolve_device(config.torch_device)
+        )
         self.config = config
         if not config.warn_uninitialized_weights:
             transformers.logging.set_verbosity(previous_verbosity)

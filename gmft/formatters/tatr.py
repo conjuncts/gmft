@@ -237,7 +237,8 @@ class TATRFormatter(TableFormatter):
 
     def __init__(self, config: TATRFormatConfig = None):
         import transformers
-        from transformers import AutoImageProcessor, TableTransformerForObjectDetection
+        from transformers import AutoImageProcessor
+        from gmft.core.ml._huggingface import _load_tatr_from_pretrained
 
         if config is None:
             config = TATRFormatConfig()
@@ -252,7 +253,7 @@ class TATRFormatter(TableFormatter):
             config.image_processor_path
         )
         revision = "no_timm" if config.no_timm else None
-        self.structor = TableTransformerForObjectDetection.from_pretrained(
+        self.structor = _load_tatr_from_pretrained(
             config.formatter_path, revision=revision
         ).to(_resolve_device(config.torch_device))
         self.config = config
